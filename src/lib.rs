@@ -158,8 +158,8 @@ impl Parse for Hsm1 {
 ///
 /// # Examples
 ///
-/// Two examples; MyFsm is the simplest FSM of just one state.
-/// MyHsm is the simplest HSM with two states initial with base
+/// Two examples; MyFsm is the simplest FSM with just one state.
+/// MyHsm is the simplest HSM with two states, initial with base
 /// as its parent.
 ///
 /// ```ignore // Ignore because clippy warnings of neeless main

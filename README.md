@@ -14,7 +14,7 @@ use proc_macro_hsm1::{handled, hsm1, hsm1_state, not_handled};
 // These two use's needed as hsm1 is dependent upon them.
 // How can hsm1 proc_macro signify the dependency?
 use std::collections::VecDeque;
-use sm::{StateResult, StateFnsHdl};
+use state_result::*;
 
 hsm1!(
     struct MyFsm {
