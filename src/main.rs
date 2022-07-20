@@ -2,8 +2,51 @@ use proc_macro_hsm1::{hsm1, hsm1_state, handled, not_handled, transition_to};
 use std::collections::VecDeque;
 use state_result::*;
 
+// Simple FSM
 hsm1!(
-    struct MyFsm {
+    struct SimpleFsm {
+        initial_counter: u64,
+    }
+
+    #[hsm1_state]
+    fn initial(&mut self) -> StateResult {
+        // Mutate the state
+        self.initial_counter += 1;
+
+        // Let the parent state handle all invocations
+        handled!()
+    }
+);
+
+// Simple HSM
+hsm1!(
+    struct SimpleHsm {
+        base_counter: u64,
+        initial_counter: u64,
+    }
+
+    #[hsm1_state]
+    fn base(&mut self) -> StateResult {
+        // Mutate the state
+        self.base_counter += 1;
+
+        // Let the parent state handle all invocations
+        handled!()
+    }
+
+    #[hsm1_state(base)]
+    fn initial(&mut self) -> StateResult {
+        // Mutate the state
+        self.initial_counter += 1;
+
+        // Let the parent state handle all invocations
+        not_handled!()
+    }
+);
+
+// A more complex Hsm
+hsm1!(
+    struct MyHsm {
         a_i32: i32,
     }
 
@@ -59,41 +102,53 @@ hsm1!(
 );
 
 fn main() {
-    let mut my_fsm = MyFsm::new();
-    assert_eq!(my_fsm.smi.current_state_fns_hdl as usize, 1); //MyFsm::initial as usize);
-    assert_eq!(my_fsm.smi.previous_state_fns_hdl as usize, 1); //MyFsm::initial as usize);
-    assert!(my_fsm.smi.current_state_changed);
+    let mut simple_fsm = SimpleFsm::new();
+    simple_fsm.dispatch();
+    assert_eq!(simple_fsm.initial_counter, 1);
+    println!("main: simple_fsm.initial_counter={}", simple_fsm.initial_counter);
 
-    my_fsm.a_i32 = 123;
-    println!("main: my_fsm.a_i32={}", my_fsm.a_i32);
+    let mut simple_hsm = SimpleHsm::new();
+    simple_hsm.dispatch();
+    assert_eq!(simple_hsm.base_counter, 1);
+    assert_eq!(simple_hsm.initial_counter, 1);
+    println!("main: simple_hsm.base_counter={}", simple_hsm.base_counter);
+    println!("main: simple_hsm.initial_counter={}", simple_hsm.initial_counter);
+
+    let mut my_hsm = MyHsm::new();
+    assert_eq!(my_hsm.smi.current_state_fns_hdl as usize, 1); //MyHsm::initial as usize);
+    assert_eq!(my_hsm.smi.previous_state_fns_hdl as usize, 1); //MyHsm::initial as usize);
+    assert!(my_hsm.smi.current_state_changed);
+
+    my_hsm.a_i32 = 123;
+    println!("main: my_hsm.a_i32={}", my_hsm.a_i32);
 
    // Invoke initial
-    my_fsm.dispatch();
-    println!("main: my_fsm.a_i32={}", my_fsm.a_i32);
-    assert_eq!(my_fsm.smi.current_state_fns_hdl as usize, 2); //MyFsm::do_work as usize);
-    assert_eq!(my_fsm.smi.previous_state_fns_hdl as usize, 1); //MyFsm::initial as usize);
-    assert!(my_fsm.smi.current_state_changed);
+    my_hsm.dispatch();
+    println!("main: my_hsm.a_i32={}", my_hsm.a_i32);
+    assert_eq!(my_hsm.smi.current_state_fns_hdl as usize, 2); //MyHsm::do_work as usize);
+    assert_eq!(my_hsm.smi.previous_state_fns_hdl as usize, 1); //MyHsm::initial as usize);
+    assert!(my_hsm.smi.current_state_changed);
 
     // Invoke do_work
-    my_fsm.dispatch();
-    println!("main: my_fsm.a_i32={}", my_fsm.a_i32);
-    assert_eq!(my_fsm.smi.current_state_fns_hdl as usize, 3); //MyFsm::done as usize);
-    assert_eq!(my_fsm.smi.previous_state_fns_hdl as usize, 2); //MyFsm::do_work as usize);
-    assert!(my_fsm.smi.current_state_changed);
+    my_hsm.dispatch();
+    println!("main: my_hsm.a_i32={}", my_hsm.a_i32);
+    assert_eq!(my_hsm.smi.current_state_fns_hdl as usize, 3); //MyHsm::done as usize);
+    assert_eq!(my_hsm.smi.previous_state_fns_hdl as usize, 2); //MyHsm::do_work as usize);
+    assert!(my_hsm.smi.current_state_changed);
 
     // Invoke done
-    my_fsm.dispatch();
-    println!("main: my_fsm.a_i32={}", my_fsm.a_i32);
-    assert_eq!(my_fsm.smi.current_state_fns_hdl as usize, 3); //MyFsm::done as usize);
-    assert_eq!(my_fsm.smi.previous_state_fns_hdl as usize, 2); //MyFsm::do_work as usize);
-    assert!(!my_fsm.smi.current_state_changed);
+    my_hsm.dispatch();
+    println!("main: my_hsm.a_i32={}", my_hsm.a_i32);
+    assert_eq!(my_hsm.smi.current_state_fns_hdl as usize, 3); //MyHsm::done as usize);
+    assert_eq!(my_hsm.smi.previous_state_fns_hdl as usize, 2); //MyHsm::do_work as usize);
+    assert!(!my_hsm.smi.current_state_changed);
 
     // Invoke done again
-    my_fsm.dispatch();
-    println!("main: my_fsm.a_i32={}", my_fsm.a_i32);
-    assert_eq!(my_fsm.smi.current_state_fns_hdl as usize, 3); //MyFsm::done as usize);
-    assert_eq!(my_fsm.smi.previous_state_fns_hdl as usize, 2); //MyFsm::do_work as usize);
-    assert!(!my_fsm.smi.current_state_changed);
+    my_hsm.dispatch();
+    println!("main: my_hsm.a_i32={}", my_hsm.a_i32);
+    assert_eq!(my_hsm.smi.current_state_fns_hdl as usize, 3); //MyHsm::done as usize);
+    assert_eq!(my_hsm.smi.previous_state_fns_hdl as usize, 2); //MyHsm::do_work as usize);
+    assert!(!my_hsm.smi.current_state_changed);
 }
 
 #[cfg(test)]
