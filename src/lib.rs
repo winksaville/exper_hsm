@@ -27,11 +27,18 @@ struct Hsm1 {
     hsm_state_fn_idents: Vec<StateFnIdents>,
 }
 
+#[derive(Debug, Clone)]
+enum MsgType {
+    MtTypePath { tp: syn::TypePath },
+    MtTypeReference { tr: syn::TypeReference },
+}
+
 #[derive(Debug)]
 struct StateFnIdents {
     parent_fn_ident: Option<syn::Ident>,
     enter_fn_ident: Option<syn::Ident>,
     process_fn_ident: syn::Ident,
+    process_fn_msg_type: MsgType,
     exit_fn_ident: Option<syn::Ident>,
 }
 
@@ -54,13 +61,18 @@ impl Parse for Hsm1 {
         //println!("hsm1::parse: fields={:#?}", fields);
 
         // The only thing that should remain are functions
-        struct StateFnHdlAndParent {
+        #[derive(Debug)]
+        struct StateFnInfo {
             hdl: usize,
             parent_ident: Option<syn::Ident>,
+            #[allow(unused)]
+            msg_type: MsgType,
         }
-        let mut state_fn_hdl_and_parent = Vec::<StateFnHdlAndParent>::new();
+        let mut state_fn_infos = Vec::<StateFnInfo>::new();
         let mut fns = Vec::<syn::ItemFn>::new();
         let mut fn_map = HashMap::<String, usize>::new();
+
+        // TODO: Gracefully handle when input.parse::<syn::ItemFn> returns an Err!
         while let Ok(a_fn) = input.parse::<syn::ItemFn>() {
             //println!("hsm1::parse: tol ItemFn a_fn={:#?}", a_fn);
 
@@ -70,6 +82,8 @@ impl Parse for Hsm1 {
 
                 if let Some(ident) = a.path.get_ident() {
                     if ident == "hsm1_state" {
+                        // There zero or one parameter to the hsm1_state and
+                        // we're not interested in other atributes, so break;
                         // TODO: There is probably a better way to implement
                         // optional parameters to proc_macro_attribute. The problem
                         // is if there is no arguments "a.parse_args" returns err, but
@@ -93,17 +107,121 @@ impl Parse for Hsm1 {
                             }
                         }
 
+                        // Enable to print the sig.input as pairs
+                        //for a_pair in a_fn.sig.inputs.pairs() {
+                        //    match a_pair {
+                        //        syn::punctuated::Pair::Punctuated(fn_arg, _) => {
+                        //            println!("Pair::Puncated: {fn_arg:#?}");
+                        //        }
+                        //        syn::punctuated::Pair::End(fn_arg) => {
+                        //            println!("Pair::End: {fn_arg:#?}");
+                        //        }
+                        //    }
+                        //}
+
+                        // Now parse the arguments there should be two arguments
+                        //   &mut self,  msg: &mut MsgType
+
+                        let len_input_pairs = a_fn.sig.inputs.pairs().len();
+                        //println!("hsm1::parse: fn {} inputs.pairs.len={}", a_fn.sig.ident, len_input_pairs);
+                        if len_input_pairs != 2 {
+                            // TODO: Improve error handling
+                            panic!("All hsm1_state functions must have two parameters, `fn xxx(&mut self, msg: MsgType)`");
+                        }
+
+                        // Iternate over the "inputs" which are the parameters
+                        let mut sig_iter = a_fn.sig.inputs.pairs(); // why is sig_iter need to be mut?
+
+                        // Verify first argument is "&mut self"
+                        if let Some(pair) = sig_iter.next() {
+                            match pair {
+                                syn::punctuated::Pair::Punctuated(self_arg, _) => {
+                                    //println!("self_arg={self_arg:#?}");
+                                    match self_arg {
+                                        syn::FnArg::Receiver(rcvr) => {
+                                            if !rcvr.attrs.is_empty()
+                                                || rcvr.reference.is_none()
+                                                || rcvr.mutability.is_none()
+                                            {
+                                                panic!(
+                                                    "Expected first parameter to be `&mut self`"
+                                                );
+                                            }
+                                        }
+                                        syn::FnArg::Typed(_) => {
+                                            panic!("Expected first parameter to be `&mut self`");
+                                        }
+                                    }
+                                }
+                                syn::punctuated::Pair::End(_) => {
+                                    panic!("Expected &mut self as first parameter to an state funtion (SHOULD NOT HAPPEN as len_input_pairs == 2)");
+                                }
+                            }
+                        } else {
+                            panic!("No parameters, expected two parameters; &mut self, msg &MsgType (SHOULD NOT HAPPEN, as len_input_pairs == 2)");
+                        }
+
+                        // Get msg Type in the signature
+                        let msg_type = if let Some(pair) = sig_iter.next() {
+                            match pair {
+                                syn::punctuated::Pair::Punctuated(_, _) => {
+                                    panic!("Too many parameters, expected two parameters; &mut self, msg &MsgType (SHOULD NOT HAPPEN, as len_input_pairs == 2)");
+                                }
+                                syn::punctuated::Pair::End(last_arg) => {
+                                    //println!("last_arg={last_arg:#?}");
+                                    match last_arg {
+                                        syn::FnArg::Typed(pt) => {
+                                            match &*pt.ty {
+                                                syn::Type::Reference(tr) => {
+                                                    //println!("tr={tr:#?}");
+                                                    MsgType::MtTypeReference { tr: tr.clone() }
+                                                }
+                                                syn::Type::Path(tp) => {
+                                                    //println!("tp={tp:#?}");
+                                                    MsgType::MtTypePath { tp: tp.clone() }
+                                                }
+                                                //syn::Type::Array(_) => todo!(),
+                                                //syn::Type::BareFn(_) => todo!(),
+                                                //syn::Type::Group(_) => todo!(),
+                                                //syn::Type::ImplTrait(_) => todo!(),
+                                                //syn::Type::Infer(_) => todo!(),
+                                                //syn::Type::Macro(_) => todo!(),
+                                                //syn::Type::Never(_) => todo!(),
+                                                //syn::Type::Paren(_) => todo!(),
+                                                //syn::Type::Ptr(_) => todo!(),
+                                                //syn::Type::Slice(_) => todo!(),
+                                                //syn::Type::TraitObject(_) => todo!(),
+                                                //syn::Type::Tuple(_) => todo!(),
+                                                //syn::Type::Verbatim(_) => todo!(),
+                                                _ => {
+                                                    panic!("Expected msg type");
+                                                }
+                                            }
+                                        }
+                                        syn::FnArg::Receiver(_) => {
+                                            // TODO Improve error handling
+                                            panic!("Expected `msg: MsgType` as last parameter, a `self` is not allowed");
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            panic!("Expected &mut self as first parameter of an state funtion");
+                        };
+
                         // Save the index of this function in state_fn_hdls
-                        state_fn_hdl_and_parent.push(StateFnHdlAndParent {
+                        state_fn_infos.push(StateFnInfo {
                             hdl: fns.len(),
                             parent_ident: if let Ok(fa) = a.parse_args::<Hsm1Args>() {
                                 fa.arg_ident
                             } else {
                                 None
                             },
+                            msg_type,
                         });
-                        //println!("hsm1::parse: {} has a hsm1_state attribute, hdl={}", a_fn.sig.ident.to_string(), state_fn_hdls.last().unwrap());
-                        break; // Never push more than one, although there should only be one
+                        //println!("hsm1::parse: state_fn_info {:#?}", state_fn_infos.last());
+
+                        break;
                     }
                 }
             }
@@ -115,7 +233,7 @@ impl Parse for Hsm1 {
 
         let mut state_fn_idents_map = HashMap::<String, usize>::new();
         let mut state_fn_idents = Vec::<StateFnIdents>::new();
-        for state_fn_info in state_fn_hdl_and_parent {
+        for state_fn_info in state_fn_infos {
             let item_fn = &fns[state_fn_info.hdl];
             let process_fn_ident = item_fn.sig.ident.clone();
 
@@ -139,6 +257,7 @@ impl Parse for Hsm1 {
                 parent_fn_ident: state_fn_info.parent_ident,
                 enter_fn_ident: enter_fn_ident_opt,
                 process_fn_ident,
+                process_fn_msg_type: state_fn_info.msg_type,
                 exit_fn_ident: exit_fn_ident_opt,
             });
         }
@@ -162,7 +281,7 @@ impl Parse for Hsm1 {
 /// MyHsm is the simplest HSM with two states, initial with base
 /// as its parent.
 ///
-/// ```ignore // Ignore because clippy warnings of neeless main
+/// ```ignore // Used to supress clippy warnings, there's got to be a better way :(
 /// use proc_macro_hsm1::{handled, hsm1, hsm1_state, not_handled};
 ///
 /// // These two use's needed as hsm1 is dependent upon them.
@@ -170,62 +289,108 @@ impl Parse for Hsm1 {
 /// use std::collections::VecDeque;
 /// use state_result::*;
 ///
+/// pub enum Messages {
+///     Add {
+///         a_field: u64,
+///     },
+///     Get {
+///         sum_a_field: u64,
+///     },
+/// }
+///
 /// hsm1!(
 ///     struct MyFsm {
 ///         initial_counter: u64,
 ///     }
 ///
 ///     #[hsm1_state]
-///     fn initial(&mut self) -> StateResult {
+///     fn initial(&mut self, _msg: &mut Messages) -> StateResult {
 ///         // Mutate the state
 ///         self.initial_counter += 1;
 ///
-///         // Let the parent state handle all invocations
 ///         handled!()
 ///     }
 /// );
 ///
 /// hsm1!(
 ///     struct MyHsm {
+///         sum_a_field: u64,
 ///         base_counter: u64,
 ///         initial_counter: u64,
 ///     }
 ///
 ///     #[hsm1_state]
-///     fn base(&mut self) -> StateResult {
+///     fn base(&mut self, msg: &mut Messages) -> StateResult {
 ///         // Mutate the state
 ///         self.base_counter += 1;
-///
-///         // Return the desired StateResult
-///         handled!()
+///         match msg {
+///             Messages::Get { sum_a_field } => {
+///                 *sum_a_field = self.sum_a_field;
+///                 handled!()
+///             }
+///             _ => not_handled!()
+///         }
 ///     }
 ///
 ///     #[hsm1_state(base)]
-///     fn initial(&mut self) -> StateResult {
+///     fn initial(&mut self, msg: &mut Messages) -> StateResult {
 ///         // Mutate the state
 ///         self.initial_counter += 1;
 ///
-///         // Let the parent state handle all invocations
-///         not_handled!()
+///         match msg {
+///             Messages::Add { a_field } => {
+///                 self.sum_a_field += *a_field;
+///                 handled!()
+///             }
+///             _ => not_handled!()
+///         }
 ///     }
 /// );
 ///
 /// fn main() {
 ///     let mut fsm = MyFsm::new();
 ///
-///     fsm.dispatch();
-///     println!( "fsm: fsm intial_counter={}", fsm.initial_counter);
+///     let mut msg = Messages::Add {
+///         a_field: 1,
+///     };
+///     fsm.dispatch(&mut msg);
+///     println!( "fsm: intial_counter={}", fsm.initial_counter);
 ///     assert_eq!(fsm.initial_counter, 1);
 ///
 ///     let mut hsm = MyHsm::new();
 ///
-///     hsm.dispatch();
+///     let mut msg = Messages::Add {
+///         a_field: 10,
+///     };
+///     hsm.dispatch(&mut msg);
 ///     println!(
-///         "hsm: hsm base_counter={} intial_counter={}",
-///         hsm.base_counter, hsm.initial_counter
+///         "hsm: sum_a_field={} base_counter={} intial_counter={}",
+///         hsm.sum_a_field, hsm.base_counter, hsm.initial_counter
 ///     );
-///     assert_eq!(hsm.base_counter, 1);
+///     assert_eq!(hsm.sum_a_field, 10);
+///     assert_eq!(hsm.base_counter, 0);
 ///     assert_eq!(hsm.initial_counter, 1);
+///
+///     let mut msg = Messages::Get {
+///         sum_a_field: 0,
+///     };
+///     hsm.dispatch(&mut msg);
+///     println!(
+///         "hsm: sum_a_field={} base_counter={} intial_counter={}",
+///         hsm.sum_a_field, hsm.base_counter, hsm.initial_counter
+///     );
+///     match msg {
+///         Messages::Get{ sum_a_field } => {
+///             assert_eq!(sum_a_field, hsm.sum_a_field );
+///             assert_eq!(sum_a_field, 10);
+///         }
+///         _ => {
+///             panic!("Should Not Happen");
+///         }
+///     }
+///     assert_eq!(hsm.sum_a_field, 10);
+///     assert_eq!(hsm.base_counter, 1);
+///     assert_eq!(hsm.initial_counter, 2);
 /// }
 /// ```
 #[proc_macro]
@@ -255,6 +420,7 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
     let state_fn_exit = new_ident(hsm_ident.clone(), "StateFnExit");
     let state_info = new_ident(hsm_ident.clone(), "StateInfo");
     let state_machine_info = new_ident(hsm_ident.clone(), "StateMachineInfo");
+    let mut state_fn_msg_type_opt: Option<MsgType> = None;
 
     let hsm_state_fn_idents = hsm.hsm_state_fn_idents;
     let mut hsm_state_fns = Vec::<syn::ExprStruct>::new();
@@ -268,6 +434,7 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
         if process_fn_ident == "initial" {
             assert_eq!(hsm_initial_state_fns_hdl, None);
             hsm_initial_state_fns_hdl = Some(hsm_state_fns.len());
+            state_fn_msg_type_opt = Some(sfn.process_fn_msg_type.clone());
         }
 
         let opt_fn_ident = |ident: Option<syn::Ident>| match ident {
@@ -333,6 +500,18 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
         converted_fns.push(mut_a_fn);
     }
     //println!("hsm1: converted_fns={:#?}", converted_fns);
+
+    let state_fn_msg_type: TokenStream2 = if let Some(msg_type) = state_fn_msg_type_opt {
+        //println!("msg_type={msg_type:?}");
+        match msg_type {
+            MsgType::MtTypePath { tp } => quote!(#tp),
+            MsgType::MtTypeReference { tr } => quote!(#tr),
+        }
+    } else {
+        panic!("No msg type");
+    };
+    //println!("state_fn_msg_type_path={state_fn_msg_type_path:?}");
+    //println!("hsm_ident={hsm_ident:?}");
 
     let output = quote!(
         // We need these but can't import them multiple times
@@ -464,13 +643,13 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
                 &self.smi.state_fns[self.smi.current_state_fns_hdl].name
             }
 
-            fn dispatch_hdl(&mut self, hdl: StateFnsHdl) {
+            fn dispatch_hdl(&mut self, msg: #state_fn_msg_type, hdl: StateFnsHdl) {
                 if self.smi.current_state_changed {
                     // Execute the enter functions
                     while let Some(enter_hdl) = self.smi.enter_fns_hdls.pop() {
                         if let Some(state_enter) = self.smi.state_fns[enter_hdl].enter {
                             //println!("enter while: enter_hdl={} call state_enter={}", enter_hdl, state_enter as usize);
-                            (state_enter)(self);
+                            (state_enter)(self, msg);
                             self.smi.state_fns[enter_hdl].active = true;
                             //println!("enter while: retf state_enter={}", state_enter as usize);
                         } else {
@@ -483,11 +662,11 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
 
                 let mut transition_dest_hdl = None;
 
-                match (self.smi.state_fns[hdl].process)(self) {
+                match (self.smi.state_fns[hdl].process)(self, msg) {
                     StateResult::NotHandled => {
                         // This handles the special case where we're transitioning to ourself
                         if let Some(parent_hdl) = self.smi.state_fns[hdl].parent {
-                            self.dispatch_hdl(parent_hdl);
+                            self.dispatch_hdl(msg, parent_hdl);
                         } else {
                             // TODO: Consider calling a "default_handler" when NotHandled and no parent
                         }
@@ -505,7 +684,7 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
                 if self.smi.current_state_changed {
                     while let Some(exit_hdl) = self.smi.exit_fns_hdls.pop_front() {
                         if let Some(state_exit) = self.smi.state_fns[exit_hdl].exit {
-                            (state_exit)(self);
+                            (state_exit)(self, msg);
                         }
                     }
                 }
@@ -518,14 +697,14 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
                 }
             }
 
-            pub fn dispatch(&mut self) {
-                self.dispatch_hdl(self.smi.current_state_fns_hdl);
+            pub fn dispatch(&mut self, msg: #state_fn_msg_type) {
+                self.dispatch_hdl(msg, self.smi.current_state_fns_hdl);
             }
         }
 
-        type #state_fn = fn(&mut #hsm_ident, /* &Protocol1 */) -> StateResult;
-        type #state_fn_enter = fn(&mut #hsm_ident, /* &Protocol1 */);
-        type #state_fn_exit = fn(&mut #hsm_ident, /* &Protocol1 */);
+        type #state_fn = fn(&mut #hsm_ident, #state_fn_msg_type) -> StateResult;
+        type #state_fn_enter = fn(&mut #hsm_ident, #state_fn_msg_type);
+        type #state_fn_exit = fn(&mut #hsm_ident, #state_fn_msg_type);
 
         //#[derive(Debug)]
         struct #state_info {
