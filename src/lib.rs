@@ -644,16 +644,17 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
             }
 
             fn dispatch_hdl(&mut self, msg: #state_fn_msg_type, hdl: StateFnsHdl) {
-                if self.smi.current_state_changed {
+                //println!("dispatch_hdl {}:+", hdl);
+                if self.smi.current_state_changed && !self.smi.enter_fns_hdls.is_empty() {
                     // Execute the enter functions
                     while let Some(enter_hdl) = self.smi.enter_fns_hdls.pop() {
                         if let Some(state_enter) = self.smi.state_fns[enter_hdl].enter {
-                            //println!("enter while: enter_hdl={} call state_enter={}", enter_hdl, state_enter as usize);
+                            //println!("dispatch_hdl {}: call enter_hdl={}", hdl, enter_hdl);
                             (state_enter)(self, msg);
                             self.smi.state_fns[enter_hdl].active = true;
-                            //println!("enter while: retf state_enter={}", state_enter as usize);
+                            //println!("dispatch_hdl {}: retf enter_hdl={}", hdl, enter_hdl);
                         } else {
-                            //println!("enter while: enter_hdl={} NO ENTER FN", enter_hdl);
+                            //println!("dispatch_hdl {}: no enter_hdl", hdl);
                         }
                     }
 
@@ -662,39 +663,52 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
 
                 let mut transition_dest_hdl = None;
 
+                //println!("dispatch_hdl {}: call process", hdl);
                 match (self.smi.state_fns[hdl].process)(self, msg) {
                     StateResult::NotHandled => {
                         // This handles the special case where we're transitioning to ourself
                         if let Some(parent_hdl) = self.smi.state_fns[hdl].parent {
+                            //println!("dispatch_hdl {}: retf process, NotHandled, call dispatch_hdl({})", hdl, parent_hdl);
                             self.dispatch_hdl(msg, parent_hdl);
+                            //println!("dispatch_hdl {}: retf process, NotHandled, retf dispatch_hdl({})", hdl, parent_hdl);
                         } else {
                             // TODO: Consider calling a "default_handler" when NotHandled and no parent
+                            //println!("dispatch_hdl {}: retf process, NotHandled no parent", hdl);
                         }
                     }
                     StateResult::Handled => {
                         // Nothing to do
+                        //println!("dispatch_hdl {}: retf process, Handled", hdl);
                     }
-                    StateResult::TransitionTo(next_state_hdl) => {
-                        self.setup_exit_enter_fns_hdls(next_state_hdl);
+                    StateResult::TransitionTo(dest_hdl) => {
+                        //println!("dispatch_hdl {}: retf process, TransitionTo({})", hdl, dest_hdl);
+                        self.setup_exit_enter_fns_hdls(dest_hdl);
                         self.smi.current_state_changed = true;
-                        transition_dest_hdl = Some(next_state_hdl);
+                        transition_dest_hdl = Some(dest_hdl);
                     }
                 }
 
-                if self.smi.current_state_changed {
+                if self.smi.current_state_changed && !self.smi.exit_fns_hdls.is_empty() {
                     while let Some(exit_hdl) = self.smi.exit_fns_hdls.pop_front() {
                         if let Some(state_exit) = self.smi.state_fns[exit_hdl].exit {
+                            //println!("dispatch_hdl {}: call exit_hdl {}", hdl, exit_hdl);
                             (state_exit)(self, msg);
+                            //println!("dispatch_hdl {}: retf exit_hdl {}", hdl, exit_hdl);
+                        } else {
+                            //println!("dispatch_hdl {}: no exit_hdl", hdl);
                         }
                     }
                 }
 
-                if let Some(hdl) = transition_dest_hdl {
+                if let Some(dest_hdl) = transition_dest_hdl {
                     // Change the previous and current state_fns_hdl after we've
                     // preformed the exit routines so state_name is correct.
                     self.smi.previous_state_fns_hdl = self.smi.current_state_fns_hdl;
-                    self.smi.current_state_fns_hdl = hdl;
+                    self.smi.current_state_fns_hdl = dest_hdl;
+                    //println!("dispatch_hdl {}: transitioned, updated previous {} and current {} state hdls", hdl, self.smi.previous_state_fns_hdl, self.smi.current_state_fns_hdl);
                 }
+
+                //println!("dispatch_hdl {}:-", hdl);
             }
 
             pub fn dispatch(&mut self, msg: #state_fn_msg_type) {
