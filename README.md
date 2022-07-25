@@ -1,78 +1,79 @@
 # Hierarchical State Machine (HSM) proc macro
 
-Define a `proc_macro` to make it easier to create HSM's.
+Define [`hsm1!`](hsm1/README.md) a `proc_macro` to make it easier to create HSM's.
 
-# Examples
+## Build and run
 
-Two examples; MyFsm is the simplest FSM with just one state.
-MyHsm is the simplest HSM with two states, initial with base
-as its parent.
+There is [`hsm1/src/main.rs`](hsm1/src/main.rs) which implements a trivial Finite
+State Machine (FSM) that can be run. Also, see [`hsm1/tests`](hsm1/tests)
+for some other examples. Eventually there will be other sub-packages as
+additional examples.
 
-```ignore // Ignore because clippy warnings of neeless main
-use proc_macro_hsm1::{handled, hsm1, hsm1_state, not_handled};
+I find it simplest to run and test from the sub-package, so initiall I `cd hsm1`:
+```
+wink@3900x 22-07-26T19:17:05.968Z:~/prgs/rust/myrepos/proc-macro-hsm1/hsm1 (main)
+$ cargo run
+    Finished dev [unoptimized + debuginfo] target(s) in 0.01s
+     Running `/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/hsm1`
+Fsm::initial: Add 15 data=15
+main: fsm initial_counter=1 data=15
+```
 
-// These two use's needed as hsm1 is dependent upon them.
-// How can hsm1 proc_macro signify the dependency?
-use std::collections::VecDeque;
-use state_result::*;
+## Tests
+```
+wink@3900x 22-07-26T19:18:49.568Z:~/prgs/rust/myrepos/proc-macro-hsm1/hsm1 (main)
+$ cargo test
+    Finished test [unoptimized + debuginfo] target(s) in 0.01s
+     Running unittests src/lib.rs (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/deps/hsm1-9d926193173f76cc)
 
-hsm1!(
-    struct MyFsm {
-        initial_counter: u64,
-    }
+running 0 tests
 
-    #[hsm1_state]
-    fn initial(&mut self) -> StateResult {
-        // Mutate the state
-        self.initial_counter += 1;
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-        // Let the parent state handle all invocations
-        handled!()
-    }
-);
+     Running unittests src/main.rs (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/deps/hsm1-d12cec030b367ee9)
 
-hsm1!(
-    struct MyHsm {
-        base_counter: u64,
-        initial_counter: u64,
-    }
+running 0 tests
 
-    #[hsm1_state]
-    fn base(&mut self) -> StateResult {
-        // Mutate the state
-        self.base_counter += 1;
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-        // Return the desired StateResult
-        handled!()
-    }
+     Running tests/low-level-tests.rs (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/deps/low_level_tests-702b20a4269af6d5)
 
-    #[hsm1_state(base)]
-    fn initial(&mut self) -> StateResult {
-        // Mutate the state
-        self.initial_counter += 1;
+running 12 tests
+test test_dispatch ... ok
+test test_initial_then_tree_of_parent_and_do_work_then_done ... ok
+test test_initial_and_do_work_and_done_all_with_enter_exit ... ok
+test test_initial_and_done_both_with_exit ... ok
+test test_initialization ... ok
+test test_initial_and_done_both_with_enter ... ok
+test test_initial_and_done_no_enter_exit ... ok
+test test_one_tree_plus_done_as_separate ... ok
+test test_parent_with_child_initial ... ok
+test test_parent_with_enter_exit_and_one_child_initial ... ok
+test test_transition_to ... ok
+test test_tree_parent_with_children_initial_do_work_done_all_with_enter_exit ... ok
 
-        // Let the parent state handle all invocations
-        not_handled!()
-    }
-);
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-fn main() {
-    let mut fsm = MyFsm::new();
+     Running tests/multiple-state-machines.rs (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/deps/multiple_state_machines-983102007e6b3ae6)
 
-    fsm.dispatch();
-    println!( "fsm: fsm intial_counter={}", fsm.initial_counter);
-    assert_eq!(fsm.initial_counter, 1);
+running 1 test
+test multiple_state_machines ... ok
 
-    let mut hsm = MyHsm::new();
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-    hsm.dispatch();
-    println!(
-        "hsm: hsm base_counter={} intial_counter={}",
-        hsm.base_counter, hsm.initial_counter
-    );
-    assert_eq!(hsm.base_counter, 1);
-    assert_eq!(hsm.initial_counter, 1);
-}
+     Running tests/mut-msg-tests.rs (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/deps/mut_msg_tests-06ee428151409df1)
+
+running 1 test
+test mut_msg_tests ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests hsm1
+
+running 1 test
+test src/lib.rs - hsm1 (line 284) ... ignored
+
+test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
 ```
 
 ## License

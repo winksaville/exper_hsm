@@ -1,13 +1,2 @@
-[package]
-name = "proc-macro-hsm1"
-version = "0.2.0"
-edition = "2021"
-
-[lib]
-proc-macro = true
-
-[dependencies]
-syn = { version = "1.0", features = ["extra-traits", "full", "parsing", "visit-mut"] }
-quote = "1.0"
-proc-macro2 = "1.0"
-state-result = { git = "https://github.com/winksaville/state-result" }
+[workspace]
+members = [ "hsm1" ]

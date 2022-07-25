@@ -1,4 +1,4 @@
-use proc_macro_hsm1::{handled, hsm1, hsm1_state, not_handled, transition_to};
+use hsm1::{handled, hsm1, hsm1_state, not_handled, transition_to};
 use state_result::*;
 use std::collections::VecDeque;
 

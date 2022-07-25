@@ -1,0 +1,15 @@
+[package]
+name = "hsm1"
+version = "0.3.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+authors = [ "Wink Saville<wink@saville.com>" ]
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "1.0", features = ["extra-traits", "full", "parsing", "visit-mut"] }
+quote = "1.0"
+proc-macro2 = "1.0"
+state-result = { git = "https://github.com/winksaville/state-result" }
