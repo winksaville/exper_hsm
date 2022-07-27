@@ -1,6 +1,4 @@
-use hsm1::{handled, hsm1, hsm1_state, not_handled, transition_to};
-use state_result::*;
-use std::collections::VecDeque;
+use hsm1::{handled, hsm1, hsm1_state, not_handled, transition_to, StateResult};
 
 struct NoMessages;
 
@@ -11,7 +9,7 @@ hsm1!(
     }
 
     #[hsm1_state]
-    fn initial(&mut self, _msg: &NoMessages) -> StateResult {
+    fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
         // Mutate the state
         self.initial_counter += 1;
 
@@ -28,7 +26,7 @@ hsm1!(
     }
 
     #[hsm1_state]
-    fn base(&mut self, _msg: &NoMessages) -> StateResult {
+    fn base(&mut self, _msg: &NoMessages) -> StateResult!() {
         // Mutate the state
         self.base_counter += 1;
 
@@ -37,7 +35,7 @@ hsm1!(
     }
 
     #[hsm1_state(base)]
-    fn initial(&mut self, _msg: &NoMessages) -> StateResult {
+    fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
         // Mutate the state
         self.initial_counter += 1;
 
@@ -58,7 +56,7 @@ hsm1!(
     }
 
     #[hsm1_state]
-    fn initial_parent(&mut self, _msg: &NoMessages) -> StateResult {
+    fn initial_parent(&mut self, _msg: &NoMessages) -> StateResult!() {
         println!("{}: never executed", self.state_name());
         handled!()
     }
@@ -68,7 +66,7 @@ hsm1!(
     }
 
     #[hsm1_state] //(initial_parent)]
-    fn initial(&mut self, _msg: &NoMessages) -> StateResult {
+    fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
         self.non_state_fn();
         println!("{}: self.a_i32={}", self.state_name(), self.a_i32);
         transition_to!(do_work)
@@ -79,7 +77,7 @@ hsm1!(
     }
 
     #[hsm1_state]
-    fn do_work(&mut self, _msg: &NoMessages) -> StateResult {
+    fn do_work(&mut self, _msg: &NoMessages) -> StateResult!() {
         self.a_i32 += 1;
         println!("{}: self.a_i32={}", self.state_name(), self.a_i32);
 
@@ -87,7 +85,7 @@ hsm1!(
     }
 
     #[hsm1_state]
-    fn done(&mut self, _msg: &NoMessages) -> StateResult {
+    fn done(&mut self, _msg: &NoMessages) -> StateResult!() {
         self.a_i32 += 1;
         println!("{}: self.a_i32={}", self.state_name(), self.a_i32);
 
@@ -95,7 +93,7 @@ hsm1!(
     }
 
     #[hsm1_state]
-    fn do_nothing_ret_not_handled(&mut self, _msg: &NoMessages) -> StateResult {
+    fn do_nothing_ret_not_handled(&mut self, _msg: &NoMessages) -> StateResult!() {
         self.a_i32 += 1;
         println!("{}: self.a_i32={}", self.state_name(), self.a_i32);
 

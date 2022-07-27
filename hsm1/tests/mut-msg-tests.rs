@@ -1,6 +1,4 @@
-use hsm1::{handled, hsm1, hsm1_state};
-use state_result::*;
-use std::collections::VecDeque;
+use hsm1::{handled, hsm1, hsm1_state, StateResult};
 
 #[derive(Debug)]
 pub enum SimpleFsmProtocol {
@@ -28,10 +26,10 @@ hsm1!(
     }
 
     #[hsm1_state]
-    fn initial(&mut self, msg: &mut SimpleFsmProtocol) -> StateResult {
+    fn initial(&mut self, msg: &mut SimpleFsmProtocol) -> StateResult!() {
         self.initial_counter += 1;
         // Mutate the state
-        let sr: StateResult = match msg {
+        let sr: StateResult!() = match msg {
             SimpleFsmProtocol::Add { tx_response: _, f1 } => {
                 println!("SimpleFsm::initial: msg Add");
                 self.data += *f1;

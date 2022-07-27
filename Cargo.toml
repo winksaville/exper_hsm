@@ -1,2 +1,5 @@
 [workspace]
-members = [ "hsm1" ]
+members = [
+  "hsm1",
+  "state-result",
+]

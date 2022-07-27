@@ -1,6 +1,4 @@
-use hsm1::{handled, hsm1, hsm1_state};
-use state_result::*;
-use std::collections::VecDeque;
+use hsm1::{handled, hsm1, hsm1_state, StateResult};
 
 #[derive(Debug)]
 pub enum MessagesType {
@@ -15,7 +13,7 @@ hsm1!(
     }
 
     #[hsm1_state]
-    fn initial(&mut self, msg: &MessagesType) -> StateResult {
+    fn initial(&mut self, msg: &MessagesType) -> StateResult!() {
         self.initial_counter += 1;
 
         match msg {

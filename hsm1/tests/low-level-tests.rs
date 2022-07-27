@@ -1,6 +1,4 @@
-use hsm1::{handled, hsm1, hsm1_state, not_handled, transition_to};
-use state_result::*;
-use std::collections::VecDeque;
+use hsm1::{handled, hsm1, hsm1_state, not_handled, transition_to, StateResult};
 
 struct NoMessages;
 
@@ -11,8 +9,8 @@ fn test_initialization() {
 
         #[hsm1_state]
         // This state has hdl 0
-        fn initial(&mut self, _msg: &NoMessages) -> StateResult {
-            StateResult::Handled
+        fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
+            handled!()
         }
     );
 
@@ -29,14 +27,14 @@ fn test_dispatch() {
 
         #[hsm1_state]
         // This state has hdl 0
-        fn initial(&mut self, _msg: &NoMessages) -> StateResult {
-            StateResult::TransitionTo(1)
+        fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
+            transition_to!(done)
         }
 
         #[hsm1_state]
         // This state is hdl 1
-        fn done(&mut self, _msg: &NoMessages) -> StateResult {
-            StateResult::Handled
+        fn done(&mut self, _msg: &NoMessages) -> StateResult!() {
+            handled!()
         }
     );
 
@@ -68,14 +66,14 @@ fn test_transition_to() {
 
         #[hsm1_state]
         // This state has hdl 0
-        fn initial(&mut self, _msg: &NoMessages) -> StateResult {
-            StateResult::TransitionTo(1)
+        fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
+            transition_to!(done)
         }
 
         #[hsm1_state]
         // This state has hdl 1
-        fn done(&mut self, _msg: &NoMessages) -> StateResult {
-            StateResult::Handled
+        fn done(&mut self, _msg: &NoMessages) -> StateResult!() {
+            handled!()
         }
     );
 
@@ -104,16 +102,16 @@ fn test_initial_and_done_no_enter_exit() {
 
         #[hsm1_state]
         // This state has hdl 0
-        fn initial(&mut self, _msg: &NoMessages) -> StateResult {
+        fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.initial_cnt += 1;
-            StateResult::TransitionTo(1)
+            transition_to!(done)
         }
 
         #[hsm1_state]
         // This state has hdl 1
-        fn done(&mut self, _msg: &NoMessages) -> StateResult {
+        fn done(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.done_cnt += 1;
-            StateResult::Handled
+            handled!()
         }
     );
 
@@ -161,18 +159,18 @@ fn test_initial_and_done_both_with_enter() {
 
         #[hsm1_state]
         // This state has hdl 0
-        fn initial(&mut self, _msg: &NoMessages) -> StateResult {
+        fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             println!("test_enter: initial");
             self.initial_cnt += 1;
-            StateResult::TransitionTo(1usize) //Test::done)
+            transition_to!(done)
         }
 
         #[hsm1_state]
         // This state has hdl 1
-        fn done(&mut self, _msg: &NoMessages) -> StateResult {
+        fn done(&mut self, _msg: &NoMessages) -> StateResult!() {
             println!("test_enter: done");
             self.done_cnt += 1;
-            StateResult::Handled
+            handled!()
         }
 
         // Have done_enter after done
@@ -221,9 +219,9 @@ fn test_initial_and_done_both_with_exit() {
 
         #[hsm1_state]
         // This state has hdl 0
-        fn initial(&mut self, _msg: &NoMessages) -> StateResult {
+        fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.initial_cnt += 1;
-            StateResult::TransitionTo(1usize) //Test::done)
+            transition_to!(done)
         }
 
         fn initial_exit(&mut self, _msg: &NoMessages) {
@@ -237,9 +235,9 @@ fn test_initial_and_done_both_with_exit() {
 
         #[hsm1_state]
         // This state has hdl 1
-        fn done(&mut self, _msg: &NoMessages) -> StateResult {
+        fn done(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.done_cnt += 1;
-            StateResult::Handled
+            handled!()
         }
     );
 
@@ -289,9 +287,9 @@ fn test_initial_and_do_work_and_done_all_with_enter_exit() {
 
         #[hsm1_state]
         // This state has hdl 0
-        fn initial(&mut self, _msg: &NoMessages) -> StateResult {
+        fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.initial_cnt += 1;
-            StateResult::TransitionTo(1) //Test::do_work)
+            transition_to!(do_work)
         }
 
         fn initial_exit(&mut self, _msg: &NoMessages) {
@@ -304,12 +302,12 @@ fn test_initial_and_do_work_and_done_all_with_enter_exit() {
 
         #[hsm1_state]
         // This state has hdl 1
-        fn do_work(&mut self, _msg: &NoMessages) -> StateResult {
+        fn do_work(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.do_work_cnt += 1;
             if self.do_work_cnt < 3 {
-                StateResult::Handled
+                handled!()
             } else {
-                StateResult::TransitionTo(2) //Test::done
+                transition_to!(done)
             }
         }
 
@@ -323,9 +321,9 @@ fn test_initial_and_do_work_and_done_all_with_enter_exit() {
 
         #[hsm1_state]
         // This state has hdl 2
-        fn done(&mut self, _msg: &NoMessages) -> StateResult {
+        fn done(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.done_cnt += 1;
-            StateResult::Handled
+            handled!()
         }
 
         fn done_enter(&mut self, _msg: &NoMessages) {
@@ -425,14 +423,14 @@ fn test_parent_with_child_initial() {
 
         #[hsm1_state]
         // This state has hdl 0
-        fn parent(&mut self, _msg: &NoMessages) -> StateResult {
+        fn parent(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.parent_cnt += 1;
             handled!()
         }
 
         #[hsm1_state(parent)]
         // This state has hdl 1
-        fn initial(&mut self, _msg: &NoMessages) -> StateResult {
+        fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.initial_cnt += 1;
             not_handled!()
         }
@@ -473,7 +471,7 @@ fn test_parent_with_enter_exit_and_one_child_initial() {
 
         #[hsm1_state]
         // This state has hdl 0
-        fn parent(&mut self, _msg: &NoMessages) -> StateResult {
+        fn parent(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.parent_cnt += 1;
             handled!()
         }
@@ -484,7 +482,7 @@ fn test_parent_with_enter_exit_and_one_child_initial() {
 
         #[hsm1_state(parent)]
         // This state has hdl 1
-        fn initial(&mut self, _msg: &NoMessages) -> StateResult {
+        fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.initial_cnt += 1;
             not_handled!()
         }
@@ -530,7 +528,7 @@ fn test_tree_parent_with_children_initial_do_work_done_all_with_enter_exit() {
         }
 
         #[hsm1_state]
-        fn parent(&mut self, _msg: &NoMessages) -> StateResult {
+        fn parent(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.parent_cnt += 1;
             handled!()
         }
@@ -544,7 +542,7 @@ fn test_tree_parent_with_children_initial_do_work_done_all_with_enter_exit() {
         }
 
         #[hsm1_state(parent)]
-        fn initial(&mut self, _msg: &NoMessages) -> StateResult {
+        fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.initial_cnt += 1;
             match self.initial_cnt {
                 1 => not_handled!(),
@@ -562,7 +560,7 @@ fn test_tree_parent_with_children_initial_do_work_done_all_with_enter_exit() {
         }
 
         #[hsm1_state(parent)]
-        fn do_work(&mut self, _msg: &NoMessages) -> StateResult {
+        fn do_work(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.do_work_cnt += 1;
             match self.do_work_cnt {
                 1 => handled!(),
@@ -580,7 +578,7 @@ fn test_tree_parent_with_children_initial_do_work_done_all_with_enter_exit() {
         }
 
         #[hsm1_state(parent)]
-        fn done(&mut self, _msg: &NoMessages) -> StateResult {
+        fn done(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.done_cnt += 1;
             transition_to!(parent)
         }
@@ -763,7 +761,7 @@ fn test_one_tree_plus_done_as_separate() {
         }
 
         #[hsm1_state]
-        fn parent(&mut self, _msg: &NoMessages) -> StateResult {
+        fn parent(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.parent_cnt += 1;
             handled!()
         }
@@ -777,7 +775,7 @@ fn test_one_tree_plus_done_as_separate() {
         }
 
         #[hsm1_state(parent)]
-        fn initial(&mut self, _msg: &NoMessages) -> StateResult {
+        fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.initial_cnt += 1;
             match self.initial_cnt {
                 1 => not_handled!(),
@@ -795,7 +793,7 @@ fn test_one_tree_plus_done_as_separate() {
         }
 
         #[hsm1_state(parent)]
-        fn do_work(&mut self, _msg: &NoMessages) -> StateResult {
+        fn do_work(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.do_work_cnt += 1;
             match self.do_work_cnt {
                 1 => handled!(),
@@ -813,7 +811,7 @@ fn test_one_tree_plus_done_as_separate() {
         }
 
         #[hsm1_state]
-        fn done(&mut self, _msg: &NoMessages) -> StateResult {
+        fn done(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.done_cnt += 1;
             handled!()
         }
@@ -981,7 +979,7 @@ fn test_initial_then_tree_of_parent_and_do_work_then_done() {
         }
 
         #[hsm1_state]
-        fn initial(&mut self, _msg: &NoMessages) -> StateResult {
+        fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.initial_cnt += 1;
             match self.initial_cnt {
                 _ => transition_to!(do_work),
@@ -997,7 +995,7 @@ fn test_initial_then_tree_of_parent_and_do_work_then_done() {
         }
 
         #[hsm1_state]
-        fn parent(&mut self, _msg: &NoMessages) -> StateResult {
+        fn parent(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.parent_cnt += 1;
             handled!()
         }
@@ -1011,7 +1009,7 @@ fn test_initial_then_tree_of_parent_and_do_work_then_done() {
         }
 
         #[hsm1_state(parent)]
-        fn do_work(&mut self, _msg: &NoMessages) -> StateResult {
+        fn do_work(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.do_work_cnt += 1;
             match self.do_work_cnt {
                 1 => handled!(),
@@ -1029,7 +1027,7 @@ fn test_initial_then_tree_of_parent_and_do_work_then_done() {
         }
 
         #[hsm1_state]
-        fn done(&mut self, _msg: &NoMessages) -> StateResult {
+        fn done(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.done_cnt += 1;
             handled!()
         }

@@ -286,7 +286,6 @@ impl Parse for Hsm1 {
 ///
 /// // These two use's needed as hsm1 is dependent upon them.
 /// // How can hsm1 proc_macro signify the dependency?
-/// use std::collections::VecDeque;
 /// use state_result::*;
 ///
 /// pub enum Messages {
@@ -304,7 +303,7 @@ impl Parse for Hsm1 {
 ///     }
 ///
 ///     #[hsm1_state]
-///     fn initial(&mut self, _msg: &mut Messages) -> StateResult {
+///     fn initial(&mut self, _msg: &mut Messages) -> StateResult!() {
 ///         // Mutate the state
 ///         self.initial_counter += 1;
 ///
@@ -320,7 +319,7 @@ impl Parse for Hsm1 {
 ///     }
 ///
 ///     #[hsm1_state]
-///     fn base(&mut self, msg: &mut Messages) -> StateResult {
+///     fn base(&mut self, msg: &mut Messages) -> StateResult!() {
 ///         // Mutate the state
 ///         self.base_counter += 1;
 ///         match msg {
@@ -333,7 +332,7 @@ impl Parse for Hsm1 {
 ///     }
 ///
 ///     #[hsm1_state(base)]
-///     fn initial(&mut self, msg: &mut Messages) -> StateResult {
+///     fn initial(&mut self, msg: &mut Messages) -> StateResult!() {
 ///         // Mutate the state
 ///         self.initial_counter += 1;
 ///
@@ -449,7 +448,7 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
                 // TODO: Improve error handling
                 panic!(
                     "{}::{} is not defined and cannot be parent of {}",
-                    parent, hsm_ident, process_fn_ident
+                    hsm_ident, parent, process_fn_ident
                 );
             }
         } else {
@@ -514,10 +513,6 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
     //println!("hsm_ident={hsm_ident:?}");
 
     let output = quote!(
-        // We need these but can't import them multiple times
-        // How do we automatically derive proc_macro dependencies?
-        //use std::collections::VecDeque;
-        //use sm::{StateResult, StateFnsHdl};
 
         // error: implementation of `Debug` is not general enough
         //   --> proc-macro-hsm1/src/main.rs:8:1
@@ -643,7 +638,7 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
                 &self.smi.state_fns[self.smi.current_state_fns_hdl].name
             }
 
-            fn dispatch_hdl(&mut self, msg: #state_fn_msg_type, hdl: StateFnsHdl) {
+            fn dispatch_hdl(&mut self, msg: #state_fn_msg_type, hdl: usize) {
                 //println!("dispatch_hdl {}:+", hdl);
                 if self.smi.current_state_changed && !self.smi.enter_fns_hdls.is_empty() {
                     // Execute the enter functions
@@ -665,7 +660,7 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
 
                 //println!("dispatch_hdl {}: call process", hdl);
                 match (self.smi.state_fns[hdl].process)(self, msg) {
-                    StateResult::NotHandled => {
+                    state_result::StateResult::NotHandled => {
                         // This handles the special case where we're transitioning to ourself
                         if let Some(parent_hdl) = self.smi.state_fns[hdl].parent {
                             //println!("dispatch_hdl {}: retf process, NotHandled, call dispatch_hdl({})", hdl, parent_hdl);
@@ -676,11 +671,11 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
                             //println!("dispatch_hdl {}: retf process, NotHandled no parent", hdl);
                         }
                     }
-                    StateResult::Handled => {
+                    state_result::StateResult::Handled => {
                         // Nothing to do
                         //println!("dispatch_hdl {}: retf process, Handled", hdl);
                     }
-                    StateResult::TransitionTo(dest_hdl) => {
+                    state_result::StateResult::TransitionTo(dest_hdl) => {
                         //println!("dispatch_hdl {}: retf process, TransitionTo({})", hdl, dest_hdl);
                         self.setup_exit_enter_fns_hdls(dest_hdl);
                         self.smi.current_state_changed = true;
@@ -716,14 +711,14 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
             }
         }
 
-        type #state_fn = fn(&mut #hsm_ident, #state_fn_msg_type) -> StateResult;
+        type #state_fn = fn(&mut #hsm_ident, #state_fn_msg_type) -> state_result::StateResult;
         type #state_fn_enter = fn(&mut #hsm_ident, #state_fn_msg_type);
         type #state_fn_exit = fn(&mut #hsm_ident, #state_fn_msg_type);
 
         //#[derive(Debug)]
         struct #state_info {
             name: String, // TODO: Remove or add StateMachineInfo::name?
-            parent: Option<StateFnsHdl>,
+            parent: Option<state_result::StateFnsHdl>,
             enter: Option<#state_fn_enter>,
             process: #state_fn,
             exit: Option<#state_fn_exit>,
@@ -734,10 +729,10 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
         struct #state_machine_info {
             //name: String, // TODO: add StateMachineInfo::name
             state_fns: [#state_info; #hsm_state_fns_len],
-            enter_fns_hdls: Vec<StateFnsHdl>,
-            exit_fns_hdls: VecDeque<StateFnsHdl>,
-            current_state_fns_hdl: StateFnsHdl,
-            previous_state_fns_hdl: StateFnsHdl,
+            enter_fns_hdls: Vec<state_result::StateFnsHdl>,
+            exit_fns_hdls: std::collections::VecDeque<state_result::StateFnsHdl>,
+            current_state_fns_hdl: state_result::StateFnsHdl,
+            previous_state_fns_hdl: state_result::StateFnsHdl,
             current_state_changed: bool,
         }
 
@@ -755,8 +750,8 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
                             #hsm_state_fns
                         ),*
                     ],
-                    enter_fns_hdls: Vec::<StateFnsHdl>::with_capacity(#hsm_state_fns_len),
-                    exit_fns_hdls: VecDeque::<StateFnsHdl>::with_capacity(#hsm_state_fns_len),
+                    enter_fns_hdls: Vec::<state_result::StateFnsHdl>::with_capacity(#hsm_state_fns_len),
+                    exit_fns_hdls: std::collections::VecDeque::<state_result::StateFnsHdl>::with_capacity(#hsm_state_fns_len),
                     current_state_fns_hdl: #initial_state_hdl,
                     previous_state_fns_hdl: #initial_state_hdl,
                     current_state_changed: true,
@@ -775,19 +770,26 @@ pub fn transition_to(item: TokenStream) -> TokenStream {
     let item_ts2: TokenStream2 = item.into();
     //println!("proc_macro transition_to!: item_ts2={:?}", item_ts2);
 
-    quote!(StateResult::TransitionTo(#item_ts2)).into()
+    quote!(state_result::StateResult::TransitionTo(#item_ts2)).into()
 }
 
 #[proc_macro]
 pub fn handled(_item: TokenStream) -> TokenStream {
     //println!("proc_macro handled!: item={:?}", item);
-    quote!(StateResult::Handled).into()
+    quote!(state_result::StateResult::Handled).into()
 }
 
 #[proc_macro]
 pub fn not_handled(_item: TokenStream) -> TokenStream {
     //println!("proc_macro not_handled!: item={:?}", item);
-    quote!(StateResult::NotHandled).into()
+    quote!(state_result::StateResult::NotHandled).into()
+}
+
+#[allow(non_snake_case)]
+#[proc_macro]
+pub fn StateResult(_item: TokenStream) -> TokenStream {
+    //println!("proc_macro not_handled!: item={:?}", item);
+    quote!(state_result::StateResult).into()
 }
 
 fn new_ident(ident: syn::Ident, suffix: &str) -> syn::Ident {

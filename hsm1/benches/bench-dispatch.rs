@@ -1,8 +1,6 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
-use hsm1::{handled, hsm1, hsm1_state, not_handled, transition_to};
-use state_result::*;
-use std::collections::VecDeque;
+use hsm1::{handled, hsm1, hsm1_state, not_handled, transition_to, StateResult};
 
 struct NoMessages;
 
@@ -11,7 +9,7 @@ pub fn bench_minimal_fsm_returning_handled(c: &mut Criterion) {
         struct Fsm {}
 
         #[hsm1_state]
-        fn initial(&mut self, _msg: &NoMessages) -> StateResult {
+        fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             handled!()
         }
     );
@@ -30,7 +28,7 @@ pub fn bench_minimal_fsm_returning_not_handled(c: &mut Criterion) {
         struct Fsm {}
 
         #[hsm1_state]
-        fn initial(&mut self, _msg: &NoMessages) -> StateResult {
+        fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             not_handled!()
         }
     );
@@ -49,7 +47,7 @@ pub fn bench_minimal_fsm_returning_transition_to_self(c: &mut Criterion) {
         struct Fsm {}
 
         #[hsm1_state]
-        fn initial(&mut self, _msg: &NoMessages) -> StateResult {
+        fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             transition_to!(initial)
         }
     );
@@ -74,7 +72,7 @@ pub fn bench_minimal_fsm_returning_transition_to_self_with_enter(c: &mut Criteri
         fn initial_enter(&mut self, _msg: &NoMessages) {}
 
         #[hsm1_state]
-        fn initial(&mut self, _msg: &NoMessages) -> StateResult {
+        fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             transition_to!(initial)
         }
     );
@@ -102,7 +100,7 @@ pub fn bench_minimal_fsm_returning_transition_to_self_with_exit(c: &mut Criterio
         fn initial_exit(&mut self, _msg: &NoMessages) {}
 
         #[hsm1_state]
-        fn initial(&mut self, _msg: &NoMessages) -> StateResult {
+        fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             transition_to!(initial)
         }
     );
@@ -132,7 +130,7 @@ pub fn bench_minimal_fsm_returning_transition_to_self_with_ee(c: &mut Criterion)
         }
 
         #[hsm1_state]
-        fn initial(&mut self, _msg: &NoMessages) -> StateResult {
+        fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.initial_cnt += 1;
             transition_to!(initial)
         }

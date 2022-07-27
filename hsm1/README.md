@@ -9,12 +9,10 @@ MyHsm is the simplest HSM with two states, initial with base
 as its parent.
 
 ```ignore // Ignore because clippy warnings of neeless main
-use proc_macro_hsm1::{handled, hsm1, hsm1_state, not_handled};
+use proc_macro_hsm1::{handled, hsm1, hsm1_state, not_handled, StateResult};
 
 // These two use's needed as hsm1 is dependent upon them.
 // How can hsm1 proc_macro signify the dependency?
-use std::collections::VecDeque;
-use state_result::*;
 
 hsm1!(
     struct MyFsm {
@@ -22,7 +20,7 @@ hsm1!(
     }
 
     #[hsm1_state]
-    fn initial(&mut self) -> StateResult {
+    fn initial(&mut self) -> StateResult!() {
         // Mutate the state
         self.initial_counter += 1;
 
@@ -38,7 +36,7 @@ hsm1!(
     }
 
     #[hsm1_state]
-    fn base(&mut self) -> StateResult {
+    fn base(&mut self) -> StateResult!() {
         // Mutate the state
         self.base_counter += 1;
 
@@ -47,7 +45,7 @@ hsm1!(
     }
 
     #[hsm1_state(base)]
-    fn initial(&mut self) -> StateResult {
+    fn initial(&mut self) -> StateResult!() {
         // Mutate the state
         self.initial_counter += 1;
 
