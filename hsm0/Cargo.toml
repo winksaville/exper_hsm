@@ -1,0 +1,11 @@
+[package]
+name = "hsm0"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+authors = [ "Wink Saville<wink@saville.com>" ]
+
+
+[dependencies]
+custom-logger = { git = "https://github.com/winksaville/custom-logger", version = "0.1.0" }
+log = { version = "0.4.17", features = ["release_max_level_off"] }
