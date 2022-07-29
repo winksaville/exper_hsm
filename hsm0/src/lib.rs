@@ -75,8 +75,8 @@ impl StateMachineInfo {
             ],
             enter_fns_hdls: Vec::<usize>::with_capacity(StateMachine::MAX_STATE_FNS),
             exit_fns_hdls: VecDeque::<usize>::with_capacity(StateMachine::MAX_STATE_FNS),
-            current_state_fns_hdl: StateMachine::BOTTOM_HDL,
-            previous_state_fns_hdl: StateMachine::BOTTOM_HDL,
+            current_state_fns_hdl: StateMachine::INITIAL_HDL,
+            previous_state_fns_hdl: StateMachine::INITIAL_HDL,
             current_state_changed: true,
             //transition_dest_hdl: Option<usize>,
         }
@@ -107,8 +107,11 @@ impl StateMachine {
     #[allow(unused)]
     const BASE_HDL: usize = 0;
     #[allow(unused)]
-    const BASE_INTERMEDIATE_HDL: usize = 1;
+    const INTERMEDIATE_HDL: usize = 1;
+    #[allow(unused)]
     const BOTTOM_HDL: usize = 2;
+
+    const INITIAL_HDL: usize = StateMachine::BASE_HDL;
 
     pub fn new() -> Self {
         let mut sm = StateMachine {
@@ -330,7 +333,7 @@ impl StateMachine {
     pub fn base(&mut self, _msg: &NoMessages) -> StateResult {
         self.base_cnt += 1;
         log::trace!("base: base_cnt={:?}", self.base_cnt);
-        StateResult::Handled
+        StateResult::TransitionTo(StateMachine::INTERMEDIATE_HDL)
     }
 
     pub fn base_exit(&mut self, _msg: &NoMessages) {
@@ -368,7 +371,7 @@ impl StateMachine {
     pub fn bottom(&mut self, _msg: &NoMessages) -> StateResult {
         self.bottom_cnt += 1;
         log::trace!("bottom: bottom_cnt={:?}", self.bottom_cnt);
-        StateResult::Handled
+        StateResult::TransitionTo(StateMachine::INTERMEDIATE_HDL)
     }
 
     pub fn bottom_exit(&mut self, _msg: &NoMessages) {
