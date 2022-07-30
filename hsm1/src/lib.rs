@@ -557,9 +557,10 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
             // When the state machine starts there will be no fn's to
             // exit so we initialize only the enter_fns_hdls.
             fn initial_enter_fns_hdls(&mut self) {
+                println!("initial_enter_fns_hdls:+ enter_fns_hdls len={}", self.smi.enter_fns_hdls.len());
                 let mut enter_hdl = self.smi.current_state_fns_hdl;
                 loop {
-                    //println!("initial_enter_fns_hdls: push(enter_hdl={})", enter_hdl);
+                    println!("initial_enter_fns_hdls: push(enter_hdl={})", enter_hdl);
                     self.smi.enter_fns_hdls.push(enter_hdl);
                     enter_hdl = if let Some(hdl) = self.smi.state_fns[enter_hdl].parent {
                         hdl
@@ -567,6 +568,7 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
                         break;
                     };
                 }
+                println!("initial_enter_fns_hdls:- enter_fns_hdls len={}", self.smi.enter_fns_hdls.len());
             }
 
             // Starting at self.current_state_fns_hdl generate the
@@ -577,14 +579,15 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
             fn setup_exit_fns_hdls(&mut self, exit_sentinel: Option<usize>) {
 
                 let mut exit_hdl = self.smi.current_state_fns_hdl;
+                println!("setup_exit_fns_hdls:  Starting EXIT  pushing len={}", self.smi.exit_fns_hdls.len());
                 loop {
-                    //println!("setup_exit_fns_hdls: push_back(exit_hdl={})", exit_hdl);
+                    println!("setup_exit_fns_hdls: EXIT push_back(exit_hdl={})", exit_hdl);
                     self.smi.exit_fns_hdls.push_back(exit_hdl);
 
                     if Some(exit_hdl) == exit_sentinel {
                         // This handles the special case where we're transitioning to ourself
                         //println!("setup_exit_fns_hdls: reached sentinel, done");
-                        return;
+                        break;
                     }
 
                     // Getting parents handle
@@ -593,14 +596,15 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
                     } else {
                         // No parent we're done
                         //println!("setup_exit_fns_hdls: No more parents, done");
-                        return;
+                        break;
                     };
 
                     if Some(exit_hdl) == exit_sentinel {
                         // Reached the exit sentinel so we're done
-                        return;
+                        break;
                     }
                 }
+                println!("setup_exit_fns_hdls: Completed EXIT  pushing len={}", self.smi.exit_fns_hdls.len());
             }
 
             // Setup exit_fns_hdls and enter_fns_hdls.
@@ -608,8 +612,9 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
                 let mut cur_hdl = next_state_hdl;
 
                 // Setup the enter vector
+                println!("setup_exit_enter_fns_hdls:  Starting ENTER pushing len={}", self.smi.enter_fns_hdls.len());
                 let exit_sentinel = loop {
-                    //println!("setup_exit_enter_fns_hdls: push(cur_hdl={})", cur_hdl);
+                    println!("setup_exit_enter_fns_hdls: ENTER push(cur_hdl={})", cur_hdl);
                     self.smi.enter_fns_hdls.push(cur_hdl);
 
                     cur_hdl = if let Some(hdl) = self.smi.state_fns[cur_hdl].parent {
@@ -628,6 +633,7 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
                         break Some(cur_hdl);
                     }
                 };
+                println!("setup_exit_enter_fns_hdls: Completed ENTER pushing len={}", self.smi.enter_fns_hdls.len());
 
                 // Setup the exit vector
                 self.setup_exit_fns_hdls(exit_sentinel);
@@ -638,64 +644,78 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
                 &self.smi.state_fns[self.smi.current_state_fns_hdl].name
             }
 
+            fn set_transition_dest_hdl(&mut self, hdl: usize) {
+                println!("set_transition_dest_hdl: hdl={}", hdl);
+                self.smi.transition_dest_hdl = Some(hdl);
+            }
+
             fn dispatch_hdl(&mut self, msg: #state_fn_msg_type, hdl: usize) {
-                //println!("dispatch_hdl {}:+", hdl);
+                println!("dispatch_hdl {}:+", hdl);
                 if self.smi.current_state_changed && !self.smi.enter_fns_hdls.is_empty() {
+                    println!("dispatch_hdl {}: Starting  enter loop len={}", hdl, self.smi.enter_fns_hdls.len());
                     // Execute the enter functions
                     while let Some(enter_hdl) = self.smi.enter_fns_hdls.pop() {
+                        println!("dispatch_hdl {}: Top Of Loop      for enter_hdl={} len={}", hdl, enter_hdl, self.smi.enter_fns_hdls.len());
                         if let Some(state_enter) = self.smi.state_fns[enter_hdl].enter {
-                            //println!("dispatch_hdl {}: call enter_hdl={}", hdl, enter_hdl);
+                            println!("dispatch_hdl {}: call state_enter for enter_hdl={}", hdl, enter_hdl);
                             (state_enter)(self, msg);
                             self.smi.state_fns[enter_hdl].active = true;
-                            //println!("dispatch_hdl {}: retf enter_hdl={}", hdl, enter_hdl);
+                            println!("dispatch_hdl {}: retf state_enter for enter_hdl={}", hdl, enter_hdl);
                         } else {
-                            //println!("dispatch_hdl {}: no enter_hdl", hdl);
+                            println!("dispatch_hdl {}: NO state_enter   for enter_hdl={}", hdl, enter_hdl);
                         }
                     }
 
                     self.smi.current_state_changed = false;
+                    self.smi.transition_dest_hdl = None;
+                    println!("dispatch_hdl {}: Completed enter loop len={}", hdl, self.smi.enter_fns_hdls.len());
                 }
 
-                let mut transition_dest_hdl = None;
-
-                //println!("dispatch_hdl {}: call process", hdl);
+                println!("dispatch_hdl {}: call process", hdl);
                 match (self.smi.state_fns[hdl].process)(self, msg) {
                     state_result::StateResult::NotHandled => {
                         // This handles the special case where we're transitioning to ourself
                         if let Some(parent_hdl) = self.smi.state_fns[hdl].parent {
-                            //println!("dispatch_hdl {}: retf process, NotHandled, call dispatch_hdl({})", hdl, parent_hdl);
+                            println!("dispatch_hdl {}: retf process, NotHandled, call dispatch_hdl({})", hdl, parent_hdl);
                             self.dispatch_hdl(msg, parent_hdl);
-                            //println!("dispatch_hdl {}: retf process, NotHandled, retf dispatch_hdl({})", hdl, parent_hdl);
+                            println!("dispatch_hdl {}: retf process, NotHandled, retf dispatch_hdl({})", hdl, parent_hdl);
                         } else {
                             // TODO: Consider calling a "default_handler" when NotHandled and no parent
-                            //println!("dispatch_hdl {}: retf process, NotHandled no parent", hdl);
+                            println!("dispatch_hdl {}: retf process, NotHandled no parent", hdl);
                         }
                     }
                     state_result::StateResult::Handled => {
                         // Nothing to do
-                        //println!("dispatch_hdl {}: retf process, Handled", hdl);
+                        println!("dispatch_hdl {}: retf process, Handled", hdl);
                     }
                     state_result::StateResult::TransitionTo(dest_hdl) => {
-                        //println!("dispatch_hdl {}: retf process, TransitionTo({})", hdl, dest_hdl);
-                        self.setup_exit_enter_fns_hdls(dest_hdl);
-                        self.smi.current_state_changed = true;
-                        transition_dest_hdl = Some(dest_hdl);
+                        println!("dispatch_hdl {}: retf process, TransitionTo({})", hdl, dest_hdl);
+                        self.set_transition_dest_hdl(dest_hdl);
                     }
+                }
+
+                if let Some(dest_hdl) = self.smi.transition_dest_hdl {
+                    self.setup_exit_enter_fns_hdls(dest_hdl);
+                    self.smi.current_state_changed = true;
                 }
 
                 if self.smi.current_state_changed && !self.smi.exit_fns_hdls.is_empty() {
+                    println!("dispatch_hdl {}: Starting  exit loop len={}", hdl, self.smi.exit_fns_hdls.len());
                     while let Some(exit_hdl) = self.smi.exit_fns_hdls.pop_front() {
+                        println!("dispatch_hdl {}: Top Of Loop     for exit_hdl={}", hdl, exit_hdl);
                         if let Some(state_exit) = self.smi.state_fns[exit_hdl].exit {
-                            //println!("dispatch_hdl {}: call exit_hdl {}", hdl, exit_hdl);
+                            println!("dispatch_hdl {}: call state_exit for exit_hdl={}", hdl, exit_hdl);
                             (state_exit)(self, msg);
-                            //println!("dispatch_hdl {}: retf exit_hdl {}", hdl, exit_hdl);
+                            self.smi.state_fns[exit_hdl].active = true;
+                            println!("dispatch_hdl {}: retf state_exit for exit_hdl={}", hdl, exit_hdl);
                         } else {
-                            //println!("dispatch_hdl {}: no exit_hdl", hdl);
+                            println!("dispatch_hdl {}: NO state_exit   for exit_hdl={}", hdl, exit_hdl);
                         }
                     }
+                    println!("dispatch_hdl {}: Completed exit loop len={}", hdl, self.smi.exit_fns_hdls.len());
                 }
 
-                if let Some(dest_hdl) = transition_dest_hdl {
+                if let Some(dest_hdl) = self.smi.transition_dest_hdl {
                     // Change the previous and current state_fns_hdl after we've
                     // preformed the exit routines so state_name is correct.
                     self.smi.previous_state_fns_hdl = self.smi.current_state_fns_hdl;
@@ -703,11 +723,13 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
                     //println!("dispatch_hdl {}: transitioned, updated previous {} and current {} state hdls", hdl, self.smi.previous_state_fns_hdl, self.smi.current_state_fns_hdl);
                 }
 
-                //println!("dispatch_hdl {}:-", hdl);
+                println!("dispatch_hdl {}:-", hdl);
             }
 
             pub fn dispatch(&mut self, msg: #state_fn_msg_type) {
+                println!("dispatch {}:+", self.smi.current_state_fns_hdl);
                 self.dispatch_hdl(msg, self.smi.current_state_fns_hdl);
+                println!("dispatch {}:-", self.smi.current_state_fns_hdl);
             }
         }
 
@@ -734,6 +756,7 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
             current_state_fns_hdl: state_result::StateFnsHdl,
             previous_state_fns_hdl: state_result::StateFnsHdl,
             current_state_changed: bool,
+            transition_dest_hdl: Option<state_result::StateFnsHdl>,
         }
 
         impl Default for #state_machine_info {
@@ -755,6 +778,7 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
                     current_state_fns_hdl: #initial_state_hdl,
                     previous_state_fns_hdl: #initial_state_hdl,
                     current_state_changed: true,
+                    transition_dest_hdl: None,
                 }
             }
         }
@@ -771,6 +795,14 @@ pub fn transition_to(item: TokenStream) -> TokenStream {
     //println!("proc_macro transition_to!: item_ts2={:?}", item_ts2);
 
     quote!(state_result::StateResult::TransitionTo(#item_ts2)).into()
+}
+
+#[proc_macro]
+pub fn set_transition_dest(item: TokenStream) -> TokenStream {
+    let item_ts2: TokenStream2 = item.into();
+    //println!("proc_macro set_transition_dest!: item_ts2={:?}", item_ts2);
+
+    quote!(self.set_transition_dest_hdl(#item_ts2)).into()
 }
 
 #[proc_macro]
@@ -809,30 +841,37 @@ impl VisitMut for Visitor {
     // each macro in the funtion. The code here will convert each
     // transtion_to!(state_fn_name) to transition_to!(state_fn_index).
     fn visit_macro_mut(&mut self, node: &mut Macro) {
-        if let Some(ident_segment) = node.path.segments.last() {
-            // The last segment is the name of the macro
-            if ident_segment.ident == "transition_to" {
-                // Found our macro, transition_to
+        fn ident_to_hdl(visitor: &mut Visitor, node: &mut Macro) {
+            // Found our macro, transition_to
 
-                // Get the first token; aka: parameter to the function
-                let mut iter = node.tokens.clone().into_iter();
-                if let Some(token) = iter.next() {
-                    if iter.next().is_some() {
-                        // TODO: improve error handling
-                        panic!("transition_to! may have only one parameter, the name of the state")
-                    }
-                    let parameter = token.to_string();
-                    if let Some(hdl) = self.hsm_state_fn_ident_map.get(&parameter) {
-                        //println!("Visitor::visit_macro_mut: Found {} in {} with index {}", parameter, self.hsm_ident, hdl);
-                        node.tokens = quote!(#hdl);
-                        return;
-                    } else {
-                        panic!("No state named {} in {}", parameter, self.hsm_ident);
-                    }
+            // Get the first token; aka: parameter to the function
+            let mut iter = node.tokens.clone().into_iter();
+            if let Some(token) = iter.next() {
+                if iter.next().is_some() {
+                    // TODO: improve error handling
+                    panic!("transition_to! may have only one parameter, the name of the state")
+                }
+                let parameter = token.to_string();
+                if let Some(hdl) = visitor.hsm_state_fn_ident_map.get(&parameter) {
+                    //println!("Visitor::visit_macro_mut: Found {} in {} with index {}", parameter, self.hsm_ident, hdl);
+                    node.tokens = quote!(#hdl);
+                    return;
                 } else {
                     // TODO: improve error handling
-                    panic!("transition_to! must have one parameter, the name of the state")
+                    panic!("No state named {} in {}", parameter, visitor.hsm_ident);
                 }
+            } else {
+                // TODO: improve error handling
+                panic!("transition_to! must have one parameter, the name of the state")
+            }
+        }
+
+        if let Some(ident_segment) = node.path.segments.last() {
+            // The last segment is the name of the macro
+            match ident_segment.ident.to_string().as_str() {
+                "transition_to" => return ident_to_hdl(self, node),
+                "set_transition_dest" => return ident_to_hdl(self, node),
+                _ => {}
             }
         }
 
