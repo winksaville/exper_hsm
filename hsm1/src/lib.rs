@@ -575,31 +575,30 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
             // If exit_sentinel is Some then exit from the current state_fns_hdl
             // up to but not including the exit_sentinel.
             fn setup_exit_fns_hdls(&mut self, exit_sentinel: Option<usize>) {
-
+                // Get the exit handle for the current state
                 let mut exit_hdl = self.smi.current_state_fns_hdl;
+
+                // Always exit the first state, this handles the special case
+                // where Some(exit_hdl) == exit_sentinel.
+
+                //println!("setup_exit_fns_hdls: push_back(current_stsate_fns_hdl={}) ", exit_hdl);
+                self.smi.exit_fns_hdls.push_back(exit_hdl);
+
                 loop {
-                    //println!("setup_exit_fns_hdls: push_back(exit_hdl={})", exit_hdl);
-                    self.smi.exit_fns_hdls.push_back(exit_hdl);
-
-                    if Some(exit_hdl) == exit_sentinel {
-                        // This handles the special case where we're transitioning to ourself
-                        //println!("setup_exit_fns_hdls: reached sentinel, done");
-                        return;
-                    }
-
-                    // Getting parents handle
                     exit_hdl = if let Some(hdl) = self.smi.state_fns[exit_hdl].parent {
                         hdl
                     } else {
-                        // No parent we're done
                         //println!("setup_exit_fns_hdls: No more parents, done");
                         return;
                     };
 
                     if Some(exit_hdl) == exit_sentinel {
-                        // Reached the exit sentinel so we're done
+                        //println!("setup_exit_fns_hdls: reached exit_sentinel, done");
                         return;
                     }
+
+                    //println!("setup_exit_fns_hdls: push_back(exit_hdl={})", exit_hdl);
+                    self.smi.exit_fns_hdls.push_back(exit_hdl);
                 }
             }
 
