@@ -2,6 +2,21 @@
 
 Define a `proc_macro` to make it easier to create HSM's.
 
+# Transition Rule from Source state to Destination state
+
+* Create exit path from source to its top most parent
+* Create entry path from destination to its top most parent
+* Find the common parent, three positibilites:
+  * The paths are the same which means source and destination are the same.
+    * This means this is a transition to "self" and exit enter should be
+    executed on this one state.
+  * The paths differ then the common parent is lowest common parent.
+    * First, exit should be executed starting at source and
+    proceeding upwards to but not including the common parent.
+    * Next, enter should be executed starting below the common parent
+    down to the destination.
+
+
 # Examples
 
 Two examples; MyFsm is the simplest FSM with just one state.
