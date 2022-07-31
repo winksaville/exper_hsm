@@ -688,6 +688,7 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
                         if let Some(state_exit) = self.smi.state_fns[exit_hdl].exit {
                             //println!("dispatch_hdl {}: call exit_hdl {}", hdl, exit_hdl);
                             (state_exit)(self, msg);
+                            self.smi.state_fns[exit_hdl].active = false;
                             //println!("dispatch_hdl {}: retf exit_hdl {}", hdl, exit_hdl);
                         } else {
                             //println!("dispatch_hdl {}: no exit_hdl", hdl);

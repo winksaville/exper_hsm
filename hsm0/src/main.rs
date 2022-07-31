@@ -223,6 +223,7 @@ impl StateMachine {
                         self.smi.state_fns[exit_hdl].name
                     );
                     (state_exit)(self, msg);
+                    self.smi.state_fns[exit_hdl].active = false;
                 }
             }
         }
