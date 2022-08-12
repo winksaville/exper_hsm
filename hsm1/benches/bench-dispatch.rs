@@ -1,7 +1,7 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 use hsm1::{
-    handled, hsm1, hsm1_initial_state, hsm1_state, not_handled, transition_to, StateResult,
+    handled, hsm1, hsm1_initial_state, not_handled, transition_to, StateResult,
 };
 
 struct NoMessages;

@@ -166,6 +166,8 @@ test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; fini
 
 Running `cargo criterion` runs all the benchmarks as specified in
 the `[[bench]]` sections in Cargo.toml, i.e. `bench-dispatch` and `bench-dispatch-iai`:
+> Note: Execute `cargo install cargo-criterion` to install the criterion command.
+> You'll also need to install `valgrind`.
 ```
 wink@3900x 22-07-26T22:53:56.139Z:~/prgs/rust/myrepos/proc-macro-hsm1/hsm1 (main)
 $ time cargo criterion
