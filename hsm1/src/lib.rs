@@ -17,6 +17,13 @@ pub fn hsm1_state(_attr: TokenStream, item: TokenStream) -> TokenStream {
     item
 }
 
+#[proc_macro_attribute]
+pub fn hsm1_initial_state(_attr: TokenStream, item: TokenStream) -> TokenStream {
+    //println!("proc_macro_attribute hsm1_initial_state: attr={:#?}", attr);
+    //println!("proc_macro_attribute hsm1_initial_state: item={:#?}", item);
+    item
+}
+
 #[derive(Debug)]
 struct Hsm1 {
     hsm_ident: syn::Ident,
@@ -40,6 +47,7 @@ struct StateFnIdents {
     process_fn_ident: syn::Ident,
     process_fn_msg_type: MsgType,
     exit_fn_ident: Option<syn::Ident>,
+    initial_state: bool,
 }
 
 impl Parse for Hsm1 {
@@ -65,8 +73,8 @@ impl Parse for Hsm1 {
         struct StateFnInfo {
             hdl: usize,
             parent_ident: Option<syn::Ident>,
-            #[allow(unused)]
             msg_type: MsgType,
+            initial_state: bool,
         }
         let mut state_fn_infos = Vec::<StateFnInfo>::new();
         let mut fns = Vec::<syn::ItemFn>::new();
@@ -81,33 +89,10 @@ impl Parse for Hsm1 {
                 //println!("hsm1::parse: function attributes: {:#?}", a);
 
                 if let Some(ident) = a.path.get_ident() {
-                    if ident == "hsm1_state" {
-                        // There zero or one parameter to the hsm1_state and
-                        // we're not interested in other atributes, so break;
-                        // TODO: There is probably a better way to implement
-                        // optional parameters to proc_macro_attribute. The problem
-                        // is if there is no arguments "a.parse_args" returns err, but
-                        // in hsm1Args::parse I also handle the notion of no args in
-                        // that it also returns None thus this feels over complicated.
-                        #[derive(Debug)]
-                        struct Hsm1Args {
-                            #[allow(unused)]
-                            arg_ident: Option<syn::Ident>,
-                        }
+                    if ident == "hsm1_state" || ident == "hsm1_initial_state" {
+                        let initial_state = ident == "hsm1_initial_state";
 
-                        impl Parse for Hsm1Args {
-                            fn parse(input: ParseStream) -> Result<Self> {
-                                // There should only be one ident
-                                let name = if let Ok(id) = input.parse() {
-                                    Some(id)
-                                } else {
-                                    None
-                                };
-                                Ok(Hsm1Args { arg_ident: name })
-                            }
-                        }
-
-                        // Enable to print the sig.input as pairs
+                        // Enable to print the sig.input as pair
                         //for a_pair in a_fn.sig.inputs.pairs() {
                         //    match a_pair {
                         //        syn::punctuated::Pair::Punctuated(fn_arg, _) => {
@@ -209,15 +194,38 @@ impl Parse for Hsm1 {
                             panic!("Expected &mut self as first parameter of an state funtion");
                         };
 
-                        // Save the index of this function in state_fn_hdls
+                        // There zero or one parameter to the hsm1_state and
+                        // we're not interested in other atributes
+                        #[derive(Debug)]
+                        struct Hsm1Args {
+                            #[allow(unused)]
+                            arg_ident: Option<syn::Ident>,
+                        }
+
+                        impl Parse for Hsm1Args {
+                            fn parse(input: ParseStream) -> Result<Self> {
+                                // There should only be one ident
+                                let name = if let Ok(id) = input.parse() {
+                                    Some(id)
+                                } else {
+                                    None
+                                };
+                                Ok(Hsm1Args { arg_ident: name })
+                            }
+                        }
+
+                        let parent_ident = if let Ok(fa) = a.parse_args::<Hsm1Args>() {
+                            fa.arg_ident
+                        } else {
+                            None
+                        };
+
+                        // Save the StateFnInfo
                         state_fn_infos.push(StateFnInfo {
                             hdl: fns.len(),
-                            parent_ident: if let Ok(fa) = a.parse_args::<Hsm1Args>() {
-                                fa.arg_ident
-                            } else {
-                                None
-                            },
+                            parent_ident,
                             msg_type,
+                            initial_state,
                         });
                         //println!("hsm1::parse: state_fn_info {:#?}", state_fn_infos.last());
 
@@ -259,6 +267,7 @@ impl Parse for Hsm1 {
                 process_fn_ident,
                 process_fn_msg_type: state_fn_info.msg_type,
                 exit_fn_ident: exit_fn_ident_opt,
+                initial_state: state_fn_info.initial_state,
             });
         }
 
@@ -302,7 +311,7 @@ impl Parse for Hsm1 {
 ///         initial_counter: u64,
 ///     }
 ///
-///     #[hsm1_state]
+///     #[hsm1_initial_state]
 ///     fn initial(&mut self, _msg: &mut Messages) -> StateResult!() {
 ///         // Mutate the state
 ///         self.initial_counter += 1;
@@ -331,7 +340,7 @@ impl Parse for Hsm1 {
 ///         }
 ///     }
 ///
-///     #[hsm1_state(base)]
+///     #[hsm1_initial_state(base)]
 ///     fn initial(&mut self, msg: &mut Messages) -> StateResult!() {
 ///         // Mutate the state
 ///         self.initial_counter += 1;
@@ -430,7 +439,7 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
 
         let process_fn_ident = sfn.process_fn_ident.clone();
         //println!("hsm1: process_fn_ident={}", process_fn_ident);
-        if process_fn_ident == "initial" {
+        if sfn.initial_state {
             assert_eq!(hsm_initial_state_fns_hdl, None);
             hsm_initial_state_fns_hdl = Some(hsm_state_fns.len());
             state_fn_msg_type_opt = Some(sfn.process_fn_msg_type.clone());

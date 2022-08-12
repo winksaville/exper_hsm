@@ -1,4 +1,4 @@
-use hsm1::{handled, hsm1, hsm1_state, not_handled, StateResult};
+use hsm1::{handled, hsm1, hsm1_initial_state, hsm1_state, not_handled, StateResult};
 
 struct NoMessages;
 
@@ -14,7 +14,7 @@ hsm1!(
         handled!()
     }
 
-    #[hsm1_state(parent)]
+    #[hsm1_initial_state(parent)]
     fn initial(&mut self, msg: &NoMessages) -> StateResult!() {
         println!("Hello World, Hsm::initial: a_field={}", self.a_field);
         self.a_field += 1;

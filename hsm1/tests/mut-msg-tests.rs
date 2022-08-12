@@ -1,4 +1,4 @@
-use hsm1::{handled, hsm1, hsm1_state, StateResult};
+use hsm1::{handled, hsm1, hsm1_initial_state, StateResult};
 
 #[derive(Debug)]
 pub enum SimpleFsmProtocol {
@@ -25,7 +25,7 @@ hsm1!(
         self.initial_enter_counter += 1;
     }
 
-    #[hsm1_state]
+    #[hsm1_initial_state]
     fn initial(&mut self, msg: &mut SimpleFsmProtocol) -> StateResult!() {
         self.initial_counter += 1;
         // Mutate the state

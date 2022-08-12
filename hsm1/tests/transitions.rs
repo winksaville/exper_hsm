@@ -1,5 +1,5 @@
 //use hsm1::{handled, hsm1, hsm1_state, not_handled, transition_to, StateResult};
-use hsm1::{handled, hsm1, hsm1_state, transition_to, StateResult};
+use hsm1::{handled, hsm1, hsm1_initial_state, hsm1_state, transition_to, StateResult};
 
 struct NoMessages;
 
@@ -16,7 +16,7 @@ fn test_transition_to_self_one_state() {
             self.initial_enter_cnt += 1;
         }
 
-        #[hsm1_state]
+        #[hsm1_initial_state]
         // This state has hdl 0
         fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.initial_cnt += 1;
@@ -65,7 +65,7 @@ fn test_transition_to_between_two_unrelated_states() {
             self.initial_enter_cnt += 1;
         }
 
-        #[hsm1_state]
+        #[hsm1_initial_state]
         // This state has hdl 0
         fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.initial_cnt += 1;
@@ -178,7 +178,7 @@ fn test_transition_to_between_leafs_of_trees() {
             self.initial_enter_cnt += 1;
         }
 
-        #[hsm1_state(initial_base)]
+        #[hsm1_initial_state(initial_base)]
         // This state has hdl 0
         fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.initial_cnt += 1;

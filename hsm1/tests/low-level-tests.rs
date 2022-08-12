@@ -1,4 +1,6 @@
-use hsm1::{handled, hsm1, hsm1_state, not_handled, transition_to, StateResult};
+use hsm1::{
+    handled, hsm1, hsm1_initial_state, hsm1_state, not_handled, transition_to, StateResult,
+};
 
 struct NoMessages;
 
@@ -7,7 +9,7 @@ fn test_initialization() {
     hsm1!(
         struct Test {}
 
-        #[hsm1_state]
+        #[hsm1_initial_state]
         // This state has hdl 0
         fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             handled!()
@@ -25,7 +27,7 @@ fn test_dispatch() {
     hsm1!(
         struct TestDispatch {}
 
-        #[hsm1_state]
+        #[hsm1_initial_state]
         // This state has hdl 0
         fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             transition_to!(done)
@@ -64,7 +66,7 @@ fn test_transition_to() {
     hsm1!(
         struct Test {}
 
-        #[hsm1_state]
+        #[hsm1_initial_state]
         // This state has hdl 0
         fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             transition_to!(done)
@@ -100,7 +102,7 @@ fn test_initial_and_done_no_enter_exit() {
             done_exit_cnt: usize,
         }
 
-        #[hsm1_state]
+        #[hsm1_initial_state]
         // This state has hdl 0
         fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.initial_cnt += 1;
@@ -157,7 +159,7 @@ fn test_initial_and_done_both_with_enter() {
             self.initial_enter_cnt += 1;
         }
 
-        #[hsm1_state]
+        #[hsm1_initial_state]
         // This state has hdl 0
         fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             println!("test_enter: initial");
@@ -217,7 +219,7 @@ fn test_initial_and_done_both_with_exit() {
             done_exit_cnt: usize,
         }
 
-        #[hsm1_state]
+        #[hsm1_initial_state]
         // This state has hdl 0
         fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.initial_cnt += 1;
@@ -285,7 +287,7 @@ fn test_initial_and_do_work_and_done_all_with_enter_exit() {
             self.initial_enter_cnt += 1;
         }
 
-        #[hsm1_state]
+        #[hsm1_initial_state]
         // This state has hdl 0
         fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.initial_cnt += 1;
@@ -428,7 +430,7 @@ fn test_parent_with_child_initial() {
             handled!()
         }
 
-        #[hsm1_state(parent)]
+        #[hsm1_initial_state(parent)]
         // This state has hdl 1
         fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.initial_cnt += 1;
@@ -480,7 +482,7 @@ fn test_parent_with_enter_exit_and_one_child_initial() {
             self.parent_exit_cnt += 1;
         }
 
-        #[hsm1_state(parent)]
+        #[hsm1_initial_state(parent)]
         // This state has hdl 1
         fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.initial_cnt += 1;
@@ -541,7 +543,7 @@ fn test_tree_parent_with_children_initial_do_work_done_all_with_enter_exit() {
             self.initial_enter_cnt += 1;
         }
 
-        #[hsm1_state(parent)]
+        #[hsm1_initial_state(parent)]
         fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.initial_cnt += 1;
             match self.initial_cnt {
@@ -774,7 +776,7 @@ fn test_one_tree_plus_done_as_separate() {
             self.initial_enter_cnt += 1;
         }
 
-        #[hsm1_state(parent)]
+        #[hsm1_initial_state(parent)]
         fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.initial_cnt += 1;
             match self.initial_cnt {
@@ -978,7 +980,7 @@ fn test_initial_then_tree_of_parent_and_do_work_then_done() {
             self.initial_enter_cnt += 1;
         }
 
-        #[hsm1_state]
+        #[hsm1_initial_state]
         fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.initial_cnt += 1;
             match self.initial_cnt {

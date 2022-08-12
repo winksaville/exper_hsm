@@ -311,18 +311,24 @@ impl StateMachineInfo {
 
 pub struct StateMachine {
     pub smi: StateMachineInfo,
-        initial_base_enter_cnt: usize,
-        initial_base_cnt: usize,
-        initial_base_exit_cnt: usize,
-        initial_enter_cnt: usize,
-        initial_cnt: usize,
-        initial_exit_cnt: usize,
-        other_base_enter_cnt: usize,
-        other_base_cnt: usize,
-        other_base_exit_cnt: usize,
-        other_enter_cnt: usize,
-        other_cnt: usize,
-        other_exit_cnt: usize,
+    initial_base_enter_cnt: usize,
+    initial_base_cnt: usize,
+    initial_base_exit_cnt: usize,
+    initial_enter_cnt: usize,
+    initial_cnt: usize,
+    initial_exit_cnt: usize,
+    other_base_enter_cnt: usize,
+    other_base_cnt: usize,
+    other_base_exit_cnt: usize,
+    other_enter_cnt: usize,
+    other_cnt: usize,
+    other_exit_cnt: usize,
+}
+
+impl Default for StateMachine {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl StateMachine {
@@ -360,64 +366,62 @@ const OTHER_BASE_HDL: usize = 2;
 const OTHER_HDL: usize = 3;
 
 impl StateMachine {
-        fn initial_base_enter(&mut self, _msg: &NoMessages) {
-            self.initial_base_enter_cnt += 1;
-        }
+    fn initial_base_enter(&mut self, _msg: &NoMessages) {
+        self.initial_base_enter_cnt += 1;
+    }
 
-        // This state has hdl 0
-        fn initial_base(&mut self, _msg: &NoMessages) -> StateResult {
-            self.initial_base_cnt += 1;
-            StateResult::Handled
-        }
+    // This state has hdl 0
+    fn initial_base(&mut self, _msg: &NoMessages) -> StateResult {
+        self.initial_base_cnt += 1;
+        StateResult::Handled
+    }
 
-        fn initial_base_exit(&mut self, _msg: &NoMessages) {
-            self.initial_base_exit_cnt += 1;
-        }
+    fn initial_base_exit(&mut self, _msg: &NoMessages) {
+        self.initial_base_exit_cnt += 1;
+    }
 
-        fn initial_enter(&mut self, _msg: &NoMessages) {
-            self.initial_enter_cnt += 1;
-        }
+    fn initial_enter(&mut self, _msg: &NoMessages) {
+        self.initial_enter_cnt += 1;
+    }
 
-        // This state has hdl 0
-        fn initial(&mut self, _msg: &NoMessages) -> StateResult {
-            self.initial_cnt += 1;
-            StateResult::TransitionTo(OTHER_HDL)
-        }
+    // This state has hdl 0
+    fn initial(&mut self, _msg: &NoMessages) -> StateResult {
+        self.initial_cnt += 1;
+        StateResult::TransitionTo(OTHER_HDL)
+    }
 
-        fn initial_exit(&mut self, _msg: &NoMessages) {
-            self.initial_exit_cnt += 1;
-        }
+    fn initial_exit(&mut self, _msg: &NoMessages) {
+        self.initial_exit_cnt += 1;
+    }
 
+    fn other_base_enter(&mut self, _msg: &NoMessages) {
+        self.other_base_enter_cnt += 1;
+    }
 
-        fn other_base_enter(&mut self, _msg: &NoMessages) {
-            self.other_base_enter_cnt += 1;
-        }
+    // This state has hdl 0
+    fn other_base(&mut self, _msg: &NoMessages) -> StateResult {
+        self.other_base_cnt += 1;
+        StateResult::Handled
+    }
 
-        // This state has hdl 0
-        fn other_base(&mut self, _msg: &NoMessages) -> StateResult {
-            self.other_base_cnt += 1;
-            StateResult::Handled
-        }
+    fn other_base_exit(&mut self, _msg: &NoMessages) {
+        self.other_base_exit_cnt += 1;
+    }
 
-        fn other_base_exit(&mut self, _msg: &NoMessages) {
-            self.other_base_exit_cnt += 1;
-        }
+    fn other_enter(&mut self, _msg: &NoMessages) {
+        self.other_enter_cnt += 1;
+    }
 
-        fn other_enter(&mut self, _msg: &NoMessages) {
-            self.other_enter_cnt += 1;
-        }
+    // This state has hdl 0
+    fn other(&mut self, _msg: &NoMessages) -> StateResult {
+        self.other_cnt += 1;
+        StateResult::TransitionTo(INITIAL_HDL)
+    }
 
-        // This state has hdl 0
-        fn other(&mut self, _msg: &NoMessages) -> StateResult {
-            self.other_cnt += 1;
-            StateResult::TransitionTo(INITIAL_HDL)
-        }
-
-        fn other_exit(&mut self, _msg: &NoMessages) {
-            self.other_exit_cnt += 1;
-        }
+    fn other_exit(&mut self, _msg: &NoMessages) {
+        self.other_exit_cnt += 1;
+    }
 }
-
 
 fn test_transition_to_between_leafs_of_trees() {
     // Create a sm and validate it's in the expected state
@@ -505,7 +509,6 @@ fn test_transition_to_between_leafs_of_trees() {
     assert_eq!(sm.other_cnt, 2);
     assert_eq!(sm.other_exit_cnt, 2);
 }
-
 
 fn main() {
     println!("main");

@@ -1,4 +1,4 @@
-use hsm1::{handled, hsm1, hsm1_state, StateResult};
+use hsm1::{handled, hsm1, hsm1_initial_state, StateResult};
 
 #[derive(Debug)]
 pub enum MessagesType {
@@ -12,7 +12,7 @@ hsm1!(
         data: i32,
     }
 
-    #[hsm1_state]
+    #[hsm1_initial_state]
     fn initial(&mut self, msg: &MessagesType) -> StateResult!() {
         self.initial_counter += 1;
 

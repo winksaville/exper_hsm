@@ -1,4 +1,6 @@
-use hsm1::{handled, hsm1, hsm1_state, not_handled, transition_to, StateResult};
+use hsm1::{
+    handled, hsm1, hsm1_initial_state, hsm1_state, not_handled, transition_to, StateResult,
+};
 
 struct NoMessages;
 
@@ -8,7 +10,7 @@ hsm1!(
         initial_counter: u64,
     }
 
-    #[hsm1_state]
+    #[hsm1_initial_state]
     fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
         // Mutate the state
         self.initial_counter += 1;
@@ -34,7 +36,7 @@ hsm1!(
         handled!()
     }
 
-    #[hsm1_state(base)]
+    #[hsm1_initial_state(base)]
     fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
         // Mutate the state
         self.initial_counter += 1;
@@ -65,7 +67,7 @@ hsm1!(
         println!("{}: enter self.a_i32={}", self.state_name(), self.a_i32);
     }
 
-    #[hsm1_state] //(initial_parent)]
+    #[hsm1_initial_state]
     fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
         self.non_state_fn();
         println!("{}: self.a_i32={}", self.state_name(), self.a_i32);

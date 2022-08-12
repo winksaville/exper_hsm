@@ -1,6 +1,8 @@
 use iai::black_box;
 
-use hsm1::{handled, hsm1, hsm1_state, not_handled, transition_to, StateResult};
+use hsm1::{
+    handled, hsm1, hsm1_initial_state, hsm1_state, not_handled, transition_to, StateResult,
+};
 
 struct NoMessages;
 
@@ -8,7 +10,7 @@ pub fn bench_fsm_setup() {
     hsm1!(
         struct Fsm {}
 
-        #[hsm1_state]
+        #[hsm1_initial_state]
         fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             handled!()
         }
@@ -22,7 +24,7 @@ pub fn bench_minimal_fsm_returning_handled() {
     hsm1!(
         struct Fsm {}
 
-        #[hsm1_state]
+        #[hsm1_initial_state]
         fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             handled!()
         }
@@ -37,7 +39,7 @@ pub fn bench_minimal_fsm_returning_not_handled() {
     hsm1!(
         struct Fsm {}
 
-        #[hsm1_state]
+        #[hsm1_initial_state]
         fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             not_handled!()
         }
@@ -52,7 +54,7 @@ pub fn bench_minimal_fsm_returning_transition_to_self() {
     hsm1!(
         struct Fsm {}
 
-        #[hsm1_state]
+        #[hsm1_initial_state]
         fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             transition_to!(initial)
         }
@@ -73,7 +75,7 @@ pub fn bench_minimal_fsm_returning_transition_to_self_with_enter() {
 
         fn initial_enter(&mut self, _msg: &NoMessages) {}
 
-        #[hsm1_state]
+        #[hsm1_initial_state]
         fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             transition_to!(initial)
         }
@@ -94,7 +96,7 @@ pub fn bench_minimal_fsm_returning_transition_to_self_with_exit() {
 
         fn initial_exit(&mut self, _msg: &NoMessages) {}
 
-        #[hsm1_state]
+        #[hsm1_initial_state]
         fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             transition_to!(initial)
         }
@@ -117,7 +119,7 @@ pub fn bench_minimal_fsm_returning_transition_to_self_with_ee() {
             self.initial_enter_cnt += 1;
         }
 
-        #[hsm1_state]
+        #[hsm1_initial_state]
         fn initial(&mut self, _msg: &NoMessages) -> StateResult!() {
             self.initial_cnt += 1;
             transition_to!(initial)
