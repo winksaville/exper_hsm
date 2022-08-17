@@ -3,4 +3,5 @@ members = [
   "hsm0",
   "hsm1",
   "state-result",
+  "xtask",
 ]
