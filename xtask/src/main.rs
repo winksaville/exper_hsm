@@ -1,3 +1,5 @@
+// xtask: based on https://github.com/winksaville/cargo-xtask/examples/wink, which
+// is based on https://github.com/matklad/cargo-xtask.
 use std::{
     env,
     path::{Path, PathBuf},
