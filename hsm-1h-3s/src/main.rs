@@ -395,7 +395,7 @@ impl StateMachine {
     }
 }
 
-fn test_transition_to_between_leafs_of_trees() {
+fn test_transition_between_leafs_in_a_tree() {
     // Create a sm and validate it's in the expected state
     let mut sm = StateMachine::new();
     assert_eq!(sm.base_enter_cnt, 0);
@@ -469,7 +469,17 @@ fn main() {
     env_logger_init("info");
     log::info!("main:+");
 
-    test_transition_to_between_leafs_of_trees();
+    test_transition_between_leafs_in_a_tree();
 
     log::info!("main:-");
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_leaf_transitions_in_a_tree() {
+        test_transition_between_leafs_in_a_tree();
+    }
 }
