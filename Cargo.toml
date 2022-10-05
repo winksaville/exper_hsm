@@ -1,5 +1,6 @@
 [workspace]
 members = [
+  "hsm-1h-3s",
   "hsm-2h-2s",
   "hsm1",
   "state-result",

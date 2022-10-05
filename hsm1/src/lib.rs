@@ -578,44 +578,14 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
                 }
             }
 
-            // Starting at self.current_state_fns_hdl generate the
-            // list of StateInfo that we're going to exit. If exit_sentinel is None
-            // then exit from current_state_fns_hdl and all of its parents.
-            // If exit_sentinel is Some then exit from the current state_fns_hdl
-            // up to but not including the exit_sentinel.
-            fn setup_exit_fns_hdls(&mut self, exit_sentinel: Option<usize>) {
-                // Get the exit handle for the current state
-                let mut exit_hdl = self.smi.current_state_fns_hdl;
+            // Setup exit_fns_hdls and enter_fns_hdls where we transition from
+            // self.current_fns_hdl to dest_state_hdl.
+            fn setup_exit_enter_fns_hdls(&mut self, dest_state_hdl: usize) {
 
-                // Always exit the first state, this handles the special case
-                // where Some(exit_hdl) == exit_sentinel.
-
-                //println!("setup_exit_fns_hdls: push_back(current_stsate_fns_hdl={}) ", exit_hdl);
-                self.smi.exit_fns_hdls.push_back(exit_hdl);
-
-                loop {
-                    exit_hdl = if let Some(hdl) = self.smi.state_fns[exit_hdl].parent {
-                        hdl
-                    } else {
-                        //println!("setup_exit_fns_hdls: No more parents, done");
-                        return;
-                    };
-
-                    if Some(exit_hdl) == exit_sentinel {
-                        //println!("setup_exit_fns_hdls: reached exit_sentinel, done");
-                        return;
-                    }
-
-                    //println!("setup_exit_fns_hdls: push_back(exit_hdl={})", exit_hdl);
-                    self.smi.exit_fns_hdls.push_back(exit_hdl);
-                }
-            }
-
-            // Setup exit_fns_hdls and enter_fns_hdls.
-            fn setup_exit_enter_fns_hdls(&mut self, next_state_hdl: usize) {
-                let mut cur_hdl = next_state_hdl;
-
-                // Setup the enter vector
+                // Setup the enter_fns_hdls vector starting at the dest_state_hdl
+                // and up to the common parent (i.e. an active state) or to the
+                // ulitimate parent.
+                let mut cur_hdl = dest_state_hdl;
                 let exit_sentinel = loop {
                     //println!("setup_exit_enter_fns_hdls: push(cur_hdl={})", cur_hdl);
                     self.smi.enter_fns_hdls.push(cur_hdl);
@@ -637,8 +607,35 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
                     }
                 };
 
-                // Setup the exit vector
-                self.setup_exit_fns_hdls(exit_sentinel);
+                // Starting at self.smi.current_state_fns_hdl generate the
+                // list of StateFns that we're going to exit. If exit_sentinel is None
+                // then exit from current_state_fns_hdl and all of its parents.
+                // If exit_sentinel is Some then exit from the current state_fns_hdl
+                // up to but not including the exit_sentinel.
+                let mut exit_hdl = self.smi.current_state_fns_hdl;
+
+                // Always exit the first state, this handles the special case
+                // where Some(exit_hdl) == exit_sentinel.
+
+                //println!("setup_exit_enter_fns_hdls: push_back(current_stsate_fns_hdl={}) ", exit_hdl);
+                self.smi.exit_fns_hdls.push_back(exit_hdl);
+
+                loop {
+                    exit_hdl = if let Some(hdl) = self.smi.state_fns[exit_hdl].parent {
+                        hdl
+                    } else {
+                        //println!("setup_exit_enter_fns_hdls: No more parents, done");
+                        return;
+                    };
+
+                    if Some(exit_hdl) == exit_sentinel {
+                        //println!("setup_exit_enter_fns_hdls: reached exit_sentinel, done");
+                        return;
+                    }
+
+                    //println!("setup_exit_enter_fns_hdls: push_back(exit_hdl={})", exit_hdl);
+                    self.smi.exit_fns_hdls.push_back(exit_hdl);
+                }
             }
 
             // TODO: Not sure this is worth it, if it is consider adding hsm_name()

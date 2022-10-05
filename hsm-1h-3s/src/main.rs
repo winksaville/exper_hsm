@@ -262,32 +262,24 @@ impl StateMachineInfo {
         StateMachineInfo {
             state_fns: [
                 StateInfo {
-                    name: "initial_base".to_owned(),
+                    name: "base".to_owned(),
                     parent: None,
-                    enter: Some(StateMachine::initial_base_enter),
-                    process: StateMachine::initial_base,
-                    exit: Some(StateMachine::initial_base_exit),
+                    enter: Some(StateMachine::base_enter),
+                    process: StateMachine::base,
+                    exit: Some(StateMachine::base_exit),
                     active: false,
                 },
                 StateInfo {
                     name: "initial".to_owned(),
-                    parent: Some(INITIAL_BASE_HDL),
+                    parent: Some(BASE_HDL),
                     enter: Some(StateMachine::initial_enter),
                     process: StateMachine::initial,
                     exit: Some(StateMachine::initial_exit),
                     active: false,
                 },
                 StateInfo {
-                    name: "other_base".to_owned(),
-                    parent: None,
-                    enter: Some(StateMachine::other_base_enter),
-                    process: StateMachine::other_base,
-                    exit: Some(StateMachine::other_base_exit),
-                    active: false,
-                },
-                StateInfo {
                     name: "other".to_owned(),
-                    parent: Some(OTHER_BASE_HDL),
+                    parent: Some(BASE_HDL),
                     enter: Some(StateMachine::other_enter),
                     process: StateMachine::other,
                     exit: Some(StateMachine::other_exit),
@@ -306,15 +298,12 @@ impl StateMachineInfo {
 
 pub struct StateMachine {
     pub smi: StateMachineInfo,
-    initial_base_enter_cnt: usize,
-    initial_base_cnt: usize,
-    initial_base_exit_cnt: usize,
+    base_enter_cnt: usize,
+    base_cnt: usize,
+    base_exit_cnt: usize,
     initial_enter_cnt: usize,
     initial_cnt: usize,
     initial_exit_cnt: usize,
-    other_base_enter_cnt: usize,
-    other_base_cnt: usize,
-    other_base_exit_cnt: usize,
     other_enter_cnt: usize,
     other_cnt: usize,
     other_exit_cnt: usize,
@@ -329,30 +318,27 @@ impl Default for StateMachine {
 // StateMachine simply transitions back and forth
 // between initial and other.
 //
-//  other_base=2          initial_base=0
-//       ^                     ^
-//       |                     |
-//     other=3              initial=1
+//                base=0
+//        --------^  ^-------
+//       /                   \
+//      /                     \
+//    other=2   <======>   initial=1
 
-const MAX_STATE_FNS: usize = 4;
-const INITIAL_BASE_HDL: usize = 0;
+const MAX_STATE_FNS: usize = 3;
+const BASE_HDL: usize = 0;
 const INITIAL_HDL: usize = 1;
-const OTHER_BASE_HDL: usize = 2;
-const OTHER_HDL: usize = 3;
+const OTHER_HDL: usize = 2;
 
 impl StateMachine {
     pub fn new() -> Self {
         let mut sm = StateMachine {
             smi: StateMachineInfo::new(),
-            initial_base_enter_cnt: 0,
-            initial_base_cnt: 0,
-            initial_base_exit_cnt: 0,
+            base_enter_cnt: 0,
+            base_cnt: 0,
+            base_exit_cnt: 0,
             initial_enter_cnt: 0,
             initial_cnt: 0,
             initial_exit_cnt: 0,
-            other_base_enter_cnt: 0,
-            other_base_cnt: 0,
-            other_base_exit_cnt: 0,
             other_enter_cnt: 0,
             other_cnt: 0,
             other_exit_cnt: 0,
@@ -366,18 +352,18 @@ impl StateMachine {
 
         sm
     }
-    fn initial_base_enter(&mut self, _msg: &NoMessages) {
-        self.initial_base_enter_cnt += 1;
+    fn base_enter(&mut self, _msg: &NoMessages) {
+        self.base_enter_cnt += 1;
     }
 
     // This state has hdl 0
-    fn initial_base(&mut self, _msg: &NoMessages) -> StateResult {
-        self.initial_base_cnt += 1;
+    fn base(&mut self, _msg: &NoMessages) -> StateResult {
+        self.base_cnt += 1;
         StateResult::Handled
     }
 
-    fn initial_base_exit(&mut self, _msg: &NoMessages) {
-        self.initial_base_exit_cnt += 1;
+    fn base_exit(&mut self, _msg: &NoMessages) {
+        self.base_exit_cnt += 1;
     }
 
     fn initial_enter(&mut self, _msg: &NoMessages) {
@@ -392,20 +378,6 @@ impl StateMachine {
 
     fn initial_exit(&mut self, _msg: &NoMessages) {
         self.initial_exit_cnt += 1;
-    }
-
-    fn other_base_enter(&mut self, _msg: &NoMessages) {
-        self.other_base_enter_cnt += 1;
-    }
-
-    // This state has hdl 0
-    fn other_base(&mut self, _msg: &NoMessages) -> StateResult {
-        self.other_base_cnt += 1;
-        StateResult::Handled
-    }
-
-    fn other_base_exit(&mut self, _msg: &NoMessages) {
-        self.other_base_exit_cnt += 1;
     }
 
     fn other_enter(&mut self, _msg: &NoMessages) {
@@ -426,85 +398,67 @@ impl StateMachine {
 fn test_transition_to_between_leafs_of_trees() {
     // Create a sm and validate it's in the expected state
     let mut sm = StateMachine::new();
-    assert_eq!(sm.initial_base_enter_cnt, 0);
-    assert_eq!(sm.initial_base_cnt, 0);
-    assert_eq!(sm.initial_base_exit_cnt, 0);
+    assert_eq!(sm.base_enter_cnt, 0);
+    assert_eq!(sm.base_cnt, 0);
+    assert_eq!(sm.base_exit_cnt, 0);
     assert_eq!(sm.initial_enter_cnt, 0);
     assert_eq!(sm.initial_cnt, 0);
     assert_eq!(sm.initial_exit_cnt, 0);
-    assert_eq!(sm.other_base_enter_cnt, 0);
-    assert_eq!(sm.other_base_cnt, 0);
-    assert_eq!(sm.other_base_exit_cnt, 0);
     assert_eq!(sm.other_enter_cnt, 0);
     assert_eq!(sm.other_cnt, 0);
     assert_eq!(sm.other_exit_cnt, 0);
 
     sm.dispatch(&NoMessages);
-    assert_eq!(sm.initial_base_enter_cnt, 1);
-    assert_eq!(sm.initial_base_cnt, 0);
-    assert_eq!(sm.initial_base_exit_cnt, 1);
+    assert_eq!(sm.base_enter_cnt, 1);
+    assert_eq!(sm.base_cnt, 0);
+    assert_eq!(sm.base_exit_cnt, 0);
     assert_eq!(sm.initial_enter_cnt, 1);
     assert_eq!(sm.initial_cnt, 1);
     assert_eq!(sm.initial_exit_cnt, 1);
-    assert_eq!(sm.other_base_enter_cnt, 0);
-    assert_eq!(sm.other_base_cnt, 0);
-    assert_eq!(sm.other_base_exit_cnt, 0);
     assert_eq!(sm.other_enter_cnt, 0);
     assert_eq!(sm.other_cnt, 0);
     assert_eq!(sm.other_exit_cnt, 0);
 
     sm.dispatch(&NoMessages);
-    assert_eq!(sm.initial_base_enter_cnt, 1);
-    assert_eq!(sm.initial_base_cnt, 0);
-    assert_eq!(sm.initial_base_exit_cnt, 1);
+    assert_eq!(sm.base_enter_cnt, 1);
+    assert_eq!(sm.base_cnt, 0);
+    assert_eq!(sm.base_exit_cnt, 0);
     assert_eq!(sm.initial_enter_cnt, 1);
     assert_eq!(sm.initial_cnt, 1);
     assert_eq!(sm.initial_exit_cnt, 1);
-    assert_eq!(sm.other_base_enter_cnt, 1);
-    assert_eq!(sm.other_base_cnt, 0);
-    assert_eq!(sm.other_base_exit_cnt, 1);
     assert_eq!(sm.other_enter_cnt, 1);
     assert_eq!(sm.other_cnt, 1);
     assert_eq!(sm.other_exit_cnt, 1);
 
     sm.dispatch(&NoMessages);
-    assert_eq!(sm.initial_base_enter_cnt, 2);
-    assert_eq!(sm.initial_base_cnt, 0);
-    assert_eq!(sm.initial_base_exit_cnt, 2);
+    assert_eq!(sm.base_enter_cnt, 1);
+    assert_eq!(sm.base_cnt, 0);
+    assert_eq!(sm.base_exit_cnt, 0);
     assert_eq!(sm.initial_enter_cnt, 2);
     assert_eq!(sm.initial_cnt, 2);
     assert_eq!(sm.initial_exit_cnt, 2);
-    assert_eq!(sm.other_base_enter_cnt, 1);
-    assert_eq!(sm.other_base_cnt, 0);
-    assert_eq!(sm.other_base_exit_cnt, 1);
     assert_eq!(sm.other_enter_cnt, 1);
     assert_eq!(sm.other_cnt, 1);
     assert_eq!(sm.other_exit_cnt, 1);
 
     sm.dispatch(&NoMessages);
-    assert_eq!(sm.initial_base_enter_cnt, 2);
-    assert_eq!(sm.initial_base_cnt, 0);
-    assert_eq!(sm.initial_base_exit_cnt, 2);
+    assert_eq!(sm.base_enter_cnt, 1);
+    assert_eq!(sm.base_cnt, 0);
+    assert_eq!(sm.base_exit_cnt, 0);
     assert_eq!(sm.initial_enter_cnt, 2);
     assert_eq!(sm.initial_cnt, 2);
     assert_eq!(sm.initial_exit_cnt, 2);
-    assert_eq!(sm.other_base_enter_cnt, 2);
-    assert_eq!(sm.other_base_cnt, 0);
-    assert_eq!(sm.other_base_exit_cnt, 2);
     assert_eq!(sm.other_enter_cnt, 2);
     assert_eq!(sm.other_cnt, 2);
     assert_eq!(sm.other_exit_cnt, 2);
 
     sm.dispatch(&NoMessages);
-    assert_eq!(sm.initial_base_enter_cnt, 3);
-    assert_eq!(sm.initial_base_cnt, 0);
-    assert_eq!(sm.initial_base_exit_cnt, 3);
+    assert_eq!(sm.base_enter_cnt, 1);
+    assert_eq!(sm.base_cnt, 0);
+    assert_eq!(sm.base_exit_cnt, 0);
     assert_eq!(sm.initial_enter_cnt, 3);
     assert_eq!(sm.initial_cnt, 3);
     assert_eq!(sm.initial_exit_cnt, 3);
-    assert_eq!(sm.other_base_enter_cnt, 2);
-    assert_eq!(sm.other_base_cnt, 0);
-    assert_eq!(sm.other_base_exit_cnt, 2);
     assert_eq!(sm.other_enter_cnt, 2);
     assert_eq!(sm.other_cnt, 2);
     assert_eq!(sm.other_exit_cnt, 2);
