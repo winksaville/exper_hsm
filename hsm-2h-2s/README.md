@@ -1,4 +1,4 @@
-# An HSM
+# An HSM with 2 hierarchies of two states
 
 Simple HSM manually coded which is a model for hsm1,
 the hsm implemented using procedural macro.
