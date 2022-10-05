@@ -4,7 +4,7 @@ use hsm1::{handled, hsm1, hsm1_initial_state, hsm1_state, transition_to, StateRe
 struct NoMessages;
 
 #[test]
-fn test_transition_to_self_one_state() {
+fn test_transitions_with_one_state() {
     hsm1!(
         struct Test {
             initial_enter_cnt: usize,
@@ -50,7 +50,7 @@ fn test_transition_to_self_one_state() {
 }
 
 #[test]
-fn test_transition_to_between_two_unrelated_states() {
+fn test_transitions_between_two_unrelated_states() {
     hsm1!(
         struct Test {
             initial_enter_cnt: usize,
@@ -142,7 +142,7 @@ fn test_transition_to_between_two_unrelated_states() {
 }
 
 #[test]
-fn test_transition_to_between_leafs_of_trees() {
+fn test_transitions_between_leafs_of_trees() {
     hsm1!(
         struct Test {
             initial_base_enter_cnt: usize,
