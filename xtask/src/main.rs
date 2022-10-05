@@ -34,9 +34,9 @@ pre-commit:    Runs `cargo fmt`, `cargo clippy` and `cargo test`"#
 }
 
 fn pre_commit(remaining_args: &Vec<String>) -> Result<(), DynError> {
-    cargo_cmd_prj_root("test", remaining_args)?;
-    cargo_cmd_prj_root("clippy", remaining_args)?;
     cargo_cmd_prj_root("fmt", remaining_args)?;
+    cargo_cmd_prj_root("clippy", remaining_args)?;
+    cargo_cmd_prj_root("test", remaining_args)?;
 
     Ok(())
 }
