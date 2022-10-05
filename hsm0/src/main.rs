@@ -331,6 +331,20 @@ impl Default for StateMachine {
     }
 }
 
+// StateMachine simply transitions back and forth
+// between initial and other.
+//
+//  other_base=2          initial_base=0
+//       ^                     ^
+//       |                     |
+//     other=3              initial=1
+
+const MAX_STATE_FNS: usize = 4;
+const INITIAL_BASE_HDL: usize = 0;
+const INITIAL_HDL: usize = 1;
+const OTHER_BASE_HDL: usize = 2;
+const OTHER_HDL: usize = 3;
+
 impl StateMachine {
     pub fn new() -> Self {
         let mut sm = StateMachine {
@@ -357,15 +371,6 @@ impl StateMachine {
 
         sm
     }
-}
-
-const MAX_STATE_FNS: usize = 4;
-const INITIAL_BASE_HDL: usize = 0;
-const INITIAL_HDL: usize = 1;
-const OTHER_BASE_HDL: usize = 2;
-const OTHER_HDL: usize = 3;
-
-impl StateMachine {
     fn initial_base_enter(&mut self, _msg: &NoMessages) {
         self.initial_base_enter_cnt += 1;
     }
@@ -513,9 +518,9 @@ fn test_transition_to_between_leafs_of_trees() {
 fn main() {
     println!("main");
     env_logger_init("info");
-    log::debug!("main:+");
+    log::info!("main:+");
 
     test_transition_to_between_leafs_of_trees();
 
-    log::debug!("main:-");
+    log::info!("main:-");
 }
