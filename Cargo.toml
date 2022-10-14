@@ -2,6 +2,7 @@
 members = [
   "hsm-1h-3s",
   "hsm-2h-2s",
+  "hsm0",
   "hsm1",
   "state-result",
   "xtask",
