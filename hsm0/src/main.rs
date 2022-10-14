@@ -149,11 +149,7 @@ impl StateMachine {
     }
 
     pub fn dispatch_hdl(&mut self, msg: &NoMessages, hdl: usize) {
-        log::trace!(
-            "dispatch_hdl:+ hdl={} {}",
-            hdl,
-            self.state_name(hdl)
-        );
+        log::trace!("dispatch_hdl:+ hdl={} {}", hdl, self.state_name(hdl));
 
         if self.smi.current_state_changed {
             // Execute the enter functions
@@ -199,11 +195,7 @@ impl StateMachine {
             }
             StateResult::Handled => {
                 // Nothing to do
-                log::trace!(
-                    "dispatch_hdl: hdl={} {} Handled",
-                    hdl,
-                    self.state_name(hdl)
-                );
+                log::trace!("dispatch_hdl: hdl={} {} Handled", hdl, self.state_name(hdl));
             }
             StateResult::TransitionTo(next_state_hdl) => {
                 log::trace!(
@@ -234,11 +226,7 @@ impl StateMachine {
             }
         }
 
-        log::trace!(
-            "dispatch_hdl:- hdl={} {}",
-            hdl,
-            self.state_name(hdl)
-        );
+        log::trace!("dispatch_hdl:- hdl={} {}", hdl, self.state_name(hdl));
     }
 
     pub fn dispatch(&mut self, msg: &NoMessages) {
@@ -358,43 +346,41 @@ impl StateMachine {
         // Initialize so transition to initial state works
         sm.initial_enter_fns_hdls();
 
-        log::trace!("new: inital state={} enter_fnss_hdls={:?}", sm.current_state_name(), sm.smi.enter_fns_hdls);
+        log::trace!(
+            "new: inital state={} enter_fnss_hdls={:?}",
+            sm.current_state_name(),
+            sm.smi.enter_fns_hdls
+        );
 
         sm
     }
 
-    fn base_enter(&mut self, _msg: &NoMessages) {
-    }
+    fn base_enter(&mut self, _msg: &NoMessages) {}
 
     // This state has hdl 0
     fn base(&mut self, _msg: &NoMessages) -> StateResult {
         StateResult::Handled
     }
 
-    fn base_exit(&mut self, _msg: &NoMessages) {
-    }
+    fn base_exit(&mut self, _msg: &NoMessages) {}
 
-    fn initial_enter(&mut self, _msg: &NoMessages) {
-    }
+    fn initial_enter(&mut self, _msg: &NoMessages) {}
 
     // This state has hdl 0
     fn initial(&mut self, _msg: &NoMessages) -> StateResult {
         StateResult::TransitionTo(OTHER_HDL)
     }
 
-    fn initial_exit(&mut self, _msg: &NoMessages) {
-    }
+    fn initial_exit(&mut self, _msg: &NoMessages) {}
 
-    fn other_enter(&mut self, _msg: &NoMessages) {
-    }
+    fn other_enter(&mut self, _msg: &NoMessages) {}
 
     // This state has hdl 0
     fn other(&mut self, _msg: &NoMessages) -> StateResult {
         StateResult::TransitionTo(INITIAL_HDL)
     }
 
-    fn other_exit(&mut self, _msg: &NoMessages) {
-    }
+    fn other_exit(&mut self, _msg: &NoMessages) {}
 }
 
 fn test_transition_between_leafs_in_a_tree() {
