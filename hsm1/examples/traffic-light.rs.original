@@ -1,0 +1,201 @@
+use std::{
+    collections::HashMap,
+    time::{Duration, Instant},
+};
+
+use hsm1::{handled, hsm1, hsm1_state, not_handled, StateResult, transition_to};
+
+#[derive(Debug)]
+enum Messages {
+    #[allow(unused)]
+    Initialize {
+        color: LightColor,
+        red_timer: Duration,
+        yellow_timer: Duration,
+        green_timer: Duration,
+    },
+    GetColor {
+        tx: std::sync::mpsc::Sender<Messages>,
+    },
+    GetColorResponse {
+        color: LightColor,
+    },
+}
+
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+enum LightColor {
+    Red,
+    #[allow(unused)]
+    Yellow,
+    #[allow(unused)]
+    Green,
+}
+
+impl Default for LightColor {
+    fn default() -> Self {
+        Self::Red
+    }
+}
+
+#[derive(Debug)]
+struct InstantWrapper {
+    instant: Instant,
+}
+
+impl Default for InstantWrapper {
+    fn default() -> Self {
+        Self {
+            instant: Instant::now(),
+        }
+    }
+}
+
+#[derive(Default, Debug)]
+struct TlState {
+    color: LightColor,
+    change_color_instant: InstantWrapper,
+    durations: HashMap<LightColor, Duration>,
+}
+
+hsm1!(
+    struct TrafficLight {
+        // Because smi: StateMachineInfo does not impl Debug
+        // I currently need to use an external struct where
+        // I can impl Debug :(
+        state: TlState,
+    }
+
+    fn set_color(&mut self, color: LightColor) {
+        self.state.color = color.clone();
+        self.state.change_color_instant.instant = Instant::now() + *self.state.durations.get(&color).unwrap();
+    }
+
+    fn initial_enter(&mut self, msg: &Messages) {
+        println!("initial_enter:+");
+        self.state.durations.insert(LightColor::Red, Duration::new(10,0));
+        self.state.durations.insert(LightColor::Yellow, Duration::new(3, 0));
+        self.state.durations.insert(LightColor::Green, Duration::new(8, 0));
+        self.set_color(self.state.color.clone());
+        println!("initial_enter:- {:?}", self.state);
+    }
+
+    #[hsm1_state]
+    fn initial(&mut self, msg: &Messages) -> StateResult!() {
+        match msg {
+            Messages::Initialize {
+                color,
+                red_timer,
+                yellow_timer,
+                green_timer,
+            } => {
+                self.state.durations.insert(LightColor::Red, *red_timer);
+                self.state
+                    .durations
+                    .insert(LightColor::Yellow, *yellow_timer);
+                self.state.durations.insert(LightColor::Green, *green_timer);
+
+                self.state.change_color_instant.instant =
+                    Instant::now() + *self.state.durations.get(&color).unwrap();
+
+                println!("initial: {:?}", self.state);
+
+                match color {
+                    LightColor::Red => transition_to!(red),
+                    LightColor::Yellow => transition_to!(yellow),
+                    LightColor::Green => transition_to!(green),
+                }
+            }
+            Messages::GetColor { tx } => {
+                tx.send(Messages::GetColorResponse {
+                    color: self.state.color.clone(),
+                });
+                handled!()
+            }
+            Messages::GetColorResponse { color } => {
+                println!("Ignoring Messages::GetColorResponse, not allowed");
+                handled!()
+            }
+        }
+    }
+
+    // In the states below I explicitly call self.initial and to handle other messages.
+    // This is would be wrong if self.initial returned not_handled as it's parent wouldn't
+    // be called, So this is could be a BUG!
+    //
+    // If transition_to was a function with a side-effect this could be handled properly
+    // by the child calling "transition_to" and returning not_handled!  This is how my
+    // other HSM code worked and AFAIK it was never a problem. So I may need to rethink
+    // this!
+
+    fn yellow_enter(&mut self, msg: &Messages) {
+        self.set_color(LightColor::Yellow);
+    }
+
+    #[hsm1_state(initial)]
+    fn yellow(&mut self, msg: &Messages) -> StateResult!() {
+        if Instant::now() > self.state.change_color_instant.instant {
+            self.initial(msg); // Possible bug see above
+            transition_to!(red)
+        } else {
+            not_handled!()
+        }
+    }
+
+    fn red_enter(&mut self, msg: &Messages) {
+        println!("red_enter");
+        self.set_color(LightColor::Red);
+    }
+
+    #[hsm1_state(initial)]
+    fn red(&mut self, msg: &Messages) -> StateResult!() {
+        let now = Instant::now();
+        let change = &self.state.change_color_instant;
+        println!("red: now={:?} change={:?}", now, change);
+        if Instant::now() > self.state.change_color_instant.instant {
+            self.initial(msg); // Possible bug see above
+            transition_to!(green)
+        } else {
+            not_handled!()
+        }
+    }
+
+    fn green_enter(&mut self, msg: &Messages) {
+        self.set_color(LightColor::Green);
+    }
+
+    #[hsm1_state(initial)]
+    fn green(&mut self, msg: &Messages) -> StateResult!() {
+        if Instant::now() > self.state.change_color_instant.instant {
+            self.initial(msg); // Possible bug see above
+            transition_to!(yellow)
+        } else {
+            not_handled!()
+        }
+    }
+);
+
+fn main() {
+    let (tx, rx) = std::sync::mpsc::channel::<Messages>();
+    let mut hsm = TrafficLight::new();
+
+    //let msg = Messages::Initialize {
+        //color: LightColor::Green,
+        //red_timer: Duration::new(3, 0),
+        //yellow_timer: Duration::new(1, 0),
+        //green_timer: Duration::new(3, 0),
+    //};
+    //hsm.dispatch(&msg);
+
+    let msg = Messages::GetColor { tx };
+    for i in 1..=25 {
+        hsm.dispatch(&msg);
+        let rsp = rx.recv().unwrap();
+        let color = match &rsp {
+            Messages::GetColorResponse { color } => color,
+            _ => panic!("Unexpected Message {rsp:?}"),
+        };
+        println!("{i:3}: rsp.color={color:?}");
+
+        std::thread::sleep(Duration::new(1,0));
+    }
+}
