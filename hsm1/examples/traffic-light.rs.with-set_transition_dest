@@ -1,0 +1,249 @@
+use std::{
+    collections::HashMap,
+    time::{Duration, Instant},
+};
+
+use hsm1::{handled, hsm1, hsm1_state, not_handled, StateResult, transition_to, set_transition_dest};
+
+#[derive(Debug)]
+enum Messages {
+    #[allow(unused)]
+    Initialize {
+        color: LightColor,
+        red_timer: Duration,
+        yellow_timer: Duration,
+        green_timer: Duration,
+    },
+    GetColor {
+        tx: std::sync::mpsc::Sender<Messages>,
+    },
+    GetColorResponse {
+        color: LightColor,
+    },
+}
+
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+enum LightColor {
+    Red,
+    #[allow(unused)]
+    Yellow,
+    #[allow(unused)]
+    Green,
+}
+
+impl Default for LightColor {
+    fn default() -> Self {
+        Self::Red
+    }
+}
+
+#[derive(Debug)]
+struct InstantWrapper {
+    instant: Instant,
+}
+
+impl Default for InstantWrapper {
+    fn default() -> Self {
+        Self {
+            instant: Instant::now(),
+        }
+    }
+}
+
+#[derive(Default, Debug)]
+struct TlState {
+    color: LightColor,
+    change_color_instant: InstantWrapper,
+    durations: HashMap<LightColor, Duration>,
+}
+
+hsm1!(
+    struct TrafficLight {
+        // Because smi: StateMachineInfo does not impl Debug
+        // I currently need to use an external struct where
+        // I can impl Debug :(
+        state: TlState,
+    }
+
+    fn set_color(&mut self, color: LightColor) {
+        self.state.color = color.clone();
+        let now = Instant::now();
+        let duration = *self.state.durations.get(&color).unwrap();
+        self.state.change_color_instant.instant = now + duration;
+        let cci = self.state.change_color_instant.instant;
+        println!("set_color: cci:{cci:?} = now:{now:?} + duration:{duration:?}");
+    }
+
+    fn initial_enter(&mut self, msg: &Messages) {
+        println!("initial_enter:+");
+        self.state.durations.insert(LightColor::Red, Duration::new(10,0));
+        self.state.durations.insert(LightColor::Yellow, Duration::new(2, 0));
+        self.state.durations.insert(LightColor::Green, Duration::new(7, 0));
+        self.set_color(self.state.color.clone());
+        println!("initial_enter:-");
+    }
+
+    #[hsm1_state(base)]
+    fn initial(&mut self, msg: &Messages) -> StateResult!() {
+        // If parents don't do a transition_to this will be the default
+        match self.state.color {
+            LightColor::Red => set_transition_dest!(red),
+            LightColor::Yellow => set_transition_dest!(yellow),
+            LightColor::Green => set_transition_dest!(green),
+        }
+
+        // Always have the parents process the msgs
+        not_handled!()
+    }
+
+    #[hsm1_state]
+    fn base(&mut self, msg: &Messages) -> StateResult!() {
+        match msg {
+            Messages::Initialize {
+                color,
+                red_timer,
+                yellow_timer,
+                green_timer,
+            } => {
+                self.state.durations.insert(LightColor::Red, *red_timer);
+                self.state
+                    .durations
+                    .insert(LightColor::Yellow, *yellow_timer);
+                self.state.durations.insert(LightColor::Green, *green_timer);
+
+                self.state.change_color_instant.instant =
+                    Instant::now() + *self.state.durations.get(&color).unwrap();
+
+                match color {
+                    LightColor::Red => transition_to!(red),
+                    LightColor::Yellow => transition_to!(yellow),
+                    LightColor::Green => transition_to!(green),
+                }
+            }
+            Messages::GetColor { tx } => {
+                tx.send(Messages::GetColorResponse {
+                    color: self.state.color.clone(),
+                });
+                handled!()
+            }
+            Messages::GetColorResponse { color } => {
+                println!("Ignoring Messages::GetColorResponse, not allowed");
+                handled!()
+            }
+        }
+    }
+
+    // In the states below I explicitly call self.initial and to handle other messages.
+    // This is would be wrong if self.initial returned not_handled as it's parent wouldn't
+    // be called, So this is could be a BUG!
+    //
+    // If transition_to was a function with a side-effect this could be handled properly
+    // by the child calling "transition_to" and returning not_handled!  This is how my
+    // other HSM code worked and AFAIK it was never a problem. So I may need to rethink
+    // this!
+
+    fn yellow_enter(&mut self, msg: &Messages) {
+        println!("yellow_enter:+");
+        self.set_color(LightColor::Yellow);
+        println!("yellow_enter:-");
+    }
+
+    #[hsm1_state(base)]
+    fn yellow(&mut self, msg: &Messages) -> StateResult!() {
+        let now = Instant::now();
+        let cci = self.state.change_color_instant.instant;
+        //if now >= cci {
+        //    println!("yellow: now={now:?} >= cci={cci:?}");
+        ////if Instant::now() >= self.state.change_color_instant.instant {
+        //    self.base(msg); // Possible bug see above
+        //    transition_to!(red)
+        //} else {
+        //    println!("yellow: now={now:?} < cci={cci:?}");
+        //    not_handled!()
+        //}
+
+        if now >= cci {
+        //if Instant::now() >= self.state.change_color_instant.instant {
+            println!("yellow: now={now:?} >= cci={cci:?}");
+            set_transition_dest!(red);
+        }
+
+        // Parents handle the msg
+        not_handled!()
+    }
+
+    fn red_enter(&mut self, msg: &Messages) {
+        println!("red_enter:+");
+        self.set_color(LightColor::Red);
+        println!("red_enter:1");
+    }
+
+    #[hsm1_state(base)]
+    fn red(&mut self, msg: &Messages) -> StateResult!() {
+        let now = Instant::now();
+        let change = &self.state.change_color_instant;
+        if Instant::now() >= self.state.change_color_instant.instant {
+            self.base(msg); // Possible bug see above
+            transition_to!(green)
+        } else {
+            not_handled!()
+        }
+    }
+
+    fn green_enter(&mut self, msg: &Messages) {
+        println!("green_enter:+");
+        self.set_color(LightColor::Green);
+        println!("green_enter:-");
+    }
+
+    #[hsm1_state(base)]
+    fn green(&mut self, msg: &Messages) -> StateResult!() {
+        let now = Instant::now();
+        let cci = self.state.change_color_instant.instant;
+        //if now >= cci {
+        //if Instant::now() >= self.state.change_color_instant.instant {
+        //    println!("green: now={now:?} >= cci={cci:?}");
+        //    self.base(msg); // Possible bug see above
+        //    transition_to!(yellow)
+        //} else {
+        //    println!("green: now={now:?} < cci={cci:?}");
+        //    not_handled!()
+        //}
+
+        if now >= cci {
+        //if Instant::now() >= self.state.change_color_instant.instant {
+            println!("green: now={now:?} >= cci={cci:?}");
+            set_transition_dest!(yellow);
+        }
+
+        // Parents handle the msg
+        not_handled!()
+    }
+);
+
+fn main() {
+    let (tx, rx) = std::sync::mpsc::channel::<Messages>();
+    let mut hsm = TrafficLight::new();
+
+    let msg = Messages::Initialize {
+        color: LightColor::Green,
+        red_timer: Duration::new(3, 0),
+        yellow_timer: Duration::new(1, 0),
+        green_timer: Duration::new(3, 0),
+    };
+    hsm.dispatch(&msg);
+
+    let msg = Messages::GetColor { tx };
+    for i in 1..=200 {
+        hsm.dispatch(&msg);
+        let rsp = rx.recv().unwrap();
+        let color = match &rsp {
+            Messages::GetColorResponse { color } => color,
+            _ => panic!("Unexpected Message {rsp:?}"),
+        };
+        println!("{i:3}: rsp.color={color:?}");
+
+        let millisec = Duration::new(0, 1000000);
+        std::thread::sleep(millisec * 100);
+    }
+}
