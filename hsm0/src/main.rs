@@ -34,6 +34,27 @@ pub struct StateInfo {
     pub exit_cnt: usize,
 }
 
+impl StateInfo {
+    fn new(
+        name: &str,
+        enter_fn: Option<EnterFn>,
+        process_fn: StateFn,
+        exit_fn: Option<ExitFn>,
+        parent_hdl: Option<usize>,
+    ) -> Self {
+        StateInfo {
+            name: name.to_owned(),
+            parent: parent_hdl,
+            enter: enter_fn,
+            process: process_fn,
+            exit: exit_fn,
+            active: false,
+            enter_cnt: 0,
+            process_cnt: 0,
+            exit_cnt: 0,
+        }
+    }
+}
 impl StateMachine {
     fn state_name(&self, hdl: usize) -> &str {
         &self.smi.state_fns[hdl].name
@@ -304,43 +325,31 @@ impl StateMachine {
             smi: StateMachineInfo::new(MAX_STATE_FNS, INITIAL_HDL),
         };
 
-        let base_si = StateInfo {
-            name: "base".to_owned(),
-            parent: None,
-            enter: Some(Self::base_enter),
-            process: Self::base,
-            exit: Some(Self::base_exit),
-            active: false,
-            enter_cnt: 0,
-            process_cnt: 0,
-            exit_cnt: 0,
-        };
+        let base_si = StateInfo::new(
+            "base",
+            Some(Self::base_enter),
+            Self::base,
+            Some(Self::base_exit),
+            None,
+        );
         sm.smi.add_state(base_si);
 
-        let initial_si = StateInfo {
-            name: "initial".to_owned(),
-            parent: Some(BASE_HDL),
-            enter: Some(Self::initial_enter),
-            process: Self::initial,
-            exit: Some(Self::initial_exit),
-            active: false,
-            enter_cnt: 0,
-            process_cnt: 0,
-            exit_cnt: 0,
-        };
+        let initial_si = StateInfo::new(
+            "initial",
+            Some(Self::initial_enter),
+            Self::initial,
+            Some(Self::initial_exit),
+            Some(BASE_HDL),
+        );
         sm.smi.add_state(initial_si);
 
-        let other_si = StateInfo {
-            name: "other".to_owned(),
-            parent: Some(BASE_HDL),
-            enter: Some(Self::other_enter),
-            process: Self::other,
-            exit: Some(Self::other_exit),
-            active: false,
-            enter_cnt: 0,
-            process_cnt: 0,
-            exit_cnt: 0,
-        };
+        let other_si = StateInfo::new(
+            "other",
+            Some(Self::other_enter),
+            Self::other,
+            Some(Self::other_exit),
+            Some(BASE_HDL),
+        );
         sm.smi.add_state(other_si);
 
         // Initialize so transition to initial state works
