@@ -55,13 +55,75 @@ impl StateInfo {
         }
     }
 }
-impl StateMachine {
+
+//#[derive(Debug)]
+pub struct StateMachineInfo {
+    //pub name: String, // TODO: add StateMachineInfo::name
+    pub sm: StateMachine,
+    pub state_fns: Vec<StateInfo>,
+    pub enter_fns_hdls: Vec<usize>,
+    pub exit_fns_hdls: std::collections::VecDeque<usize>,
+    pub current_state_fns_hdl: usize,
+    pub previous_state_fns_hdl: usize,
+    pub current_state_changed: bool,
+    //pub transition_dest_hdl: Option<usize>,
+}
+
+impl StateMachineInfo {
+    fn new(sm: StateMachine, max_fns: usize, initial_hdl: usize) -> Self {
+        StateMachineInfo {
+            sm,
+            state_fns: Vec::<StateInfo>::with_capacity(max_fns),
+            enter_fns_hdls: Vec::<usize>::with_capacity(max_fns),
+            exit_fns_hdls: VecDeque::<usize>::with_capacity(max_fns),
+            current_state_fns_hdl: initial_hdl,
+            previous_state_fns_hdl: initial_hdl,
+            current_state_changed: true,
+            //transition_dest_hdl: Option<usize>,
+        }
+    }
+
+    fn add_state(&mut self, state_info: StateInfo) {
+        self.state_fns.push(state_info);
+    }
+}
+
+pub struct StateMachineExecutor {
+    pub smi: StateMachineInfo,
+}
+
+impl StateMachineExecutor {
+    fn new(sm: StateMachine, max_fns: usize, initial_hdl: usize) -> Self {
+        StateMachineExecutor {
+            smi: StateMachineInfo::new(sm, max_fns, initial_hdl),
+        }
+    }
+
     fn state_name(&self, hdl: usize) -> &str {
         &self.smi.state_fns[hdl].name
     }
 
     fn current_state_name(&self) -> &str {
         self.state_name(self.smi.current_state_fns_hdl)
+    }
+
+    fn get_sm(&mut self) -> &StateMachine {
+        &self.smi.sm
+    }
+
+    fn add_state(&mut self, state_info: StateInfo) {
+        self.smi.add_state(state_info);
+    }
+
+    fn get_state_fns_enter_cnt(&self, hdl: usize) -> usize {
+        self.smi.state_fns[hdl].enter_cnt
+    }
+    fn get_state_fns_process_cnt(&self, hdl: usize) -> usize {
+        self.smi.state_fns[hdl].process_cnt
+    }
+
+    fn get_state_fns_exit_cnt(&self, hdl: usize) -> usize {
+        self.smi.state_fns[hdl].exit_cnt
     }
 
     // When the state machine starts there will be no fn's to
@@ -182,7 +244,7 @@ impl StateMachine {
                         self.state_name(enter_hdl)
                     );
                     self.smi.state_fns[enter_hdl].enter_cnt += 1;
-                    (state_enter)(self, msg);
+                    (state_enter)(&mut self.smi.sm, msg);
                     self.smi.state_fns[enter_hdl].active = true;
                 }
             }
@@ -197,7 +259,7 @@ impl StateMachine {
         );
 
         self.smi.state_fns[hdl].process_cnt += 1;
-        match (self.smi.state_fns[hdl].process)(self, msg) {
+        match (self.smi.state_fns[hdl].process)(&mut self.smi.sm, msg) {
             StateResult::NotHandled => {
                 if let Some(parent_hdl) = self.smi.state_fns[hdl].parent {
                     log::trace!(
@@ -241,7 +303,7 @@ impl StateMachine {
                         self.state_name(exit_hdl)
                     );
                     self.smi.state_fns[exit_hdl].exit_cnt += 1;
-                    (state_exit)(self, msg);
+                    (state_exit)(&mut self.smi.sm, msg);
                     self.smi.state_fns[exit_hdl].active = false;
                 }
             }
@@ -265,46 +327,6 @@ impl StateMachine {
     }
 }
 
-//#[derive(Debug)]
-pub struct StateMachineInfo {
-    //pub name: String, // TODO: add StateMachineInfo::name
-    pub state_fns: Vec<StateInfo>,
-    pub enter_fns_hdls: Vec<usize>,
-    pub exit_fns_hdls: std::collections::VecDeque<usize>,
-    pub current_state_fns_hdl: usize,
-    pub previous_state_fns_hdl: usize,
-    pub current_state_changed: bool,
-    //pub transition_dest_hdl: Option<usize>,
-}
-
-impl StateMachineInfo {
-    fn new(max_fns: usize, initial_hdl: usize) -> Self {
-        StateMachineInfo {
-            state_fns: Vec::<StateInfo>::with_capacity(max_fns),
-            enter_fns_hdls: Vec::<usize>::with_capacity(max_fns),
-            exit_fns_hdls: VecDeque::<usize>::with_capacity(max_fns),
-            current_state_fns_hdl: initial_hdl,
-            previous_state_fns_hdl: initial_hdl,
-            current_state_changed: true,
-            //transition_dest_hdl: Option<usize>,
-        }
-    }
-
-    fn add_state(&mut self, state_info: StateInfo) {
-        self.state_fns.push(state_info);
-    }
-}
-
-pub struct StateMachine {
-    pub smi: StateMachineInfo,
-}
-
-impl Default for StateMachine {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 // StateMachine simply transitions back and forth
 // between initial and other.
 //
@@ -314,16 +336,18 @@ impl Default for StateMachine {
 //      /                     \
 //    other=2   <======>   initial=1
 
+#[derive(Default)]
+pub struct StateMachine;
+
 const MAX_STATE_FNS: usize = 3;
 const BASE_HDL: usize = 0;
 const INITIAL_HDL: usize = 1;
 const OTHER_HDL: usize = 2;
 
 impl StateMachine {
-    pub fn new() -> Self {
-        let mut sm = StateMachine {
-            smi: StateMachineInfo::new(MAX_STATE_FNS, INITIAL_HDL),
-        };
+    pub fn create() -> StateMachineExecutor {
+        let sm = StateMachine::default();
+        let mut sme = StateMachineExecutor::new(sm, MAX_STATE_FNS, INITIAL_HDL);
 
         let base_si = StateInfo::new(
             "base",
@@ -332,7 +356,7 @@ impl StateMachine {
             Some(Self::base_exit),
             None,
         );
-        sm.smi.add_state(base_si);
+        sme.add_state(base_si);
 
         let initial_si = StateInfo::new(
             "initial",
@@ -341,7 +365,7 @@ impl StateMachine {
             Some(Self::initial_exit),
             Some(BASE_HDL),
         );
-        sm.smi.add_state(initial_si);
+        sme.add_state(initial_si);
 
         let other_si = StateInfo::new(
             "other",
@@ -350,18 +374,18 @@ impl StateMachine {
             Some(Self::other_exit),
             Some(BASE_HDL),
         );
-        sm.smi.add_state(other_si);
+        sme.add_state(other_si);
 
         // Initialize so transition to initial state works
-        sm.initial_enter_fns_hdls();
+        sme.initial_enter_fns_hdls();
 
         log::trace!(
             "new: inital state={} enter_fnss_hdls={:?}",
-            sm.current_state_name(),
-            sm.smi.enter_fns_hdls
+            sme.current_state_name(),
+            sme.smi.enter_fns_hdls
         );
 
-        sm
+        sme
     }
 
     fn base_enter(&mut self, _msg: &NoMessages) {}
@@ -393,72 +417,73 @@ impl StateMachine {
 }
 
 fn test_transition_between_leafs_in_a_tree() {
-    // Create a sm and validate it's in the expected state
-    let mut sm = StateMachine::new();
-    assert_eq!(sm.smi.state_fns[BASE_HDL].enter_cnt, 0);
-    assert_eq!(sm.smi.state_fns[BASE_HDL].process_cnt, 0);
-    assert_eq!(sm.smi.state_fns[BASE_HDL].exit_cnt, 0);
-    assert_eq!(sm.smi.state_fns[INITIAL_HDL].enter_cnt, 0);
-    assert_eq!(sm.smi.state_fns[INITIAL_HDL].process_cnt, 0);
-    assert_eq!(sm.smi.state_fns[INITIAL_HDL].exit_cnt, 0);
-    assert_eq!(sm.smi.state_fns[OTHER_HDL].enter_cnt, 0);
-    assert_eq!(sm.smi.state_fns[OTHER_HDL].process_cnt, 0);
-    assert_eq!(sm.smi.state_fns[OTHER_HDL].exit_cnt, 0);
+    // Create a sme and validate it's in the expected state
+    let mut sme = StateMachine::create();
+    assert_eq!(std::mem::size_of_val(sme.get_sm()), 0);
+    assert_eq!(sme.get_state_fns_enter_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_fns_process_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_fns_exit_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_fns_enter_cnt(INITIAL_HDL), 0);
+    assert_eq!(sme.get_state_fns_process_cnt(INITIAL_HDL), 0);
+    assert_eq!(sme.get_state_fns_exit_cnt(INITIAL_HDL), 0);
+    assert_eq!(sme.get_state_fns_enter_cnt(OTHER_HDL), 0);
+    assert_eq!(sme.get_state_fns_process_cnt(OTHER_HDL), 0);
+    assert_eq!(sme.get_state_fns_exit_cnt(OTHER_HDL), 0);
 
-    sm.dispatch(&NoMessages);
-    assert_eq!(sm.smi.state_fns[BASE_HDL].enter_cnt, 1);
-    assert_eq!(sm.smi.state_fns[BASE_HDL].process_cnt, 0);
-    assert_eq!(sm.smi.state_fns[BASE_HDL].exit_cnt, 0);
-    assert_eq!(sm.smi.state_fns[INITIAL_HDL].enter_cnt, 1);
-    assert_eq!(sm.smi.state_fns[INITIAL_HDL].process_cnt, 1);
-    assert_eq!(sm.smi.state_fns[INITIAL_HDL].exit_cnt, 1);
-    assert_eq!(sm.smi.state_fns[OTHER_HDL].enter_cnt, 0);
-    assert_eq!(sm.smi.state_fns[OTHER_HDL].process_cnt, 0);
-    assert_eq!(sm.smi.state_fns[OTHER_HDL].exit_cnt, 0);
+    sme.dispatch(&NoMessages);
+    assert_eq!(sme.get_state_fns_enter_cnt(BASE_HDL), 1);
+    assert_eq!(sme.get_state_fns_process_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_fns_exit_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_fns_enter_cnt(INITIAL_HDL), 1);
+    assert_eq!(sme.get_state_fns_process_cnt(INITIAL_HDL), 1);
+    assert_eq!(sme.get_state_fns_exit_cnt(INITIAL_HDL), 1);
+    assert_eq!(sme.get_state_fns_enter_cnt(OTHER_HDL), 0);
+    assert_eq!(sme.get_state_fns_process_cnt(OTHER_HDL), 0);
+    assert_eq!(sme.get_state_fns_exit_cnt(OTHER_HDL), 0);
 
-    sm.dispatch(&NoMessages);
-    assert_eq!(sm.smi.state_fns[BASE_HDL].enter_cnt, 1);
-    assert_eq!(sm.smi.state_fns[BASE_HDL].process_cnt, 0);
-    assert_eq!(sm.smi.state_fns[BASE_HDL].exit_cnt, 0);
-    assert_eq!(sm.smi.state_fns[INITIAL_HDL].enter_cnt, 1);
-    assert_eq!(sm.smi.state_fns[INITIAL_HDL].process_cnt, 1);
-    assert_eq!(sm.smi.state_fns[INITIAL_HDL].exit_cnt, 1);
-    assert_eq!(sm.smi.state_fns[OTHER_HDL].enter_cnt, 1);
-    assert_eq!(sm.smi.state_fns[OTHER_HDL].process_cnt, 1);
-    assert_eq!(sm.smi.state_fns[OTHER_HDL].exit_cnt, 1);
+    sme.dispatch(&NoMessages);
+    assert_eq!(sme.get_state_fns_enter_cnt(BASE_HDL), 1);
+    assert_eq!(sme.get_state_fns_process_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_fns_exit_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_fns_enter_cnt(INITIAL_HDL), 1);
+    assert_eq!(sme.get_state_fns_process_cnt(INITIAL_HDL), 1);
+    assert_eq!(sme.get_state_fns_exit_cnt(INITIAL_HDL), 1);
+    assert_eq!(sme.get_state_fns_enter_cnt(OTHER_HDL), 1);
+    assert_eq!(sme.get_state_fns_process_cnt(OTHER_HDL), 1);
+    assert_eq!(sme.get_state_fns_exit_cnt(OTHER_HDL), 1);
 
-    sm.dispatch(&NoMessages);
-    assert_eq!(sm.smi.state_fns[BASE_HDL].enter_cnt, 1);
-    assert_eq!(sm.smi.state_fns[BASE_HDL].process_cnt, 0);
-    assert_eq!(sm.smi.state_fns[BASE_HDL].exit_cnt, 0);
-    assert_eq!(sm.smi.state_fns[INITIAL_HDL].enter_cnt, 2);
-    assert_eq!(sm.smi.state_fns[INITIAL_HDL].process_cnt, 2);
-    assert_eq!(sm.smi.state_fns[INITIAL_HDL].exit_cnt, 2);
-    assert_eq!(sm.smi.state_fns[OTHER_HDL].enter_cnt, 1);
-    assert_eq!(sm.smi.state_fns[OTHER_HDL].process_cnt, 1);
-    assert_eq!(sm.smi.state_fns[OTHER_HDL].exit_cnt, 1);
+    sme.dispatch(&NoMessages);
+    assert_eq!(sme.get_state_fns_enter_cnt(BASE_HDL), 1);
+    assert_eq!(sme.get_state_fns_process_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_fns_exit_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_fns_enter_cnt(INITIAL_HDL), 2);
+    assert_eq!(sme.get_state_fns_process_cnt(INITIAL_HDL), 2);
+    assert_eq!(sme.get_state_fns_exit_cnt(INITIAL_HDL), 2);
+    assert_eq!(sme.get_state_fns_enter_cnt(OTHER_HDL), 1);
+    assert_eq!(sme.get_state_fns_process_cnt(OTHER_HDL), 1);
+    assert_eq!(sme.get_state_fns_exit_cnt(OTHER_HDL), 1);
 
-    sm.dispatch(&NoMessages);
-    assert_eq!(sm.smi.state_fns[BASE_HDL].enter_cnt, 1);
-    assert_eq!(sm.smi.state_fns[BASE_HDL].process_cnt, 0);
-    assert_eq!(sm.smi.state_fns[BASE_HDL].exit_cnt, 0);
-    assert_eq!(sm.smi.state_fns[INITIAL_HDL].enter_cnt, 2);
-    assert_eq!(sm.smi.state_fns[INITIAL_HDL].process_cnt, 2);
-    assert_eq!(sm.smi.state_fns[INITIAL_HDL].exit_cnt, 2);
-    assert_eq!(sm.smi.state_fns[OTHER_HDL].enter_cnt, 2);
-    assert_eq!(sm.smi.state_fns[OTHER_HDL].process_cnt, 2);
-    assert_eq!(sm.smi.state_fns[OTHER_HDL].exit_cnt, 2);
+    sme.dispatch(&NoMessages);
+    assert_eq!(sme.get_state_fns_enter_cnt(BASE_HDL), 1);
+    assert_eq!(sme.get_state_fns_process_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_fns_exit_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_fns_enter_cnt(INITIAL_HDL), 2);
+    assert_eq!(sme.get_state_fns_process_cnt(INITIAL_HDL), 2);
+    assert_eq!(sme.get_state_fns_exit_cnt(INITIAL_HDL), 2);
+    assert_eq!(sme.get_state_fns_enter_cnt(OTHER_HDL), 2);
+    assert_eq!(sme.get_state_fns_process_cnt(OTHER_HDL), 2);
+    assert_eq!(sme.get_state_fns_exit_cnt(OTHER_HDL), 2);
 
-    sm.dispatch(&NoMessages);
-    assert_eq!(sm.smi.state_fns[BASE_HDL].enter_cnt, 1);
-    assert_eq!(sm.smi.state_fns[BASE_HDL].process_cnt, 0);
-    assert_eq!(sm.smi.state_fns[BASE_HDL].exit_cnt, 0);
-    assert_eq!(sm.smi.state_fns[INITIAL_HDL].enter_cnt, 3);
-    assert_eq!(sm.smi.state_fns[INITIAL_HDL].process_cnt, 3);
-    assert_eq!(sm.smi.state_fns[INITIAL_HDL].exit_cnt, 3);
-    assert_eq!(sm.smi.state_fns[OTHER_HDL].enter_cnt, 2);
-    assert_eq!(sm.smi.state_fns[OTHER_HDL].process_cnt, 2);
-    assert_eq!(sm.smi.state_fns[OTHER_HDL].exit_cnt, 2);
+    sme.dispatch(&NoMessages);
+    assert_eq!(sme.get_state_fns_enter_cnt(BASE_HDL), 1);
+    assert_eq!(sme.get_state_fns_process_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_fns_exit_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_fns_enter_cnt(INITIAL_HDL), 3);
+    assert_eq!(sme.get_state_fns_process_cnt(INITIAL_HDL), 3);
+    assert_eq!(sme.get_state_fns_exit_cnt(INITIAL_HDL), 3);
+    assert_eq!(sme.get_state_fns_enter_cnt(OTHER_HDL), 2);
+    assert_eq!(sme.get_state_fns_process_cnt(OTHER_HDL), 2);
+    assert_eq!(sme.get_state_fns_exit_cnt(OTHER_HDL), 2);
 }
 
 fn main() {
