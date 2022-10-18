@@ -56,8 +56,7 @@ impl StateInfo {
     }
 }
 
-//#[derive(Debug)]
-pub struct StateMachineInfo {
+pub struct StateMachineExecutor {
     //pub name: String, // TODO: add StateMachineInfo::name
     pub sm: StateMachine,
     pub state_fns: Vec<StateInfo>,
@@ -69,9 +68,9 @@ pub struct StateMachineInfo {
     //pub transition_dest_hdl: Option<usize>,
 }
 
-impl StateMachineInfo {
+impl StateMachineExecutor {
     fn new(sm: StateMachine, max_fns: usize, initial_hdl: usize) -> Self {
-        StateMachineInfo {
+        StateMachineExecutor {
             sm,
             state_fns: Vec::<StateInfo>::with_capacity(max_fns),
             enter_fns_hdls: Vec::<usize>::with_capacity(max_fns),
@@ -83,61 +82,45 @@ impl StateMachineInfo {
         }
     }
 
-    fn add_state(&mut self, state_info: StateInfo) {
-        self.state_fns.push(state_info);
-    }
-}
-
-pub struct StateMachineExecutor {
-    pub smi: StateMachineInfo,
-}
-
-impl StateMachineExecutor {
-    fn new(sm: StateMachine, max_fns: usize, initial_hdl: usize) -> Self {
-        StateMachineExecutor {
-            smi: StateMachineInfo::new(sm, max_fns, initial_hdl),
-        }
-    }
-
     fn state_name(&self, hdl: usize) -> &str {
-        &self.smi.state_fns[hdl].name
+        &self.state_fns[hdl].name
     }
 
     fn current_state_name(&self) -> &str {
-        self.state_name(self.smi.current_state_fns_hdl)
+        self.state_name(self.current_state_fns_hdl)
     }
 
     fn get_sm(&mut self) -> &StateMachine {
-        &self.smi.sm
+        &self.sm
     }
 
     fn add_state(&mut self, state_info: StateInfo) {
-        self.smi.add_state(state_info);
+        self.state_fns.push(state_info);
     }
 
     fn get_state_fns_enter_cnt(&self, hdl: usize) -> usize {
-        self.smi.state_fns[hdl].enter_cnt
+        self.state_fns[hdl].enter_cnt
     }
     fn get_state_fns_process_cnt(&self, hdl: usize) -> usize {
-        self.smi.state_fns[hdl].process_cnt
+        self.state_fns[hdl].process_cnt
     }
 
     fn get_state_fns_exit_cnt(&self, hdl: usize) -> usize {
-        self.smi.state_fns[hdl].exit_cnt
+        self.state_fns[hdl].exit_cnt
     }
 
     // When the state machine starts there will be no fn's to
     // exit so we initialize only the enter_fns_hdls.
     fn initial_enter_fns_hdls(&mut self) {
-        let mut enter_hdl = self.smi.current_state_fns_hdl;
+        let mut enter_hdl = self.current_state_fns_hdl;
         loop {
             log::trace!(
                 "initial_enter_fns_hdls: push enter_hdl={} {}",
                 enter_hdl,
                 self.state_name(enter_hdl)
             );
-            self.smi.enter_fns_hdls.push(enter_hdl);
-            enter_hdl = if let Some(hdl) = self.smi.state_fns[enter_hdl].parent {
+            self.enter_fns_hdls.push(enter_hdl);
+            enter_hdl = if let Some(hdl) = self.state_fns[enter_hdl].parent {
                 hdl
             } else {
                 break;
@@ -155,12 +138,12 @@ impl StateMachineExecutor {
                 cur_hdl,
                 self.state_name(cur_hdl)
             );
-            self.smi.enter_fns_hdls.push(cur_hdl);
+            self.enter_fns_hdls.push(cur_hdl);
 
-            cur_hdl = if let Some(hdl) = self.smi.state_fns[cur_hdl].parent {
+            cur_hdl = if let Some(hdl) = self.state_fns[cur_hdl].parent {
                 hdl
             } else {
-                // Exit state_fns[self.smi.current_state_fns_hdl] and all its parents
+                // Exit state_fns[self.current_state_fns_hdl] and all its parents
                 log::trace!(
                     "setup_exit_enter_fns_hdls: cur_hdl={} {} has no parent exit_sentinel=None",
                     cur_hdl,
@@ -169,8 +152,8 @@ impl StateMachineExecutor {
                 break None;
             };
 
-            if self.smi.state_fns[cur_hdl].active {
-                // Exit state_fns[self.smi.current_state_fns_hdl] and
+            if self.state_fns[cur_hdl].active {
+                // Exit state_fns[self.current_state_fns_hdl] and
                 // parents upto but excluding state_fns[cur_hdl]
                 log::trace!(
                     "setup_exit_enter_fns_hdls: cur_hdl={} {} is active so it's exit_sentinel",
@@ -181,12 +164,12 @@ impl StateMachineExecutor {
             }
         };
 
-        // Starting at self.smi.current_state_fns_hdl generate the
+        // Starting at self.current_state_fns_hdl generate the
         // list of StateFns that we're going to exit. If exit_sentinel is None
         // then exit from current_state_fns_hdl and all of its parents.
         // If exit_sentinel is Some then exit from the current state_fns_hdl
         // up to but not including the exit_sentinel.
-        let mut exit_hdl = self.smi.current_state_fns_hdl;
+        let mut exit_hdl = self.current_state_fns_hdl;
 
         // Always exit the first state, this handles the special case
         // where Some(exit_hdl) == exit_sentinel.
@@ -195,10 +178,10 @@ impl StateMachineExecutor {
             exit_hdl,
             self.state_name(exit_hdl)
         );
-        self.smi.exit_fns_hdls.push_back(exit_hdl);
+        self.exit_fns_hdls.push_back(exit_hdl);
 
         loop {
-            exit_hdl = if let Some(hdl) = self.smi.state_fns[exit_hdl].parent {
+            exit_hdl = if let Some(hdl) = self.state_fns[exit_hdl].parent {
                 hdl
             } else {
                 // No parent we're done
@@ -227,28 +210,28 @@ impl StateMachineExecutor {
                 exit_hdl,
                 self.state_name(exit_hdl)
             );
-            self.smi.exit_fns_hdls.push_back(exit_hdl);
+            self.exit_fns_hdls.push_back(exit_hdl);
         }
     }
 
     pub fn dispatch_hdl(&mut self, msg: &NoMessages, hdl: usize) {
         log::trace!("dispatch_hdl:+ hdl={} {}", hdl, self.state_name(hdl));
 
-        if self.smi.current_state_changed {
+        if self.current_state_changed {
             // Execute the enter functions
-            while let Some(enter_hdl) = self.smi.enter_fns_hdls.pop() {
-                if let Some(state_enter) = self.smi.state_fns[enter_hdl].enter {
+            while let Some(enter_hdl) = self.enter_fns_hdls.pop() {
+                if let Some(state_enter) = self.state_fns[enter_hdl].enter {
                     log::trace!(
                         "dispatch_hdl: entering hdl={} {}",
                         enter_hdl,
                         self.state_name(enter_hdl)
                     );
-                    self.smi.state_fns[enter_hdl].enter_cnt += 1;
-                    (state_enter)(&mut self.smi.sm, msg);
-                    self.smi.state_fns[enter_hdl].active = true;
+                    self.state_fns[enter_hdl].enter_cnt += 1;
+                    (state_enter)(&mut self.sm, msg);
+                    self.state_fns[enter_hdl].active = true;
                 }
             }
-            self.smi.current_state_changed = false;
+            self.current_state_changed = false;
         }
 
         // Invoke the current state funtion processing the result
@@ -258,10 +241,10 @@ impl StateMachineExecutor {
             self.state_name(hdl)
         );
 
-        self.smi.state_fns[hdl].process_cnt += 1;
-        match (self.smi.state_fns[hdl].process)(&mut self.smi.sm, msg) {
+        self.state_fns[hdl].process_cnt += 1;
+        match (self.state_fns[hdl].process)(&mut self.sm, msg) {
             StateResult::NotHandled => {
-                if let Some(parent_hdl) = self.smi.state_fns[hdl].parent {
+                if let Some(parent_hdl) = self.state_fns[hdl].parent {
                     log::trace!(
                         "dispatch_hdl: hdl={} {} NotHandled, recurse into dispatch_hdl",
                         hdl,
@@ -288,23 +271,23 @@ impl StateMachineExecutor {
                 );
                 self.setup_exit_enter_fns_hdls(next_state_hdl);
 
-                self.smi.previous_state_fns_hdl = self.smi.current_state_fns_hdl;
-                self.smi.current_state_fns_hdl = next_state_hdl;
-                self.smi.current_state_changed = true;
+                self.previous_state_fns_hdl = self.current_state_fns_hdl;
+                self.current_state_fns_hdl = next_state_hdl;
+                self.current_state_changed = true;
             }
         }
 
-        if self.smi.current_state_changed {
-            while let Some(exit_hdl) = self.smi.exit_fns_hdls.pop_front() {
-                if let Some(state_exit) = self.smi.state_fns[exit_hdl].exit {
+        if self.current_state_changed {
+            while let Some(exit_hdl) = self.exit_fns_hdls.pop_front() {
+                if let Some(state_exit) = self.state_fns[exit_hdl].exit {
                     log::trace!(
                         "dispatch_hdl: exiting hdl={} {}",
                         exit_hdl,
                         self.state_name(exit_hdl)
                     );
-                    self.smi.state_fns[exit_hdl].exit_cnt += 1;
-                    (state_exit)(&mut self.smi.sm, msg);
-                    self.smi.state_fns[exit_hdl].active = false;
+                    self.state_fns[exit_hdl].exit_cnt += 1;
+                    (state_exit)(&mut self.sm, msg);
+                    self.state_fns[exit_hdl].active = false;
                 }
             }
         }
@@ -315,13 +298,13 @@ impl StateMachineExecutor {
     pub fn dispatch(&mut self, msg: &NoMessages) {
         log::trace!(
             "dispatch:+ current_state_fns_hdl={} {}",
-            self.smi.current_state_fns_hdl,
+            self.current_state_fns_hdl,
             self.current_state_name()
         );
-        self.dispatch_hdl(msg, self.smi.current_state_fns_hdl);
+        self.dispatch_hdl(msg, self.current_state_fns_hdl);
         log::trace!(
             "dispatch:- current_state_fns_hdl={} {}",
-            self.smi.current_state_fns_hdl,
+            self.current_state_fns_hdl,
             self.current_state_name()
         );
     }
@@ -382,7 +365,7 @@ impl StateMachine {
         log::trace!(
             "new: inital state={} enter_fnss_hdls={:?}",
             sme.current_state_name(),
-            sme.smi.enter_fns_hdls
+            sme.enter_fns_hdls
         );
 
         sme
