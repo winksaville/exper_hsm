@@ -57,7 +57,10 @@ pub struct StateMachineExecutor<SM, P> {
 }
 
 impl<SM, P> StateMachineExecutor<SM, P> {
-    pub fn new(sm: SM, max_fns: usize, initial_hdl: usize) -> Self {
+    // Begin building an executor.
+    //
+    // You must call add_state to add one or more states
+    pub fn build(sm: SM, max_fns: usize, initial_hdl: usize) -> Self {
         StateMachineExecutor {
             sm,
             state_fns: Vec::<StateInfo<SM, P>>::with_capacity(max_fns),
@@ -67,6 +70,34 @@ impl<SM, P> StateMachineExecutor<SM, P> {
             previous_state_fns_hdl: initial_hdl,
             current_state_changed: true,
             //transition_dest_hdl: Option<usize>,
+        }
+    }
+
+    // Add a state to the the executor
+    pub fn add_state(&mut self, state_info: StateInfo<SM, P>) -> &mut Self {
+        self.state_fns.push(state_info);
+
+        self
+    }
+
+    // Initialize and so the executor is ready to dispatch messages.
+    //
+    // The first state will be the initial state as identified by the
+    // initial_hdl parameter in build.
+    pub fn initialize(&mut self) {
+        let mut enter_hdl = self.current_state_fns_hdl;
+        loop {
+            log::trace!(
+                "initial_enter_fns_hdls: push enter_hdl={} {}",
+                enter_hdl,
+                self.state_name(enter_hdl)
+            );
+            self.enter_fns_hdls.push(enter_hdl);
+            enter_hdl = if let Some(hdl) = self.state_fns[enter_hdl].parent {
+                hdl
+            } else {
+                break;
+            };
         }
     }
 
@@ -82,10 +113,6 @@ impl<SM, P> StateMachineExecutor<SM, P> {
         &self.sm
     }
 
-    pub fn add_state(&mut self, state_info: StateInfo<SM, P>) {
-        self.state_fns.push(state_info);
-    }
-
     pub fn get_state_fns_enter_cnt(&self, hdl: usize) -> usize {
         self.state_fns[hdl].enter_cnt
     }
@@ -95,25 +122,6 @@ impl<SM, P> StateMachineExecutor<SM, P> {
 
     pub fn get_state_fns_exit_cnt(&self, hdl: usize) -> usize {
         self.state_fns[hdl].exit_cnt
-    }
-
-    // When the state machine starts there will be no fn's to
-    // exit so we initialize only the enter_fns_hdls.
-    pub fn initial_enter_fns_hdls(&mut self) {
-        let mut enter_hdl = self.current_state_fns_hdl;
-        loop {
-            log::trace!(
-                "initial_enter_fns_hdls: push enter_hdl={} {}",
-                enter_hdl,
-                self.state_name(enter_hdl)
-            );
-            self.enter_fns_hdls.push(enter_hdl);
-            enter_hdl = if let Some(hdl) = self.state_fns[enter_hdl].parent {
-                hdl
-            } else {
-                break;
-            };
-        }
     }
 
     fn setup_exit_enter_fns_hdls(&mut self, next_state_hdl: usize) {
@@ -323,39 +331,32 @@ mod test {
     const OTHER_HDL: usize = 2;
 
     impl StateMachine {
-        pub fn create() -> StateMachineExecutor<Self, NoMessages> {
+        pub fn new() -> StateMachineExecutor<Self, NoMessages> {
             let sm = StateMachine::default();
-            let mut sme = StateMachineExecutor::new(sm, MAX_STATE_FNS, INITIAL_HDL);
+            let mut sme = StateMachineExecutor::build(sm, MAX_STATE_FNS, INITIAL_HDL);
 
-            let base_si = StateInfo::new(
+            sme.add_state(StateInfo::new(
                 "base",
                 Some(Self::base_enter),
                 Self::base,
                 Some(Self::base_exit),
                 None,
-            );
-            sme.add_state(base_si);
-
-            let initial_si = StateInfo::new(
+            ))
+            .add_state(StateInfo::new(
                 "initial",
                 Some(Self::initial_enter),
                 Self::initial,
                 Some(Self::initial_exit),
                 Some(BASE_HDL),
-            );
-            sme.add_state(initial_si);
-
-            let other_si = StateInfo::new(
+            ))
+            .add_state(StateInfo::new(
                 "other",
                 Some(Self::other_enter),
                 Self::other,
                 Some(Self::other_exit),
                 Some(BASE_HDL),
-            );
-            sme.add_state(other_si);
-
-            // Initialize so transition to initial state works
-            sme.initial_enter_fns_hdls();
+            ))
+            .initialize();
 
             log::trace!(
                 "new: inital state={} enter_fnss_hdls={:?}",
@@ -396,7 +397,7 @@ mod test {
 
     fn test_transition_between_leafs_in_a_tree() {
         // Create a sme and validate it's in the expected state
-        let mut sme = StateMachine::create();
+        let mut sme = StateMachine::new();
         assert_eq!(std::mem::size_of_val(sme.get_sm()), 0);
         assert_eq!(sme.get_state_fns_enter_cnt(BASE_HDL), 0);
         assert_eq!(sme.get_state_fns_process_cnt(BASE_HDL), 0);
