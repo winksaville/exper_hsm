@@ -1,29 +1,30 @@
 # Attempt to use an executor model
 
 An Executor Model where there is a seperation between
-the Users StateMachine implementation and the code that
-executes the StateMachine. Not sure this will work but
-we'll see.
+the Users `StateMachine` and the code that executes the
+state machine, `StateMachineExecutor`.
 
-First step, I created StateMachineExecutor which was
-previously StateMachine and has-a `smi: StateMachineInfo`
-and along with that moved StateMachineInfo above StateMachineExecutor.
-I added `sm: StateMachine` as a member of `StateMachineInfo`. And
-then modified the calls to `enter`, `process` and `exit` in `dispatch_hdl`
-to pass `sm` as the first parameter.
+## Run
 
-The next step will be to refactor `StateMachineInfo` into
-`StateMachineExecutor`.
+Debug:
+```
+$ cargo run
+   Compiling hsm0-executor v0.2.0 (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/hsm0-executor)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.48s
+     Running `/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/hsm0-executor`
+main
+[2022-10-18T19:36:19.395050902Z INFO  hsm0_executor  163  1] main:+
+[2022-10-18T19:36:19.395088333Z INFO  hsm0_executor  167  1] main:-
+```
 
-The subsequent step will be to make `StateMachineExecutor` generic
-over `SM` (i.e. StateMachine) and then to make `StateMachineExecutor`
-a module.
-
-If this works we will have a generic executor that invokes "StateFns"
-(`enter`, `process` and `exit`) which can mutate the `SM` and a user
-can access an immutable instance of `SM`. This tightly enforces that
-only methods inside `SM` can mutate the instance fields!
-
+Release:
+```
+$ cargo run --release
+   Compiling hsm0-executor v0.2.0 (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/hsm0-executor)
+    Finished release [optimized] target(s) in 0.33s
+     Running `/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/release/hsm0-executor`
+main
+```
 ## License
 
 Licensed under either of
