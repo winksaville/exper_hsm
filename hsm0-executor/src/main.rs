@@ -12,9 +12,9 @@ pub struct Header<P> {
 #[derive(Debug)]
 pub struct NoMessages;
 
-type StateFn = fn(&mut StateMachine, &NoMessages) -> StateResult;
-type EnterFn = fn(&mut StateMachine, &NoMessages);
-type ExitFn = fn(&mut StateMachine, &NoMessages);
+type StateFn<SM> = fn(&mut SM, &NoMessages) -> StateResult;
+type EnterFn<SM> = fn(&mut SM, &NoMessages);
+type ExitFn<SM> = fn(&mut SM, &NoMessages);
 
 pub enum StateResult {
     NotHandled,
@@ -22,24 +22,24 @@ pub enum StateResult {
     TransitionTo(usize),
 }
 
-pub struct StateInfo {
+pub struct StateInfo<SM> {
     pub name: String,
     pub parent: Option<usize>,
-    pub enter: Option<EnterFn>,
-    pub process: StateFn,
-    pub exit: Option<ExitFn>,
+    pub enter: Option<EnterFn<SM>>,
+    pub process: StateFn<SM>,
+    pub exit: Option<ExitFn<SM>>,
     pub active: bool,
     pub enter_cnt: usize,
     pub process_cnt: usize,
     pub exit_cnt: usize,
 }
 
-impl StateInfo {
+impl<SM> StateInfo<SM> {
     fn new(
         name: &str,
-        enter_fn: Option<EnterFn>,
-        process_fn: StateFn,
-        exit_fn: Option<ExitFn>,
+        enter_fn: Option<EnterFn<SM>>,
+        process_fn: StateFn<SM>,
+        exit_fn: Option<ExitFn<SM>>,
         parent_hdl: Option<usize>,
     ) -> Self {
         StateInfo {
@@ -56,10 +56,10 @@ impl StateInfo {
     }
 }
 
-pub struct StateMachineExecutor {
+pub struct StateMachineExecutor<SM> {
     //pub name: String, // TODO: add StateMachineInfo::name
-    pub sm: StateMachine,
-    pub state_fns: Vec<StateInfo>,
+    pub sm: SM,
+    pub state_fns: Vec<StateInfo<SM>>,
     pub enter_fns_hdls: Vec<usize>,
     pub exit_fns_hdls: std::collections::VecDeque<usize>,
     pub current_state_fns_hdl: usize,
@@ -68,11 +68,11 @@ pub struct StateMachineExecutor {
     //pub transition_dest_hdl: Option<usize>,
 }
 
-impl StateMachineExecutor {
-    fn new(sm: StateMachine, max_fns: usize, initial_hdl: usize) -> Self {
+impl<SM> StateMachineExecutor<SM> {
+    fn new(sm: SM, max_fns: usize, initial_hdl: usize) -> Self {
         StateMachineExecutor {
             sm,
-            state_fns: Vec::<StateInfo>::with_capacity(max_fns),
+            state_fns: Vec::<StateInfo<SM>>::with_capacity(max_fns),
             enter_fns_hdls: Vec::<usize>::with_capacity(max_fns),
             exit_fns_hdls: VecDeque::<usize>::with_capacity(max_fns),
             current_state_fns_hdl: initial_hdl,
@@ -90,11 +90,11 @@ impl StateMachineExecutor {
         self.state_name(self.current_state_fns_hdl)
     }
 
-    fn get_sm(&mut self) -> &StateMachine {
+    fn get_sm(&mut self) -> &SM {
         &self.sm
     }
 
-    fn add_state(&mut self, state_info: StateInfo) {
+    fn add_state(&mut self, state_info: StateInfo<SM>) {
         self.state_fns.push(state_info);
     }
 
@@ -328,7 +328,7 @@ const INITIAL_HDL: usize = 1;
 const OTHER_HDL: usize = 2;
 
 impl StateMachine {
-    pub fn create() -> StateMachineExecutor {
+    pub fn create() -> StateMachineExecutor<Self> {
         let sm = StateMachine::default();
         let mut sme = StateMachineExecutor::new(sm, MAX_STATE_FNS, INITIAL_HDL);
 
