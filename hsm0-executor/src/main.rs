@@ -52,7 +52,7 @@ impl StateMachine {
 
         log::trace!(
             "new: inital state={} enter_fnss_hdls={:?}",
-            sme.current_state_name(),
+            sme.get_current_state_name(),
             sme.idxs_enter_fns
         );
 
