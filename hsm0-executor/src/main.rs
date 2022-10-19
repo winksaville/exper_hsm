@@ -53,7 +53,7 @@ impl StateMachine {
         log::trace!(
             "new: inital state={} enter_fnss_hdls={:?}",
             sme.current_state_name(),
-            sme.enter_fns_hdls
+            sme.idxs_enter_fns
         );
 
         sme
@@ -91,70 +91,70 @@ fn test_transition_between_leafs_in_a_tree() {
     // Create a sme and validate it's in the expected state
     let mut sme = StateMachine::new();
     assert_eq!(std::mem::size_of_val(sme.get_sm()), 0);
-    assert_eq!(sme.get_state_fns_enter_cnt(BASE_HDL), 0);
-    assert_eq!(sme.get_state_fns_process_cnt(BASE_HDL), 0);
-    assert_eq!(sme.get_state_fns_exit_cnt(BASE_HDL), 0);
-    assert_eq!(sme.get_state_fns_enter_cnt(INITIAL_HDL), 0);
-    assert_eq!(sme.get_state_fns_process_cnt(INITIAL_HDL), 0);
-    assert_eq!(sme.get_state_fns_exit_cnt(INITIAL_HDL), 0);
-    assert_eq!(sme.get_state_fns_enter_cnt(OTHER_HDL), 0);
-    assert_eq!(sme.get_state_fns_process_cnt(OTHER_HDL), 0);
-    assert_eq!(sme.get_state_fns_exit_cnt(OTHER_HDL), 0);
+    assert_eq!(sme.get_state_enter_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_process_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_exit_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_enter_cnt(INITIAL_HDL), 0);
+    assert_eq!(sme.get_state_process_cnt(INITIAL_HDL), 0);
+    assert_eq!(sme.get_state_exit_cnt(INITIAL_HDL), 0);
+    assert_eq!(sme.get_state_enter_cnt(OTHER_HDL), 0);
+    assert_eq!(sme.get_state_process_cnt(OTHER_HDL), 0);
+    assert_eq!(sme.get_state_exit_cnt(OTHER_HDL), 0);
 
     sme.dispatch(&NoMessages);
-    assert_eq!(sme.get_state_fns_enter_cnt(BASE_HDL), 1);
-    assert_eq!(sme.get_state_fns_process_cnt(BASE_HDL), 0);
-    assert_eq!(sme.get_state_fns_exit_cnt(BASE_HDL), 0);
-    assert_eq!(sme.get_state_fns_enter_cnt(INITIAL_HDL), 1);
-    assert_eq!(sme.get_state_fns_process_cnt(INITIAL_HDL), 1);
-    assert_eq!(sme.get_state_fns_exit_cnt(INITIAL_HDL), 1);
-    assert_eq!(sme.get_state_fns_enter_cnt(OTHER_HDL), 0);
-    assert_eq!(sme.get_state_fns_process_cnt(OTHER_HDL), 0);
-    assert_eq!(sme.get_state_fns_exit_cnt(OTHER_HDL), 0);
+    assert_eq!(sme.get_state_enter_cnt(BASE_HDL), 1);
+    assert_eq!(sme.get_state_process_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_exit_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_enter_cnt(INITIAL_HDL), 1);
+    assert_eq!(sme.get_state_process_cnt(INITIAL_HDL), 1);
+    assert_eq!(sme.get_state_exit_cnt(INITIAL_HDL), 1);
+    assert_eq!(sme.get_state_enter_cnt(OTHER_HDL), 0);
+    assert_eq!(sme.get_state_process_cnt(OTHER_HDL), 0);
+    assert_eq!(sme.get_state_exit_cnt(OTHER_HDL), 0);
 
     sme.dispatch(&NoMessages);
-    assert_eq!(sme.get_state_fns_enter_cnt(BASE_HDL), 1);
-    assert_eq!(sme.get_state_fns_process_cnt(BASE_HDL), 0);
-    assert_eq!(sme.get_state_fns_exit_cnt(BASE_HDL), 0);
-    assert_eq!(sme.get_state_fns_enter_cnt(INITIAL_HDL), 1);
-    assert_eq!(sme.get_state_fns_process_cnt(INITIAL_HDL), 1);
-    assert_eq!(sme.get_state_fns_exit_cnt(INITIAL_HDL), 1);
-    assert_eq!(sme.get_state_fns_enter_cnt(OTHER_HDL), 1);
-    assert_eq!(sme.get_state_fns_process_cnt(OTHER_HDL), 1);
-    assert_eq!(sme.get_state_fns_exit_cnt(OTHER_HDL), 1);
+    assert_eq!(sme.get_state_enter_cnt(BASE_HDL), 1);
+    assert_eq!(sme.get_state_process_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_exit_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_enter_cnt(INITIAL_HDL), 1);
+    assert_eq!(sme.get_state_process_cnt(INITIAL_HDL), 1);
+    assert_eq!(sme.get_state_exit_cnt(INITIAL_HDL), 1);
+    assert_eq!(sme.get_state_enter_cnt(OTHER_HDL), 1);
+    assert_eq!(sme.get_state_process_cnt(OTHER_HDL), 1);
+    assert_eq!(sme.get_state_exit_cnt(OTHER_HDL), 1);
 
     sme.dispatch(&NoMessages);
-    assert_eq!(sme.get_state_fns_enter_cnt(BASE_HDL), 1);
-    assert_eq!(sme.get_state_fns_process_cnt(BASE_HDL), 0);
-    assert_eq!(sme.get_state_fns_exit_cnt(BASE_HDL), 0);
-    assert_eq!(sme.get_state_fns_enter_cnt(INITIAL_HDL), 2);
-    assert_eq!(sme.get_state_fns_process_cnt(INITIAL_HDL), 2);
-    assert_eq!(sme.get_state_fns_exit_cnt(INITIAL_HDL), 2);
-    assert_eq!(sme.get_state_fns_enter_cnt(OTHER_HDL), 1);
-    assert_eq!(sme.get_state_fns_process_cnt(OTHER_HDL), 1);
-    assert_eq!(sme.get_state_fns_exit_cnt(OTHER_HDL), 1);
+    assert_eq!(sme.get_state_enter_cnt(BASE_HDL), 1);
+    assert_eq!(sme.get_state_process_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_exit_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_enter_cnt(INITIAL_HDL), 2);
+    assert_eq!(sme.get_state_process_cnt(INITIAL_HDL), 2);
+    assert_eq!(sme.get_state_exit_cnt(INITIAL_HDL), 2);
+    assert_eq!(sme.get_state_enter_cnt(OTHER_HDL), 1);
+    assert_eq!(sme.get_state_process_cnt(OTHER_HDL), 1);
+    assert_eq!(sme.get_state_exit_cnt(OTHER_HDL), 1);
 
     sme.dispatch(&NoMessages);
-    assert_eq!(sme.get_state_fns_enter_cnt(BASE_HDL), 1);
-    assert_eq!(sme.get_state_fns_process_cnt(BASE_HDL), 0);
-    assert_eq!(sme.get_state_fns_exit_cnt(BASE_HDL), 0);
-    assert_eq!(sme.get_state_fns_enter_cnt(INITIAL_HDL), 2);
-    assert_eq!(sme.get_state_fns_process_cnt(INITIAL_HDL), 2);
-    assert_eq!(sme.get_state_fns_exit_cnt(INITIAL_HDL), 2);
-    assert_eq!(sme.get_state_fns_enter_cnt(OTHER_HDL), 2);
-    assert_eq!(sme.get_state_fns_process_cnt(OTHER_HDL), 2);
-    assert_eq!(sme.get_state_fns_exit_cnt(OTHER_HDL), 2);
+    assert_eq!(sme.get_state_enter_cnt(BASE_HDL), 1);
+    assert_eq!(sme.get_state_process_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_exit_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_enter_cnt(INITIAL_HDL), 2);
+    assert_eq!(sme.get_state_process_cnt(INITIAL_HDL), 2);
+    assert_eq!(sme.get_state_exit_cnt(INITIAL_HDL), 2);
+    assert_eq!(sme.get_state_enter_cnt(OTHER_HDL), 2);
+    assert_eq!(sme.get_state_process_cnt(OTHER_HDL), 2);
+    assert_eq!(sme.get_state_exit_cnt(OTHER_HDL), 2);
 
     sme.dispatch(&NoMessages);
-    assert_eq!(sme.get_state_fns_enter_cnt(BASE_HDL), 1);
-    assert_eq!(sme.get_state_fns_process_cnt(BASE_HDL), 0);
-    assert_eq!(sme.get_state_fns_exit_cnt(BASE_HDL), 0);
-    assert_eq!(sme.get_state_fns_enter_cnt(INITIAL_HDL), 3);
-    assert_eq!(sme.get_state_fns_process_cnt(INITIAL_HDL), 3);
-    assert_eq!(sme.get_state_fns_exit_cnt(INITIAL_HDL), 3);
-    assert_eq!(sme.get_state_fns_enter_cnt(OTHER_HDL), 2);
-    assert_eq!(sme.get_state_fns_process_cnt(OTHER_HDL), 2);
-    assert_eq!(sme.get_state_fns_exit_cnt(OTHER_HDL), 2);
+    assert_eq!(sme.get_state_enter_cnt(BASE_HDL), 1);
+    assert_eq!(sme.get_state_process_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_exit_cnt(BASE_HDL), 0);
+    assert_eq!(sme.get_state_enter_cnt(INITIAL_HDL), 3);
+    assert_eq!(sme.get_state_process_cnt(INITIAL_HDL), 3);
+    assert_eq!(sme.get_state_exit_cnt(INITIAL_HDL), 3);
+    assert_eq!(sme.get_state_enter_cnt(OTHER_HDL), 2);
+    assert_eq!(sme.get_state_process_cnt(OTHER_HDL), 2);
+    assert_eq!(sme.get_state_exit_cnt(OTHER_HDL), 2);
 }
 
 fn main() {
