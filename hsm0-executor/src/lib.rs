@@ -28,11 +28,11 @@ impl<SM, P> StateInfo<SM, P> {
         enter_fn: Option<EnterFn<SM, P>>,
         process_fn: ProcessFn<SM, P>,
         exit_fn: Option<ExitFn<SM, P>>,
-        parent_hdl: Option<usize>,
+        idx_parent: Option<usize>,
     ) -> Self {
         StateInfo {
             name: name.to_owned(),
-            parent: parent_hdl,
+            parent: idx_parent,
             enter: enter_fn,
             process: process_fn,
             exit: exit_fn,
@@ -53,7 +53,7 @@ pub struct StateMachineExecutor<SM, P> {
     pub idx_previous_state: usize,
     pub idxs_enter_fns: Vec<usize>,
     pub idxs_exit_fns: std::collections::VecDeque<usize>,
-    //pub transition_dest_hdl: Option<usize>,
+    //pub transition_dest_idx: Option<usize>,
 }
 
 impl<SM, P> StateMachineExecutor<SM, P> {
@@ -69,7 +69,7 @@ impl<SM, P> StateMachineExecutor<SM, P> {
             idx_current_state: idx_initial_state,
             idx_previous_state: idx_initial_state,
             current_state_changed: true,
-            //transition_dest_hdl: Option<usize>,
+            //transition_dest_idx: Option<usize>,
         }
     }
 
@@ -83,390 +83,704 @@ impl<SM, P> StateMachineExecutor<SM, P> {
     // Initialize and so the executor is ready to dispatch messages.
     //
     // The first state will be the initial state as identified by the
-    // initial_hdl parameter in build.
+    // idx_initial_state parameter in build.
     pub fn initialize(&mut self) {
-        let mut enter_hdl = self.idx_current_state;
+        let mut idx_enter = self.idx_current_state;
         loop {
-            log::trace!(
-                "initial_enter_fns_hdls: push enter_hdl={} {}",
-                enter_hdl,
-                self.state_name(enter_hdl)
-            );
-            self.idxs_enter_fns.push(enter_hdl);
-            enter_hdl = if let Some(hdl) = self.states[enter_hdl].parent {
-                hdl
+            //log::trace!("initial_enter_fns_idxs: push idx_enter={} {}", idx_enter, self.state_name(idx_enter));
+            self.idxs_enter_fns.push(idx_enter);
+            idx_enter = if let Some(idx) = self.states[idx_enter].parent {
+                idx
             } else {
                 break;
             };
         }
     }
 
-    pub fn state_name(&self, hdl: usize) -> &str {
-        &self.states[hdl].name
+    pub fn get_state_name(&self, idx: usize) -> &str {
+        &self.states[idx].name
     }
 
-    pub fn current_state_name(&self) -> &str {
-        self.state_name(self.idx_current_state)
+    pub fn get_current_state_name(&self) -> &str {
+        self.get_state_name(self.idx_current_state)
     }
 
     pub fn get_sm(&mut self) -> &SM {
         &self.sm
     }
 
-    pub fn get_state_enter_cnt(&self, hdl: usize) -> usize {
-        self.states[hdl].enter_cnt
+    pub fn get_state_enter_cnt(&self, idx: usize) -> usize {
+        self.states[idx].enter_cnt
     }
-    pub fn get_state_process_cnt(&self, hdl: usize) -> usize {
-        self.states[hdl].process_cnt
-    }
-
-    pub fn get_state_exit_cnt(&self, hdl: usize) -> usize {
-        self.states[hdl].exit_cnt
+    pub fn get_state_process_cnt(&self, idx: usize) -> usize {
+        self.states[idx].process_cnt
     }
 
-    fn setup_exit_enter_fns_hdls(&mut self, next_state_hdl: usize) {
-        let mut cur_hdl = next_state_hdl;
+    pub fn get_state_exit_cnt(&self, idx: usize) -> usize {
+        self.states[idx].exit_cnt
+    }
+
+    fn setup_exit_enter_fns_idxs(&mut self, idx_next_state: usize) {
+        let mut cur_idx = idx_next_state;
 
         // Setup the enter vector
         let exit_sentinel = loop {
-            log::trace!(
-                "setup_exit_enter_fns_hdls: cur_hdl={} {}, TOL",
-                cur_hdl,
-                self.state_name(cur_hdl)
-            );
-            self.idxs_enter_fns.push(cur_hdl);
+            //log::trace!("setup_exit_enter_fns_idxs: cur_idx={} {}, TOL", cur_idx, self.state_name(cur_idx));
+            self.idxs_enter_fns.push(cur_idx);
 
-            cur_hdl = if let Some(hdl) = self.states[cur_hdl].parent {
-                hdl
+            cur_idx = if let Some(idx) = self.states[cur_idx].parent {
+                idx
             } else {
-                // Exit state_infos[self.current_state_infos_hdl] and all its parents
-                log::trace!(
-                    "setup_exit_enter_fns_hdls: cur_hdl={} {} has no parent exit_sentinel=None",
-                    cur_hdl,
-                    self.state_name(cur_hdl)
-                );
+                // Exit state_infos[self.current_state_infos_idx] and all its parents
+                //log::trace!("setup_exit_enter_fns_idxs: cur_idx={} {} has no parent exit_sentinel=None", cur_dx, self.state_name(cur_idx));
                 break None;
             };
 
-            if self.states[cur_hdl].active {
-                // Exit state_infos[self.current_state_infos_hdl] and
-                // parents upto but excluding state_infos[cur_hdl]
-                log::trace!(
-                    "setup_exit_enter_fns_hdls: cur_hdl={} {} is active so it's exit_sentinel",
-                    cur_hdl,
-                    self.state_name(cur_hdl)
-                );
-                break Some(cur_hdl);
+            if self.states[cur_idx].active {
+                // Exit state_infos[self.current_state_infos_idx] and
+                // parents upto but excluding state_infos[cur_idx]
+                //log::trace!("setup_exit_enter_fns_idxs: cur_idx={} {} is active so it's exit_sentinel", cur_idx, self.state_name(cur_idx));
+                break Some(cur_idx);
             }
         };
 
-        // Starting at self.current_state_infos_hdl generate the
+        // Starting at self.idx_current_state generate the
         // list of StateFns that we're going to exit. If exit_sentinel is None
-        // then exit from current_state_infos_hdl and all of its parents.
-        // If exit_sentinel is Some then exit from the current state_infos_hdl
+        // then exit from idx_current_state and all of its parents.
+        // If exit_sentinel is Some then exit from the idx_current_state
         // up to but not including the exit_sentinel.
-        let mut exit_hdl = self.idx_current_state;
+        let mut idx_exit = self.idx_current_state;
 
         // Always exit the first state, this handles the special case
-        // where Some(exit_hdl) == exit_sentinel.
-        log::trace!(
-            "setup_exit_enter_fns_hdls: push_back(curren_state_infos_hdl={} {})",
-            exit_hdl,
-            self.state_name(exit_hdl)
-        );
-        self.idxs_exit_fns.push_back(exit_hdl);
+        // where Some(idx_exit) == exit_sentinel.
+        //log::trace!("setup_exit_enter_fns_idxs: push_back(idx_exit={} {})", idx_exit, self.state_name(idx_exit));
+        self.idxs_exit_fns.push_back(idx_exit);
 
         loop {
-            exit_hdl = if let Some(hdl) = self.states[exit_hdl].parent {
-                hdl
+            idx_exit = if let Some(idx) = self.states[idx_exit].parent {
+                idx
             } else {
                 // No parent we're done
-                log::trace!(
-                    "setup_exit_enter_fns_hdls: No parent exit_hdl={} {}, return",
-                    exit_hdl,
-                    self.state_name(exit_hdl)
-                );
+                //log::trace!("setup_exit_enter_fns_idxs: No parent idx_exit={} {}, return", idx_exit, self.state_name(idx_exit));
                 return;
             };
 
-            if Some(exit_hdl) == exit_sentinel {
+            if Some(idx_exit) == exit_sentinel {
                 // Reached the exit sentinel so we're done
-                log::trace!(
-                    "setup_exit_enter_fns_hdls: exit_hdl={} {} == exit_sentinel={} {}, reached exit_sentinel return",
-                    exit_hdl,
-                    self.state_name(exit_hdl),
-                    exit_sentinel.unwrap(),
-                    self.state_name(exit_sentinel.unwrap()),
-                );
+                //log::trace!("setup_exit_enter_fns_idxs: idx_exit={} {} == exit_sentinel={} {}, reached exit_sentinel return", idx_exit, self.state_name(idx_exit), exit_sentinel.unwrap(), self.state_name(exit_sentinel.unwrap()));
                 return;
             }
 
-            log::trace!(
-                "setup_exit_enter_fns_hdls: push_back(exit_hdl={} {})",
-                exit_hdl,
-                self.state_name(exit_hdl)
-            );
-            self.idxs_exit_fns.push_back(exit_hdl);
+            //log::trace!( "setup_exit_enter_fns_idxs: push_back(idx_exit={} {})", idx_exit, self.state_name(idx_exit));
+            self.idxs_exit_fns.push_back(idx_exit);
         }
     }
 
-    pub fn dispatch_hdl(&mut self, msg: &P, hdl: usize) {
-        log::trace!("dispatch_hdl:+ hdl={} {}", hdl, self.state_name(hdl));
+    pub fn dispatch_idx(&mut self, msg: &P, idx: usize) {
+        //log::trace!("dispatch_idx:+ idx={} {}", idx, self.state_name(idx));
 
         if self.current_state_changed {
             // Execute the enter functions
-            while let Some(enter_hdl) = self.idxs_enter_fns.pop() {
-                if let Some(state_enter) = self.states[enter_hdl].enter {
-                    log::trace!(
-                        "dispatch_hdl: entering hdl={} {}",
-                        enter_hdl,
-                        self.state_name(enter_hdl)
-                    );
-                    self.states[enter_hdl].enter_cnt += 1;
+            while let Some(idx_enter) = self.idxs_enter_fns.pop() {
+                if let Some(state_enter) = self.states[idx_enter].enter {
+                    //log::trace!("dispatch_idx: entering idx={} {}", idx_enter, self.state_name(idx_enter));
+                    self.states[idx_enter].enter_cnt += 1;
                     (state_enter)(&mut self.sm, msg);
-                    self.states[enter_hdl].active = true;
+                    self.states[idx_enter].active = true;
                 }
             }
             self.current_state_changed = false;
         }
 
         // Invoke the current state funtion processing the result
-        log::trace!(
-            "dispatch_hdl: processing hdl={} {}",
-            hdl,
-            self.state_name(hdl)
-        );
+        //log::trace!("dispatch_idx: processing idx={} {}", idx, self.state_name(idx));
 
-        self.states[hdl].process_cnt += 1;
-        match (self.states[hdl].process)(&mut self.sm, msg) {
+        self.states[idx].process_cnt += 1;
+        match (self.states[idx].process)(&mut self.sm, msg) {
             StateResult::NotHandled => {
-                if let Some(parent_hdl) = self.states[hdl].parent {
-                    log::trace!(
-                        "dispatch_hdl: hdl={} {} NotHandled, recurse into dispatch_hdl",
-                        hdl,
-                        self.state_name(hdl)
-                    );
-                    self.dispatch_hdl(msg, parent_hdl);
+                if let Some(idx_parent) = self.states[idx].parent {
+                    //log::trace!("dispatch_idx: idx={} {} NotHandled, recurse into dispatch_idx", idx, self.state_name(idx));
+                    self.dispatch_idx(msg, idx_parent);
                 } else {
-                    log::trace!(
-                        "dispatch_hdl: hdl={} {}, NotHandled, no parent, ignoring messages",
-                        hdl,
-                        self.state_name(hdl)
-                    );
+                    //log::trace!("dispatch_idx: idx={} {}, NotHandled, no parent, ignoring messages", idx, self.state_name(idx));
                 }
             }
             StateResult::Handled => {
                 // Nothing to do
-                log::trace!("dispatch_hdl: hdl={} {} Handled", hdl, self.state_name(hdl));
+                //log::trace!("dispatch_idx: idx={} {} Handled", idx, self.state_name(idx));
             }
-            StateResult::TransitionTo(next_state_hdl) => {
-                log::trace!(
-                    "dispatch_hdl: transition_to hdl={} {}",
-                    next_state_hdl,
-                    self.state_name(next_state_hdl)
-                );
-                self.setup_exit_enter_fns_hdls(next_state_hdl);
+            StateResult::TransitionTo(idx_next_state) => {
+                //log::trace!("dispatch_idx: transition_to idx={} {}", idx_next_state, self.state_name(idx_next_state));
+                self.setup_exit_enter_fns_idxs(idx_next_state);
 
                 self.idx_previous_state = self.idx_current_state;
-                self.idx_current_state = next_state_hdl;
+                self.idx_current_state = idx_next_state;
                 self.current_state_changed = true;
             }
         }
 
         if self.current_state_changed {
-            while let Some(exit_hdl) = self.idxs_exit_fns.pop_front() {
-                if let Some(state_exit) = self.states[exit_hdl].exit {
-                    log::trace!(
-                        "dispatch_hdl: exiting hdl={} {}",
-                        exit_hdl,
-                        self.state_name(exit_hdl)
-                    );
-                    self.states[exit_hdl].exit_cnt += 1;
+            while let Some(idx_exit) = self.idxs_exit_fns.pop_front() {
+                if let Some(state_exit) = self.states[idx_exit].exit {
+                    //log::trace!("dispatch_idx: exiting idx={} {}", idx_exit, self.state_name(idx_exit));
+                    self.states[idx_exit].exit_cnt += 1;
                     (state_exit)(&mut self.sm, msg);
-                    self.states[exit_hdl].active = false;
+                    self.states[idx_exit].active = false;
                 }
             }
         }
 
-        log::trace!("dispatch_hdl:- hdl={} {}", hdl, self.state_name(hdl));
+        //log::trace!("dispatch_idx:- idx={} {}", idx, self.state_name(idx));
     }
 
     pub fn dispatch(&mut self, msg: &P) {
-        log::trace!(
-            "dispatch:+ current_state_infos_hdl={} {}",
-            self.idx_current_state,
-            self.current_state_name()
-        );
-        self.dispatch_hdl(msg, self.idx_current_state);
-        log::trace!(
-            "dispatch:- current_state_infos_hdl={} {}",
-            self.idx_current_state,
-            self.current_state_name()
-        );
+        //log::trace!( "dispatch:+ current_state_infos_idx={} {}", self.idx_current_state, self.current_state_name());
+        self.dispatch_idx(msg, self.idx_current_state);
+        //log::trace!( "dispatch:- current_state_infos_idx={} {}", self.idx_current_state, self.current_state_name());
     }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-
-    // StateMachine simply transitions back and forth
-    // between initial and other.
-    //
-    //                base=0
-    //        --------^  ^-------
-    //       /                   \
-    //      /                     \
-    //    other=2   <======>   initial=1
-
-    #[derive(Default)]
-    struct StateMachine;
-
-    // Create a Protocol with no messages
-    struct NoMessages;
-
-    const MAX_STATES: usize = 3;
-    const BASE_HDL: usize = 0;
-    const INITIAL_HDL: usize = 1;
-    const OTHER_HDL: usize = 2;
-
-    impl StateMachine {
-        pub fn new() -> StateMachineExecutor<Self, NoMessages> {
-            let sm = StateMachine::default();
-            let mut sme = StateMachineExecutor::build(sm, MAX_STATES, INITIAL_HDL);
-
-            sme.add_state(StateInfo::new(
-                "base",
-                Some(Self::base_enter),
-                Self::base,
-                Some(Self::base_exit),
-                None,
-            ))
-            .add_state(StateInfo::new(
-                "initial",
-                Some(Self::initial_enter),
-                Self::initial,
-                Some(Self::initial_exit),
-                Some(BASE_HDL),
-            ))
-            .add_state(StateInfo::new(
-                "other",
-                Some(Self::other_enter),
-                Self::other,
-                Some(Self::other_exit),
-                Some(BASE_HDL),
-            ))
-            .initialize();
-
-            log::trace!(
-                "new: inital state={} enter_fnss_hdls={:?}",
-                sme.current_state_name(),
-                sme.idxs_enter_fns
-            );
-
-            sme
+    // Test SM with one state with one field
+    #[test]
+    #[cfg(not(tarpaulin_include))]
+    fn test_sm_1s_no_enter_no_exit() {
+        pub struct StateMachine {
+            state: i32,
         }
 
-        fn base_enter(&mut self, _msg: &NoMessages) {}
+        // Create a Protocol
+        pub struct NoMessages;
 
-        // This state has hdl 0
-        fn base(&mut self, _msg: &NoMessages) -> StateResult {
-            StateResult::Handled
+        const MAX_STATES: usize = 1;
+        const IDX_STATE1: usize = 0;
+
+        impl StateMachine {
+            pub fn new() -> StateMachineExecutor<Self, NoMessages> {
+                let sm = StateMachine { state: 0 };
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
+
+                sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
+                    .initialize();
+
+                sme
+            }
+
+            fn state1(&mut self, _msg: &NoMessages) -> StateResult {
+                self.state += 1;
+
+                StateResult::Handled
+            }
         }
 
-        fn base_exit(&mut self, _msg: &NoMessages) {}
-
-        fn initial_enter(&mut self, _msg: &NoMessages) {}
-
-        // This state has hdl 0
-        fn initial(&mut self, _msg: &NoMessages) -> StateResult {
-            StateResult::TransitionTo(OTHER_HDL)
-        }
-
-        fn initial_exit(&mut self, _msg: &NoMessages) {}
-
-        fn other_enter(&mut self, _msg: &NoMessages) {}
-
-        // This state has hdl 0
-        fn other(&mut self, _msg: &NoMessages) -> StateResult {
-            StateResult::TransitionTo(INITIAL_HDL)
-        }
-
-        fn other_exit(&mut self, _msg: &NoMessages) {}
-    }
-
-    fn test_transition_between_leafs_in_a_tree() {
         // Create a sme and validate it's in the expected state
         let mut sme = StateMachine::new();
-        assert_eq!(std::mem::size_of_val(sme.get_sm()), 0);
-        assert_eq!(sme.get_state_enter_cnt(BASE_HDL), 0);
-        assert_eq!(sme.get_state_process_cnt(BASE_HDL), 0);
-        assert_eq!(sme.get_state_exit_cnt(BASE_HDL), 0);
-        assert_eq!(sme.get_state_enter_cnt(INITIAL_HDL), 0);
-        assert_eq!(sme.get_state_process_cnt(INITIAL_HDL), 0);
-        assert_eq!(sme.get_state_exit_cnt(INITIAL_HDL), 0);
-        assert_eq!(sme.get_state_enter_cnt(OTHER_HDL), 0);
-        assert_eq!(sme.get_state_process_cnt(OTHER_HDL), 0);
-        assert_eq!(sme.get_state_exit_cnt(OTHER_HDL), 0);
+        assert_eq!(std::mem::size_of_val(sme.get_sm()), 4);
+        assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_sm().state, 0);
 
         sme.dispatch(&NoMessages);
-        assert_eq!(sme.get_state_enter_cnt(BASE_HDL), 1);
-        assert_eq!(sme.get_state_process_cnt(BASE_HDL), 0);
-        assert_eq!(sme.get_state_exit_cnt(BASE_HDL), 0);
-        assert_eq!(sme.get_state_enter_cnt(INITIAL_HDL), 1);
-        assert_eq!(sme.get_state_process_cnt(INITIAL_HDL), 1);
-        assert_eq!(sme.get_state_exit_cnt(INITIAL_HDL), 1);
-        assert_eq!(sme.get_state_enter_cnt(OTHER_HDL), 0);
-        assert_eq!(sme.get_state_process_cnt(OTHER_HDL), 0);
-        assert_eq!(sme.get_state_exit_cnt(OTHER_HDL), 0);
+        assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 1);
+        assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_sm().state, 1);
 
         sme.dispatch(&NoMessages);
-        assert_eq!(sme.get_state_enter_cnt(BASE_HDL), 1);
-        assert_eq!(sme.get_state_process_cnt(BASE_HDL), 0);
-        assert_eq!(sme.get_state_exit_cnt(BASE_HDL), 0);
-        assert_eq!(sme.get_state_enter_cnt(INITIAL_HDL), 1);
-        assert_eq!(sme.get_state_process_cnt(INITIAL_HDL), 1);
-        assert_eq!(sme.get_state_exit_cnt(INITIAL_HDL), 1);
-        assert_eq!(sme.get_state_enter_cnt(OTHER_HDL), 1);
-        assert_eq!(sme.get_state_process_cnt(OTHER_HDL), 1);
-        assert_eq!(sme.get_state_exit_cnt(OTHER_HDL), 1);
+        assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 2);
+        assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_sm().state, 2);
+    }
+
+    // Test SM with one state getting names
+    #[test]
+    #[cfg(not(tarpaulin_include))]
+    fn test_sm_1s_get_names() {
+        pub struct StateMachine {
+            state: i32,
+        }
+
+        // Create a Protocol
+        pub struct NoMessages;
+
+        const MAX_STATES: usize = 1;
+        const IDX_STATE1: usize = 0;
+
+        impl StateMachine {
+            pub fn new() -> StateMachineExecutor<Self, NoMessages> {
+                let sm = StateMachine { state: 0 };
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
+
+                sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
+                    .initialize();
+
+                sme
+            }
+
+            fn state1(&mut self, _msg: &NoMessages) -> StateResult {
+                self.state += 1;
+
+                StateResult::Handled
+            }
+        }
+
+        // Create a sme and validate it's in the expected state
+        let mut sme = StateMachine::new();
+        assert_eq!(sme.get_sm().state, 0);
+        assert_eq!(sme.get_state_name(IDX_STATE1), "state1");
+        assert_eq!(sme.get_current_state_name(), "state1");
 
         sme.dispatch(&NoMessages);
-        assert_eq!(sme.get_state_enter_cnt(BASE_HDL), 1);
-        assert_eq!(sme.get_state_process_cnt(BASE_HDL), 0);
-        assert_eq!(sme.get_state_exit_cnt(BASE_HDL), 0);
-        assert_eq!(sme.get_state_enter_cnt(INITIAL_HDL), 2);
-        assert_eq!(sme.get_state_process_cnt(INITIAL_HDL), 2);
-        assert_eq!(sme.get_state_exit_cnt(INITIAL_HDL), 2);
-        assert_eq!(sme.get_state_enter_cnt(OTHER_HDL), 1);
-        assert_eq!(sme.get_state_process_cnt(OTHER_HDL), 1);
-        assert_eq!(sme.get_state_exit_cnt(OTHER_HDL), 1);
+        assert_eq!(sme.get_sm().state, 1);
+        assert_eq!(sme.get_state_name(IDX_STATE1), "state1");
+        assert_eq!(sme.get_current_state_name(), "state1");
 
         sme.dispatch(&NoMessages);
-        assert_eq!(sme.get_state_enter_cnt(BASE_HDL), 1);
-        assert_eq!(sme.get_state_process_cnt(BASE_HDL), 0);
-        assert_eq!(sme.get_state_exit_cnt(BASE_HDL), 0);
-        assert_eq!(sme.get_state_enter_cnt(INITIAL_HDL), 2);
-        assert_eq!(sme.get_state_process_cnt(INITIAL_HDL), 2);
-        assert_eq!(sme.get_state_exit_cnt(INITIAL_HDL), 2);
-        assert_eq!(sme.get_state_enter_cnt(OTHER_HDL), 2);
-        assert_eq!(sme.get_state_process_cnt(OTHER_HDL), 2);
-        assert_eq!(sme.get_state_exit_cnt(OTHER_HDL), 2);
+        assert_eq!(sme.get_sm().state, 2);
+        assert_eq!(sme.get_state_name(IDX_STATE1), "state1");
+        assert_eq!(sme.get_current_state_name(), "state1");
+    }
+
+    // Test SM with one state getting names
+    #[test]
+    #[cfg(not(tarpaulin_include))]
+    fn test_sm_2s_get_names() {
+        pub struct StateMachine {
+            state: i32,
+        }
+
+        // Create a Protocol
+        pub struct NoMessages;
+
+        const MAX_STATES: usize = 2;
+        const IDX_STATE1: usize = 0;
+        const IDX_STATE2: usize = 1;
+
+        impl StateMachine {
+            pub fn new() -> StateMachineExecutor<Self, NoMessages> {
+                let sm = StateMachine { state: 0 };
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
+
+                sme
+                    .add_state(StateInfo::new("state1", None, Self::state1, None, None))
+                    .add_state(StateInfo::new("state2", None, Self::state2, None, None))
+                    .initialize();
+
+                sme
+            }
+
+            fn state1(&mut self, _msg: &NoMessages) -> StateResult {
+                self.state += 1;
+
+                StateResult::TransitionTo(IDX_STATE2)
+            }
+
+            fn state2(&mut self, _msg: &NoMessages) -> StateResult {
+                self.state -= 1;
+
+                StateResult::TransitionTo(IDX_STATE1)
+            }
+        }
+
+        // Create a sme and validate it's in the expected state
+        let mut sme = StateMachine::new();
+        assert_eq!(sme.get_sm().state, 0);
+        assert_eq!(sme.get_state_name(IDX_STATE1), "state1");
+        assert_eq!(sme.get_current_state_name(), "state1");
 
         sme.dispatch(&NoMessages);
-        assert_eq!(sme.get_state_enter_cnt(BASE_HDL), 1);
-        assert_eq!(sme.get_state_process_cnt(BASE_HDL), 0);
-        assert_eq!(sme.get_state_exit_cnt(BASE_HDL), 0);
-        assert_eq!(sme.get_state_enter_cnt(INITIAL_HDL), 3);
-        assert_eq!(sme.get_state_process_cnt(INITIAL_HDL), 3);
-        assert_eq!(sme.get_state_exit_cnt(INITIAL_HDL), 3);
-        assert_eq!(sme.get_state_enter_cnt(OTHER_HDL), 2);
-        assert_eq!(sme.get_state_process_cnt(OTHER_HDL), 2);
-        assert_eq!(sme.get_state_exit_cnt(OTHER_HDL), 2);
+        assert_eq!(sme.get_sm().state, 1);
+        assert_eq!(sme.get_state_name(IDX_STATE2), "state2");
+        assert_eq!(sme.get_current_state_name(), "state2");
+
+        sme.dispatch(&NoMessages);
+        assert_eq!(sme.get_sm().state, 0);
+        assert_eq!(sme.get_state_name(IDX_STATE1), "state1");
+        assert_eq!(sme.get_current_state_name(), "state1");
+    }
+
+    // Test SM with one state with one field
+    // plus derive Default
+    #[test]
+    #[cfg(not(tarpaulin_include))]
+    fn test_sm_1s_enter_no_exit() {
+        #[derive(Default)]
+        pub struct StateMachine {
+            state: i32,
+        }
+
+        // Create a Protocol
+        pub enum Message {
+            Add { val: i32 },
+            Sub { val: i32 },
+        }
+
+        const MAX_STATES: usize = 1;
+        const IDX_STATE1: usize = 0;
+
+        impl StateMachine {
+            pub fn new() -> StateMachineExecutor<Self, Message> {
+                let sm = StateMachine::default();
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
+
+                sme.add_state(StateInfo::new(
+                    "state1",
+                    Some(Self::state1_enter),
+                    Self::state1,
+                    None,
+                    None,
+                ))
+                .initialize();
+
+                sme
+            }
+
+            fn state1_enter(&mut self, _msg: &Message) {
+                self.state = 100;
+            }
+
+            fn state1(&mut self, msg: &Message) -> StateResult {
+                match msg {
+                    Message::Add { val } => self.state += val,
+                    Message::Sub { val } => self.state -= val,
+                }
+                StateResult::Handled
+            }
+        }
+
+        // Create a sme and validate it's in the expected state
+        let mut sme = StateMachine::new();
+        assert_eq!(std::mem::size_of_val(sme.get_sm()), 4);
+        assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_sm().state, 0);
+
+        sme.dispatch(&Message::Add { val: 2 });
+        assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 1);
+        assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 1);
+        assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_sm().state, 102);
+
+        sme.dispatch(&Message::Sub { val: 1 });
+        assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 1);
+        assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 2);
+        assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_sm().state, 101);
+    }
+
+    // Test SM with twos state with one field
+    // plus derive Default
+    #[test]
+    #[cfg(not(tarpaulin_include))]
+    fn test_sm_2s_no_enter_no_exit() {
+        #[derive(Default)]
+        pub struct StateMachine {
+            state: i32,
+        }
+
+        // Create a Protocol
+        pub enum Message {
+            Add { val: i32 },
+            Sub { val: i32 },
+        }
+
+        const MAX_STATES: usize = 2;
+        const IDX_STATE1: usize = 0;
+        const IDX_STATE2: usize = 1;
+
+        impl StateMachine {
+            pub fn new() -> StateMachineExecutor<Self, Message> {
+                let sm = StateMachine::default();
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
+
+                sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
+                    .add_state(StateInfo::new("state1", None, Self::state2, None, None))
+                    .initialize();
+
+                sme
+            }
+
+            fn state1(&mut self, msg: &Message) -> StateResult {
+                match msg {
+                    Message::Add { val } => self.state += val,
+                    Message::Sub { val } => self.state -= val,
+                }
+                StateResult::TransitionTo(IDX_STATE2)
+            }
+
+            fn state2(&mut self, msg: &Message) -> StateResult {
+                match msg {
+                    Message::Add { val } => self.state += 2 * val,
+                    Message::Sub { val } => self.state -= 2 * val,
+                }
+                StateResult::TransitionTo(IDX_STATE1)
+            }
+        }
+
+        // Create a sme and validate it's in the expected state
+        let mut sme = StateMachine::new();
+        assert_eq!(std::mem::size_of_val(sme.get_sm()), 4);
+        assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_state_enter_cnt(IDX_STATE2), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_STATE2), 0);
+        assert_eq!(sme.get_state_exit_cnt(IDX_STATE2), 0);
+        assert_eq!(sme.get_sm().state, 0);
+
+        sme.dispatch(&Message::Add { val: 2 });
+        assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 1);
+        assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_state_enter_cnt(IDX_STATE2), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_STATE2), 0);
+        assert_eq!(sme.get_state_exit_cnt(IDX_STATE2), 0);
+        assert_eq!(sme.get_sm().state, 2);
+
+        sme.dispatch(&Message::Sub { val: 1 });
+        assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 1);
+        assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_state_enter_cnt(IDX_STATE2), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_STATE2), 1);
+        assert_eq!(sme.get_state_exit_cnt(IDX_STATE2), 0);
+        assert_eq!(sme.get_sm().state, 0);
+    }
+
+    // Test SM with twos state with one field
+    // plus derive Default
+    #[test]
+    #[cfg(not(tarpaulin_include))]
+    fn test_sm_1h_2s_not_handled_no_enter_no_exit() {
+        #[derive(Default)]
+        pub struct StateMachine {
+            state: i32,
+        }
+
+        // Create a Protocol
+        pub enum Message {
+            Add { val: i32 },
+            Sub { val: i32 },
+        }
+
+        const MAX_STATES: usize = 2;
+        const IDX_PARENT: usize = 0;
+        const IDX_CHILD: usize = 1;
+
+        impl StateMachine {
+            pub fn new() -> StateMachineExecutor<Self, Message> {
+                let sm = StateMachine::default();
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_CHILD);
+
+                sme.add_state(StateInfo::new("parent", None, Self::parent, None, None))
+                    .add_state(StateInfo::new(
+                        "child",
+                        None,
+                        Self::child,
+                        None,
+                        Some(IDX_PARENT),
+                    ))
+                    .initialize();
+
+                sme
+            }
+
+            fn parent(&mut self, msg: &Message) -> StateResult {
+                match msg {
+                    Message::Add { val } => self.state += val,
+                    Message::Sub { val } => self.state -= val,
+                }
+                StateResult::Handled
+            }
+
+            fn child(&mut self, _msg: &Message) -> StateResult {
+                StateResult::NotHandled
+            }
+        }
+
+        // Create a sme and validate it's in the expected state
+        let mut sme = StateMachine::new();
+        assert_eq!(std::mem::size_of_val(sme.get_sm()), 4);
+        assert_eq!(sme.get_state_enter_cnt(IDX_PARENT), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_PARENT), 0);
+        assert_eq!(sme.get_state_exit_cnt(IDX_PARENT), 0);
+        assert_eq!(sme.get_state_enter_cnt(IDX_CHILD), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_CHILD), 0);
+        assert_eq!(sme.get_state_exit_cnt(IDX_CHILD), 0);
+        assert_eq!(sme.get_sm().state, 0);
+
+        sme.dispatch(&Message::Add { val: 2 });
+        assert_eq!(sme.get_state_enter_cnt(IDX_PARENT), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_PARENT), 1);
+        assert_eq!(sme.get_state_exit_cnt(IDX_PARENT), 0);
+        assert_eq!(sme.get_state_enter_cnt(IDX_CHILD), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_CHILD), 1);
+        assert_eq!(sme.get_state_exit_cnt(IDX_CHILD), 0);
+        assert_eq!(sme.get_sm().state, 2);
+
+        sme.dispatch(&Message::Sub { val: 1 });
+        assert_eq!(sme.get_state_enter_cnt(IDX_PARENT), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_PARENT), 2);
+        assert_eq!(sme.get_state_exit_cnt(IDX_PARENT), 0);
+        assert_eq!(sme.get_state_enter_cnt(IDX_CHILD), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_CHILD), 2);
+        assert_eq!(sme.get_state_exit_cnt(IDX_CHILD), 0);
+        assert_eq!(sme.get_sm().state, 1);
     }
 
     #[test]
+    #[cfg(not(tarpaulin_include))]
     fn test_leaf_transitions_in_a_tree() {
-        test_transition_between_leafs_in_a_tree();
+        // StateMachine simply transitions back and forth
+        // between initial and other.
+        //
+        //                base=0
+        //        --------^  ^-------
+        //       /                   \
+        //      /                     \
+        //    other=2   <======>   initial=1
+
+        #[derive(Default)]
+        struct StateMachine;
+
+        // Create a Protocol with no messages
+        struct NoMessages;
+
+        const MAX_STATES: usize = 3;
+        const IDX_BASE: usize = 0;
+        const IDX_INITIAL: usize = 1;
+        const IDX_OTHER: usize = 2;
+
+        impl StateMachine {
+            pub fn new() -> StateMachineExecutor<Self, NoMessages> {
+                let sm = StateMachine::default();
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_INITIAL);
+
+                sme.add_state(StateInfo::new(
+                    "base",
+                    Some(Self::base_enter),
+                    Self::base,
+                    Some(Self::base_exit),
+                    None,
+                ))
+                .add_state(StateInfo::new(
+                    "initial",
+                    Some(Self::initial_enter),
+                    Self::initial,
+                    Some(Self::initial_exit),
+                    Some(IDX_BASE),
+                ))
+                .add_state(StateInfo::new(
+                    "other",
+                    Some(Self::other_enter),
+                    Self::other,
+                    Some(Self::other_exit),
+                    Some(IDX_BASE),
+                ))
+                .initialize();
+
+                sme
+            }
+
+            fn base_enter(&mut self, _msg: &NoMessages) {}
+
+            // This state has idx 0
+            fn base(&mut self, _msg: &NoMessages) -> StateResult {
+                StateResult::Handled
+            }
+
+            fn base_exit(&mut self, _msg: &NoMessages) {}
+
+            fn initial_enter(&mut self, _msg: &NoMessages) {}
+
+            // This state has idx 0
+            fn initial(&mut self, _msg: &NoMessages) -> StateResult {
+                StateResult::TransitionTo(IDX_OTHER)
+            }
+
+            fn initial_exit(&mut self, _msg: &NoMessages) {}
+
+            fn other_enter(&mut self, _msg: &NoMessages) {}
+
+            // This state has idx 0
+            fn other(&mut self, _msg: &NoMessages) -> StateResult {
+                StateResult::TransitionTo(IDX_INITIAL)
+            }
+
+            fn other_exit(&mut self, _msg: &NoMessages) {}
+        }
+
+        // Create a sme and validate it's in the expected state
+        let mut sme = StateMachine::new();
+        assert_eq!(std::mem::size_of_val(sme.get_sm()), 0);
+        assert_eq!(sme.get_state_enter_cnt(IDX_BASE), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_BASE), 0);
+        assert_eq!(sme.get_state_exit_cnt(IDX_BASE), 0);
+        assert_eq!(sme.get_state_enter_cnt(IDX_INITIAL), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_INITIAL), 0);
+        assert_eq!(sme.get_state_exit_cnt(IDX_INITIAL), 0);
+        assert_eq!(sme.get_state_enter_cnt(IDX_OTHER), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_OTHER), 0);
+        assert_eq!(sme.get_state_exit_cnt(IDX_OTHER), 0);
+
+        sme.dispatch(&NoMessages);
+        assert_eq!(sme.get_state_enter_cnt(IDX_BASE), 1);
+        assert_eq!(sme.get_state_process_cnt(IDX_BASE), 0);
+        assert_eq!(sme.get_state_exit_cnt(IDX_BASE), 0);
+        assert_eq!(sme.get_state_enter_cnt(IDX_INITIAL), 1);
+        assert_eq!(sme.get_state_process_cnt(IDX_INITIAL), 1);
+        assert_eq!(sme.get_state_exit_cnt(IDX_INITIAL), 1);
+        assert_eq!(sme.get_state_enter_cnt(IDX_OTHER), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_OTHER), 0);
+        assert_eq!(sme.get_state_exit_cnt(IDX_OTHER), 0);
+
+        sme.dispatch(&NoMessages);
+        assert_eq!(sme.get_state_enter_cnt(IDX_BASE), 1);
+        assert_eq!(sme.get_state_process_cnt(IDX_BASE), 0);
+        assert_eq!(sme.get_state_exit_cnt(IDX_BASE), 0);
+        assert_eq!(sme.get_state_enter_cnt(IDX_INITIAL), 1);
+        assert_eq!(sme.get_state_process_cnt(IDX_INITIAL), 1);
+        assert_eq!(sme.get_state_exit_cnt(IDX_INITIAL), 1);
+        assert_eq!(sme.get_state_enter_cnt(IDX_OTHER), 1);
+        assert_eq!(sme.get_state_process_cnt(IDX_OTHER), 1);
+        assert_eq!(sme.get_state_exit_cnt(IDX_OTHER), 1);
+
+        sme.dispatch(&NoMessages);
+        assert_eq!(sme.get_state_enter_cnt(IDX_BASE), 1);
+        assert_eq!(sme.get_state_process_cnt(IDX_BASE), 0);
+        assert_eq!(sme.get_state_exit_cnt(IDX_BASE), 0);
+        assert_eq!(sme.get_state_enter_cnt(IDX_INITIAL), 2);
+        assert_eq!(sme.get_state_process_cnt(IDX_INITIAL), 2);
+        assert_eq!(sme.get_state_exit_cnt(IDX_INITIAL), 2);
+        assert_eq!(sme.get_state_enter_cnt(IDX_OTHER), 1);
+        assert_eq!(sme.get_state_process_cnt(IDX_OTHER), 1);
+        assert_eq!(sme.get_state_exit_cnt(IDX_OTHER), 1);
+
+        sme.dispatch(&NoMessages);
+        assert_eq!(sme.get_state_enter_cnt(IDX_BASE), 1);
+        assert_eq!(sme.get_state_process_cnt(IDX_BASE), 0);
+        assert_eq!(sme.get_state_exit_cnt(IDX_BASE), 0);
+        assert_eq!(sme.get_state_enter_cnt(IDX_INITIAL), 2);
+        assert_eq!(sme.get_state_process_cnt(IDX_INITIAL), 2);
+        assert_eq!(sme.get_state_exit_cnt(IDX_INITIAL), 2);
+        assert_eq!(sme.get_state_enter_cnt(IDX_OTHER), 2);
+        assert_eq!(sme.get_state_process_cnt(IDX_OTHER), 2);
+        assert_eq!(sme.get_state_exit_cnt(IDX_OTHER), 2);
+
+        sme.dispatch(&NoMessages);
+        assert_eq!(sme.get_state_enter_cnt(IDX_BASE), 1);
+        assert_eq!(sme.get_state_process_cnt(IDX_BASE), 0);
+        assert_eq!(sme.get_state_exit_cnt(IDX_BASE), 0);
+        assert_eq!(sme.get_state_enter_cnt(IDX_INITIAL), 3);
+        assert_eq!(sme.get_state_process_cnt(IDX_INITIAL), 3);
+        assert_eq!(sme.get_state_exit_cnt(IDX_INITIAL), 3);
+        assert_eq!(sme.get_state_enter_cnt(IDX_OTHER), 2);
+        assert_eq!(sme.get_state_process_cnt(IDX_OTHER), 2);
+        assert_eq!(sme.get_state_exit_cnt(IDX_OTHER), 2);
     }
 }
