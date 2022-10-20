@@ -152,27 +152,21 @@ impl<SM, P> StateMachineExecutor<SM, P> {
         let mut idx_exit = self.idx_current_state;
 
         // Always exit the first state, this handles the special case
-        // where Some(idx_exit) == exit_sentinel.
+        // where Some(idx_exit) == exit_sentinel and we need to exit anyway.
         //log::trace!("setup_exit_enter_fns_idxs: push_back(idx_exit={} {})", idx_exit, self.state_name(idx_exit));
         self.idxs_exit_fns.push_back(idx_exit);
 
-        loop {
-            idx_exit = if let Some(idx) = self.states[idx_exit].parent {
-                idx
-            } else {
-                // No parent we're done
-                //log::trace!("setup_exit_enter_fns_idxs: No parent idx_exit={} {}, return", idx_exit, self.state_name(idx_exit));
-                return;
-            };
-
-            if Some(idx_exit) == exit_sentinel {
+        while let Some(idx) = self.states[idx_exit].parent {
+            if Some(idx) == exit_sentinel {
                 // Reached the exit sentinel so we're done
-                //log::trace!("setup_exit_enter_fns_idxs: idx_exit={} {} == exit_sentinel={} {}, reached exit_sentinel return", idx_exit, self.state_name(idx_exit), exit_sentinel.unwrap(), self.state_name(exit_sentinel.unwrap()));
+                //log::trace!("setup_exit_enter_fns_idxs: idx={} {} == exit_sentinel={} {}, reached exit_sentinel return", idx_exit, self.state_name(idx_exit), exit_sentinel.unwrap(), self.state_name(exit_sentinel.unwrap()));
                 return;
             }
 
             //log::trace!( "setup_exit_enter_fns_idxs: push_back(idx_exit={} {})", idx_exit, self.state_name(idx_exit));
-            self.idxs_exit_fns.push_back(idx_exit);
+            self.idxs_exit_fns.push_back(idx);
+
+            idx_exit = idx;
         }
     }
 
@@ -365,8 +359,7 @@ mod test {
                 let sm = StateMachine { state: 0 };
                 let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
 
-                sme
-                    .add_state(StateInfo::new("state1", None, Self::state1, None, None))
+                sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
                     .add_state(StateInfo::new("state2", None, Self::state2, None, None))
                     .initialize();
 
