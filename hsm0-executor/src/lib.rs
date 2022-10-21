@@ -85,15 +85,17 @@ impl<SM, P> StateMachineExecutor<SM, P> {
     // The first state will be the initial state as identified by the
     // idx_initial_state parameter in build.
     pub fn initialize(&mut self) {
+        // Always push the destination
         let mut idx_enter = self.idx_current_state;
-        loop {
+        //log::trace!("initial_enter_fns_idxs: push idx_enter={} {}", idx_enter, self.state_name(idx_enter));
+        self.idxs_enter_fns.push(idx_enter);
+
+        // Then push any parents
+        while let Some(idx) = self.states[idx_enter].parent {
+            idx_enter = idx;
+
             //log::trace!("initial_enter_fns_idxs: push idx_enter={} {}", idx_enter, self.state_name(idx_enter));
             self.idxs_enter_fns.push(idx_enter);
-            idx_enter = if let Some(idx) = self.states[idx_enter].parent {
-                idx
-            } else {
-                break;
-            };
         }
     }
 
@@ -157,16 +159,16 @@ impl<SM, P> StateMachineExecutor<SM, P> {
         self.idxs_exit_fns.push_back(idx_exit);
 
         while let Some(idx) = self.states[idx_exit].parent {
-            if Some(idx) == exit_sentinel {
+            idx_exit = idx;
+
+            if Some(idx_exit) == exit_sentinel {
                 // Reached the exit sentinel so we're done
-                //log::trace!("setup_exit_enter_fns_idxs: idx={} {} == exit_sentinel={} {}, reached exit_sentinel return", idx_exit, self.state_name(idx_exit), exit_sentinel.unwrap(), self.state_name(exit_sentinel.unwrap()));
+                //log::trace!("setup_exit_enter_fns_idxs: idx_exit={} {} == exit_sentinel={} {}, reached exit_sentinel return", idx_exit, self.state_name(idx_exit), exit_sentinel.unwrap(), self.state_name(exit_sentinel.unwrap()));
                 return;
             }
 
             //log::trace!( "setup_exit_enter_fns_idxs: push_back(idx_exit={} {})", idx_exit, self.state_name(idx_exit));
-            self.idxs_exit_fns.push_back(idx);
-
-            idx_exit = idx;
+            self.idxs_exit_fns.push_back(idx_exit);
         }
     }
 
@@ -195,9 +197,10 @@ impl<SM, P> StateMachineExecutor<SM, P> {
                 if let Some(idx_parent) = self.states[idx].parent {
                     //log::trace!("dispatch_idx: idx={} {} NotHandled, recurse into dispatch_idx", idx, self.state_name(idx));
                     self.dispatch_idx(msg, idx_parent);
-                } else {
-                    //log::trace!("dispatch_idx: idx={} {}, NotHandled, no parent, ignoring messages", idx, self.state_name(idx));
                 }
+                //} else {
+                //    log::trace!("dispatch_idx: idx={} {}, NotHandled, no parent, ignoring messages", idx, self.state_name(idx));
+                //}
             }
             StateResult::Handled => {
                 // Nothing to do

@@ -59,44 +59,25 @@ test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; fini
 ## Code coverage
 
 ```
-wink@3900x 22-10-19T20:20:33.993Z:~/prgs/rust/myrepos/proc-macro-hsm1/hsm0-executor
-$ cargo tarpaulin --lib
-Oct 19 13:20:36.022  INFO cargo_tarpaulin::config: Creating config
-Oct 19 13:20:36.063  INFO cargo_tarpaulin: Running Tarpaulin
-Oct 19 13:20:36.063  INFO cargo_tarpaulin: Building project
-Oct 19 13:20:36.063  INFO cargo_tarpaulin::cargo: Cleaning project
-   Compiling memchr v2.5.0
-   Compiling libc v0.2.126
-   Compiling log v0.4.17
-   Compiling regex-syntax v0.6.27
-   Compiling cfg-if v1.0.0
-   Compiling termcolor v1.1.3
-   Compiling humantime v2.1.0
-   Compiling aho-corasick v0.7.18
-   Compiling atty v0.2.14
-   Compiling regex v1.6.0
-   Compiling env_logger v0.9.1
-   Compiling custom-logger v0.1.0 (https://github.com/winksaville/custom-logger#4d828a35)
-   Compiling hsm0-executor v0.2.0 (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/hsm0-executor)
-    Finished test [unoptimized + debuginfo] target(s) in 2.21s
-Oct 19 13:20:38.398  INFO cargo_tarpaulin::process_handling::linux: Launching test
-Oct 19 13:20:38.398  INFO cargo_tarpaulin::process_handling: running /home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/deps/hsm0_executor-7f4fd4adf08c77fc
 
-running 5 tests
+running 7 tests
 test test::test_leaf_transitions_in_a_tree ... ok
 test test::test_sm_1h_2s_not_handled_no_enter_no_exit ... ok
 test test::test_sm_1s_enter_no_exit ... ok
+test test::test_sm_1s_get_names ... ok
 test test::test_sm_1s_no_enter_no_exit ... ok
+test test::test_sm_2s_get_names ... ok
 test test::test_sm_2s_no_enter_no_exit ... ok
 
-test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-Oct 19 13:20:38.617  INFO cargo_tarpaulin::report: Coverage Results:
+Oct 20 09:39:32.128  INFO cargo_tarpaulin::report: Coverage Results:
+|| Uncovered Lines:
+|| src/lib.rs: 80, 93, 95, 127, 132, 163, 167, 169, 194, 202
 || Tested/Total Lines:
-|| src/lib.rs: 57/73 +0.00%
-||
-78.08% coverage, 57/73 lines covered, +0% change in coverage
-```
+|| src/lib.rs: 61/71 +2.35%
+|| 
+85.92% coverage, 61/71 lines covered, +2.3538491221300433% change in coverage```
 
 ## License
 
