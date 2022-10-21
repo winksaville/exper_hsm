@@ -14,10 +14,18 @@ fn main() -> Result<(), DynError> {
     let remaining_args: Vec<String> = env_iter.collect();
     //let remaining_args: Vec<String> = env_iter.map(|a| a).collect();
     match task.as_deref() {
+        Some("pre-commit") => pre_commit(&remaining_args)?,
+        Some("gen-cov") => gen_cov(&get_current_dir())?,
         Some("fmt") => cargo_cmd("fmt", &remaining_args)?,
         Some("test") => cargo_cmd("test", &remaining_args)?,
         Some("clippy") => cargo_cmd("clippy", &remaining_args)?,
-        Some("pre-commit") => pre_commit(&remaining_args)?,
+        Some("gen-profraw") => gen_profraw(&get_current_dir())?,
+        Some("gen-html") => gen_html(&get_current_dir())?,
+        Some("gen-lcov") => gen_lcov(&get_current_dir())?,
+        Some("gen-covdir") => gen_covdir(&get_current_dir())?,
+        Some("cwd") => cwd()?,
+        Some("pcr") => pcr()?,
+        Some("mk-empty-cov-dir") => mk_empty_cov_dir(&get_current_dir())?,
         _ => print_help(),
     }
     Ok(())
@@ -26,10 +34,22 @@ fn main() -> Result<(), DynError> {
 fn print_help() {
     eprintln!(
         r#"Tasks:
-clippy:        Runs `cargo clippy`
-fmt:           Runs `cargo fmt`
-test:          Runs `cargo test`
-pre-commit:    Runs `cargo fmt`, `cargo clippy` and `cargo test`"#
+pre-commit:    Runs `cargo fmt`, `cargo clippy` and `cargo test`
+gen-cov:       Removes <current-dir>/coverage/ then generates coverage data in <current-dir>/coverage/
+               using gen-profraw, gen-html gen-lcov and gen-covdir.
+
+tasks for testing gen-phl:
+    clippy:           Runs `cargo clippy`
+    fmt:              Runs `cargo fmt`
+    test:             Runs `cargo test`
+    gen-profraw:      Runs `cargo test` with `-cinstrument-coverage` generating `<proj-root>/coverage/*.profraw` files
+    gen-html:         Runs `grcov` generating html files in `<proj-root>/coverage/html/`
+    gen-lcov:         Rust `grcov` generating `<proj-root>/coverage/tests.lcov`
+    gen-covdir:       Rust `grcov` generating `<proj-root>/coverage/tests.covdir.json`
+    cwd:              Display current working director
+    pcr:              Display project coverage root
+    mk-empty-cov-dir  Make empty coverage directory
+"#
     );
 }
 
@@ -37,6 +57,120 @@ fn pre_commit(remaining_args: &Vec<String>) -> Result<(), DynError> {
     cargo_cmd_prj_root("fmt", remaining_args)?;
     cargo_cmd_prj_root("clippy", remaining_args)?;
     cargo_cmd_prj_root("test", remaining_args)?;
+
+    Ok(())
+}
+
+fn gen_cov(root: &PathBuf) -> Result<(), DynError> {
+    mk_empty_cov_dir(root)?;
+    gen_profraw(root)?;
+    gen_html(root)?;
+    gen_lcov(root)?;
+    gen_covdir(root)?;
+
+    Ok(())
+}
+
+fn mk_empty_cov_dir(root: &PathBuf) -> Result<(), DynError> {
+    match std::fs::remove_dir_all(root.join("coverage")) {
+        Ok(_) => {} // Great, worked
+        Err(_) => {} // Ignore removal error as it generally means it doesn't exist
+    }
+    std::fs::create_dir_all(root.join("coverage"))?;
+
+    Ok(())
+}
+
+fn gen_profraw(root: &PathBuf) -> Result<(), DynError> {
+    let coverage_dir = project_coverage_root(&root)?;
+    eprintln!("Create profraw data at {coverage_dir}");
+
+    let status = Command::new("cargo")
+        .env("CARGO_INCREMENTAL", "0")
+        .env("RUSTFLAGS", "-C instrument-coverage")
+        .env("TMPDIR", coverage_dir)
+        .env("LLVM_PROFILE_FILE", "%t/cargo-test-%p-%m.profraw")
+        .arg("test")
+        .arg("--lib")
+        //.args(["-p", "sub", "-p", "add"]) // All packages if none, else choose specific packages
+        //.args(remaining_args)
+        .status()?;
+
+    if !status.success() {
+        Err(format!("`cargo test --lib` with code-coverage Failed"))?;
+    }
+
+    Ok(())
+}
+
+fn gen_html(root: &PathBuf) -> Result<(), DynError> {
+    let output_path_buf = root.join("coverage").join("html");
+    gen_coverage("html", &output_path_buf)
+}
+
+fn gen_lcov(root: &PathBuf) -> Result<(), DynError> {
+    let output_path_buf = root.join("coverage").join("tests.lcov");
+    gen_coverage("lcov", &output_path_buf)
+}
+
+fn gen_covdir(root: &PathBuf) -> Result<(), DynError> {
+    let output_path_buf = root.join("coverage").join("tests.covdir.json");
+    gen_coverage("covdir", &output_path_buf)
+}
+
+fn gen_coverage(output_type: &str, output_path_buf: &Path) -> Result<(), DynError> {
+    let output_path = output_path_buf.to_string_lossy();
+    eprintln!("Create {output_path}");
+
+    let pb = project_root().join("target").join("debug").join("deps");
+    let binary_path = pb.to_string_lossy();
+
+    //let pb = Path::new("/home/wink/prgs/rust/clones/grcov/target/debug/grcov");
+    //let grcov = pb.to_string_lossy().to_string();
+    let grcov = "grcov".to_string();
+    let status = Command::new(&grcov)
+        .current_dir(project_root())
+        .args([
+            ".",
+            "--binary-path",
+            &binary_path,
+            "--branch",
+            "--ignore-not-existing",
+            "--source-dir",
+            ".",
+            // All --ignore options are releative to --source-dir
+            "--ignore",
+            "xtask/*",
+            //"--ignore",
+            //"*/src/tests/*",
+            //"--ignore",
+            //"../*", // Ignore all explicitly relative paths
+            //"--ignore",
+            //"/*", // Ignore all absolute paths
+            "--output-type",
+            output_type,
+            "--output-path",
+            &output_path,
+        ])
+        //.args(remaining_args)
+        .status()?;
+
+    if !status.success() {
+        Err(format!("Creating {output_path} Failed"))?;
+    }
+
+    Ok(())
+}
+
+fn cwd() -> Result<(), DynError> {
+    eprintln!("{}", get_current_dir().to_string_lossy());
+
+    Ok(())
+}
+
+fn pcr() -> Result<(), DynError> {
+    let coverage_dir = project_coverage_root(&get_current_dir())?;
+    eprintln!("{coverage_dir}");
 
     Ok(())
 }
@@ -65,7 +199,7 @@ fn cargo_cmd_prj_root(cmd: &str, remaining_args: &Vec<String>) -> Result<(), Dyn
         .status()?;
 
     if !status.success() {
-        Err("cargo {cmd} {remaining_args:?} Failed")?;
+        Err(format!("cargo {cmd} {remaining_args:?} Failed"))?;
     }
     Ok(())
 }
@@ -80,10 +214,24 @@ fn cargo_string() -> String {
     }
 }
 
+fn project_coverage_root(root: &PathBuf) -> Result<String, DynError> {
+    let pb = root.join("coverage");
+    let coverage_dir = match pb.to_str() {
+        Some(dir) => dir,
+        None => return Err("Unable to create coverage dir".into()),
+    };
+
+    Ok(coverage_dir.to_owned())
+}
+
 fn project_root() -> PathBuf {
     Path::new(&env!("CARGO_MANIFEST_DIR"))
         .ancestors()
         .nth(1)
         .unwrap()
         .to_path_buf()
+}
+
+fn get_current_dir() -> PathBuf {
+    env::current_dir().unwrap()
 }
