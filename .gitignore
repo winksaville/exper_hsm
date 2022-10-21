@@ -1,2 +1,4 @@
+*.prof*
+coverage/
 /target
 Cargo.lock

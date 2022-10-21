@@ -242,7 +242,6 @@ mod test {
     use super::*;
     // Test SM with one state with one field
     #[test]
-    #[cfg(not(tarpaulin_include))]
     fn test_sm_1s_no_enter_no_exit() {
         pub struct StateMachine {
             state: i32,
@@ -295,7 +294,6 @@ mod test {
 
     // Test SM with one state getting names
     #[test]
-    #[cfg(not(tarpaulin_include))]
     fn test_sm_1s_get_names() {
         pub struct StateMachine {
             state: i32,
@@ -344,7 +342,6 @@ mod test {
 
     // Test SM with one state getting names
     #[test]
-    #[cfg(not(tarpaulin_include))]
     fn test_sm_2s_get_names() {
         pub struct StateMachine {
             state: i32,
@@ -402,7 +399,6 @@ mod test {
     // Test SM with one state with one field
     // plus derive Default
     #[test]
-    #[cfg(not(tarpaulin_include))]
     fn test_sm_1s_enter_no_exit() {
         #[derive(Default)]
         pub struct StateMachine {
@@ -472,7 +468,6 @@ mod test {
     // Test SM with twos state with one field
     // plus derive Default
     #[test]
-    #[cfg(not(tarpaulin_include))]
     fn test_sm_2s_no_enter_no_exit() {
         #[derive(Default)]
         pub struct StateMachine {
@@ -551,7 +546,6 @@ mod test {
     // Test SM with twos state with one field
     // plus derive Default
     #[test]
-    #[cfg(not(tarpaulin_include))]
     fn test_sm_1h_2s_not_handled_no_enter_no_exit() {
         #[derive(Default)]
         pub struct StateMachine {
@@ -630,7 +624,6 @@ mod test {
     }
 
     #[test]
-    #[cfg(not(tarpaulin_include))]
     fn test_leaf_transitions_in_a_tree() {
         // StateMachine simply transitions back and forth
         // between initial and other.
