@@ -113,6 +113,24 @@ Create /home/wink/prgs/rust/myrepos/proc-macro-hsm1/hsm0-executor/coverage/tests
 Create /home/wink/prgs/rust/myrepos/proc-macro-hsm1/hsm0-executor/coverage/tests.covdir.json
 ```
 
+# Examples
+
+```
+$ cargo run --example hsm-1h-3s
+    Finished dev [unoptimized + debuginfo] target(s) in 0.02s
+     Running `/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/examples/hsm-1h-3s`
+main
+[2022-10-23T20:53:01.030475295Z INFO  hsm_1h_3s  163  1] main:+
+[2022-10-23T20:53:01.030506083Z INFO  hsm_1h_3s  167  1] main:-
+wink@3900x 22-10-23T20:53:01.032Z:~/prgs/rust/myrepos/proc-macro-hsm1/hsm0-executor (make-hsm-1h-3s-and-hsm-2h-2s-hsm0-executor-examples)
+$ cargo run --example hsm-2h-2s
+    Finished dev [unoptimized + debuginfo] target(s) in 0.01s
+     Running `/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/examples/hsm-2h-2s`
+main
+[2022-10-23T20:53:08.205121365Z INFO  hsm_2h_2s  197  1] main:+
+[2022-10-23T20:53:08.205155509Z INFO  hsm_2h_2s  201  1] main:-
+```
+
 ## License
 
 Licensed under either of
