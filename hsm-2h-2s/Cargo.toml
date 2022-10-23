@@ -9,4 +9,4 @@ license.workspace = true
 [dependencies]
 custom-logger = { git = "https://github.com/winksaville/custom-logger", version = "0.1.0" }
 log = { version = "0.4.17", features = ["release_max_level_off"] }
-hsm0-executor = { version = "0.2.0", path = "../hsm0-executor" }
+hsm0-executor = { path = "../hsm0-executor" }
