@@ -16,9 +16,9 @@ fn main() -> Result<(), DynError> {
     match task.as_deref() {
         Some("pre-commit") => pre_commit(&remaining_args)?,
         Some("gen-cov") => gen_cov(&get_current_dir())?,
-        Some("fmt") => cargo_cmd("fmt", &remaining_args)?,
-        Some("test") => cargo_cmd("test", &remaining_args)?,
-        Some("clippy") => cargo_cmd("clippy", &remaining_args)?,
+        Some("fmt") => cargo_cmd(&get_current_dir(), "fmt", &remaining_args)?,
+        Some("test") => cargo_cmd(&get_current_dir(), "test", &remaining_args)?,
+        Some("clippy") => cargo_cmd(&get_current_dir(), "clippy", &remaining_args)?,
         Some("gen-profraw") => gen_profraw(&get_current_dir())?,
         Some("gen-html") => gen_html(&get_current_dir())?,
         Some("gen-lcov") => gen_lcov(&get_current_dir())?,
@@ -34,7 +34,7 @@ fn main() -> Result<(), DynError> {
 fn print_help() {
     eprintln!(
         r#"Tasks:
-pre-commit:    Runs `cargo fmt`, `cargo clippy` and `cargo test`
+pre-commit:    Runs `cargo fmt`, `cargo clippy`, `cargo test` and `gen-cov`
 gen-cov:       Removes <current-dir>/coverage/ then generates coverage data in <current-dir>/coverage/
                using gen-profraw, gen-html gen-lcov and gen-covdir.
 
@@ -54,14 +54,15 @@ tasks for testing gen-phl:
 }
 
 fn pre_commit(remaining_args: &Vec<String>) -> Result<(), DynError> {
-    cargo_cmd_prj_root("fmt", remaining_args)?;
-    cargo_cmd_prj_root("clippy", remaining_args)?;
-    cargo_cmd_prj_root("test", remaining_args)?;
+    cargo_cmd(&project_root(), "fmt", remaining_args)?;
+    cargo_cmd(&project_root(), "clippy", remaining_args)?;
+    cargo_cmd(&project_root(), "test", remaining_args)?;
+    gen_cov(&project_root())?;
 
     Ok(())
 }
 
-fn gen_cov(root: &PathBuf) -> Result<(), DynError> {
+fn gen_cov(root: &Path) -> Result<(), DynError> {
     mk_empty_cov_dir(root)?;
     gen_profraw(root)?;
     gen_html(root)?;
@@ -71,18 +72,18 @@ fn gen_cov(root: &PathBuf) -> Result<(), DynError> {
     Ok(())
 }
 
-fn mk_empty_cov_dir(root: &PathBuf) -> Result<(), DynError> {
-    match std::fs::remove_dir_all(root.join("coverage")) {
-        Ok(_) => {} // Great, worked
-        Err(_) => {} // Ignore removal error as it generally means it doesn't exist
-    }
+fn mk_empty_cov_dir(root: &Path) -> Result<(), DynError> {
+    // Ignore errors as coverage dir may or may not exit
+    if std::fs::remove_dir_all(root.join("coverage")).is_ok() {}
+
+    // But always create but return errors if it fails :)
     std::fs::create_dir_all(root.join("coverage"))?;
 
     Ok(())
 }
 
-fn gen_profraw(root: &PathBuf) -> Result<(), DynError> {
-    let coverage_dir = project_coverage_root(&root)?;
+fn gen_profraw(root: &Path) -> Result<(), DynError> {
+    let coverage_dir = project_coverage_root(root)?;
     eprintln!("Create profraw data at {coverage_dir}");
 
     let status = Command::new("cargo")
@@ -97,23 +98,23 @@ fn gen_profraw(root: &PathBuf) -> Result<(), DynError> {
         .status()?;
 
     if !status.success() {
-        Err(format!("`cargo test --lib` with code-coverage Failed"))?;
+        Err("`cargo test --lib` with code-coverage Failed")?;
     }
 
     Ok(())
 }
 
-fn gen_html(root: &PathBuf) -> Result<(), DynError> {
+fn gen_html(root: &Path) -> Result<(), DynError> {
     let output_path_buf = root.join("coverage").join("html");
     gen_coverage("html", &output_path_buf)
 }
 
-fn gen_lcov(root: &PathBuf) -> Result<(), DynError> {
+fn gen_lcov(root: &Path) -> Result<(), DynError> {
     let output_path_buf = root.join("coverage").join("tests.lcov");
     gen_coverage("lcov", &output_path_buf)
 }
 
-fn gen_covdir(root: &PathBuf) -> Result<(), DynError> {
+fn gen_covdir(root: &Path) -> Result<(), DynError> {
     let output_path_buf = root.join("coverage").join("tests.covdir.json");
     gen_coverage("covdir", &output_path_buf)
 }
@@ -175,25 +176,11 @@ fn pcr() -> Result<(), DynError> {
     Ok(())
 }
 
-fn cargo_cmd(cmd: &str, remaining_args: &Vec<String>) -> Result<(), DynError> {
+fn cargo_cmd(root: &Path, cmd: &str, remaining_args: &Vec<String>) -> Result<(), DynError> {
     eprintln!("Run cargo {cmd} {remaining_args:?}");
 
     let status = Command::new(cargo_string())
-        .arg(cmd)
-        .args(remaining_args)
-        .status()?;
-
-    if !status.success() {
-        Err("cargo {cmd} {remaining_args:?} Failed")?;
-    }
-    Ok(())
-}
-
-fn cargo_cmd_prj_root(cmd: &str, remaining_args: &Vec<String>) -> Result<(), DynError> {
-    eprintln!("Run cargo {cmd} {remaining_args:?}");
-
-    let status = Command::new(cargo_string())
-        .current_dir(project_root())
+        .current_dir(root)
         .arg(cmd)
         .args(remaining_args)
         .status()?;
@@ -214,7 +201,7 @@ fn cargo_string() -> String {
     }
 }
 
-fn project_coverage_root(root: &PathBuf) -> Result<String, DynError> {
+fn project_coverage_root(root: &Path) -> Result<String, DynError> {
     let pb = root.join("coverage");
     let coverage_dir = match pb.to_str() {
         Some(dir) => dir,
