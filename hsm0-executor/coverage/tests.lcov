@@ -7,8 +7,8 @@ FN:28,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_1s_no_enter_no_exit
 FN:235,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::dispatch
 FN:793,<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine as core::default::Default>::default
 FN:177,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::dispatch_idx
-FN:28,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::new
 FN:235,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::dispatch
+FN:28,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::new
 FN:127,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::setup_exit_enter_fns_idxs
 FN:1,hsm0_executor::main
 FN:851,<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine>::initial_base_exit
@@ -16,9 +16,9 @@ FN:65,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter
 FN:89,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::initialize
 FN:235,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::dispatch
 FN:79,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::add_state
-FN:476,hsm0_executor::test::test_sm_2s_no_enter_no_exit::{closure#0}
 FN:127,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::setup_exit_enter_fns_idxs
 FN:65,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::build
+FN:476,hsm0_executor::test::test_sm_2s_no_enter_no_exit::{closure#0}
 FN:116,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::get_state_enter_cnt
 FN:860,<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine>::initial_exit
 FN:655,<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine>::new
@@ -38,16 +38,16 @@ FN:28,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_1h_2s_not_handled_n
 FN:406,hsm0_executor::test::test_sm_1s_enter_no_exit::{closure#0}
 FN:119,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::get_state_process_cnt
 FN:79,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::add_state
+FN:123,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::get_state_exit_cnt
+FN:89,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::initialize
+FN:856,<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine>::initial
+FN:104,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::get_state_name
 FN:127,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::setup_exit_enter_fns_idxs
 FN:853,<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine>::initial_enter
-FN:856,<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine>::initial
-FN:89,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::initialize
-FN:104,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::get_state_name
-FN:123,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::get_state_exit_cnt
+FN:123,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::get_state_exit_cnt
 FN:631,hsm0_executor::test::test_leaf_transitions_in_a_tree::{closure#0}
 FN:177,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::dispatch_idx
 FN:479,<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine as core::default::Default>::default
-FN:123,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::get_state_exit_cnt
 FN:28,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::new
 FN:65,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::build
 FN:235,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::dispatch
@@ -59,32 +59,32 @@ FN:28,<hsm0_executor::StateInfo<hsm0_executor::test::test_leaf_transitions_betwe
 FN:843,<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine>::initial_base_enter
 FN:65,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::build
 FN:89,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::initialize
-FN:643,<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine as core::default::Default>::default
-FN:380,<hsm0_executor::test::test_sm_2s_get_names::StateMachine>::state2
-FN:89,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::initialize
-FN:127,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::setup_exit_enter_fns_idxs
 FN:119,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::get_state_process_cnt
+FN:380,<hsm0_executor::test::test_sm_2s_get_names::StateMachine>::state2
 FN:123,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::get_state_exit_cnt
+FN:127,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::setup_exit_enter_fns_idxs
 FN:123,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::get_state_exit_cnt
+FN:89,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::initialize
+FN:643,<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine as core::default::Default>::default
 FN:123,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::get_state_exit_cnt
 FN:112,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::get_sm
-FN:862,<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine>::other_base_enter
 FN:693,<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine>::initial_enter
+FN:862,<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine>::other_base_enter
 FN:235,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::dispatch
 FN:112,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::get_sm
 FN:112,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::get_sm
 FN:363,<hsm0_executor::test::test_sm_2s_get_names::StateMachine>::new
 FN:440,<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine>::state1_enter
+FN:119,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::get_state_process_cnt
 FN:28,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::new
 FN:127,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::setup_exit_enter_fns_idxs
-FN:119,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::get_state_process_cnt
 FN:879,<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine>::other_exit
 FN:127,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::setup_exit_enter_fns_idxs
 FN:65,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::build
 FN:177,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::dispatch_idx
 FN:875,<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine>::other
-FN:685,<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine>::base_enter
 FN:112,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::get_sm
+FN:685,<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine>::base_enter
 FN:119,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::get_state_process_cnt
 FN:28,<hsm0_executor::StateInfo<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::new
 FN:89,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::initialize
@@ -115,8 +115,8 @@ FN:104,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_
 FN:127,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::setup_exit_enter_fns_idxs
 FN:112,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::get_sm
 FN:696,<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine>::initial
-FN:555,<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine as core::default::Default>::default
 FN:806,<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine>::new
+FN:555,<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine as core::default::Default>::default
 FN:709,<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine>::other_exit
 FN:552,hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::{closure#0}
 FN:505,<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine>::state1
@@ -142,8 +142,8 @@ FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_1s_no_enter_no_exi
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::dispatch
 FNDA:1,<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine as core::default::Default>::default
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::dispatch_idx
-FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::new
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::dispatch
+FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::new
 FNDA:0,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::setup_exit_enter_fns_idxs
 FNDA:1,hsm0_executor::main
 FNDA:1,<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine>::initial_base_exit
@@ -151,9 +151,9 @@ FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_ente
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::initialize
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::dispatch
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::add_state
-FNDA:1,hsm0_executor::test::test_sm_2s_no_enter_no_exit::{closure#0}
 FNDA:0,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::setup_exit_enter_fns_idxs
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::build
+FNDA:1,hsm0_executor::test::test_sm_2s_no_enter_no_exit::{closure#0}
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::get_state_enter_cnt
 FNDA:1,<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine>::initial_exit
 FNDA:1,<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine>::new
@@ -173,16 +173,16 @@ FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_1h_2s_not_handled_
 FNDA:1,hsm0_executor::test::test_sm_1s_enter_no_exit::{closure#0}
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::get_state_process_cnt
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::add_state
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::get_state_exit_cnt
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::initialize
+FNDA:1,<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine>::initial
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::get_state_name
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::setup_exit_enter_fns_idxs
 FNDA:1,<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine>::initial_enter
-FNDA:1,<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine>::initial
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::initialize
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::get_state_name
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::get_state_exit_cnt
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::get_state_exit_cnt
 FNDA:1,hsm0_executor::test::test_leaf_transitions_in_a_tree::{closure#0}
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::dispatch_idx
 FNDA:1,<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine as core::default::Default>::default
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::get_state_exit_cnt
 FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::new
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::build
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::dispatch
@@ -194,32 +194,32 @@ FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_leaf_transitions_betw
 FNDA:1,<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine>::initial_base_enter
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::build
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::initialize
-FNDA:1,<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine as core::default::Default>::default
-FNDA:1,<hsm0_executor::test::test_sm_2s_get_names::StateMachine>::state2
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::initialize
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::setup_exit_enter_fns_idxs
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::get_state_process_cnt
+FNDA:1,<hsm0_executor::test::test_sm_2s_get_names::StateMachine>::state2
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::get_state_exit_cnt
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::setup_exit_enter_fns_idxs
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::get_state_exit_cnt
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::initialize
+FNDA:1,<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine as core::default::Default>::default
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::get_state_exit_cnt
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::get_sm
-FNDA:1,<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine>::other_base_enter
 FNDA:1,<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine>::initial_enter
+FNDA:1,<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine>::other_base_enter
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::dispatch
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::get_sm
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::get_sm
 FNDA:1,<hsm0_executor::test::test_sm_2s_get_names::StateMachine>::new
 FNDA:1,<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine>::state1_enter
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::get_state_process_cnt
 FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::new
 FNDA:0,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::setup_exit_enter_fns_idxs
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::get_state_process_cnt
 FNDA:1,<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine>::other_exit
 FNDA:0,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::setup_exit_enter_fns_idxs
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::build
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::dispatch_idx
 FNDA:1,<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine>::other
-FNDA:1,<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine>::base_enter
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::get_sm
+FNDA:1,<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine>::base_enter
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::get_state_process_cnt
 FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::new
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::initialize
@@ -250,8 +250,8 @@ FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::setup_exit_enter_fns_idxs
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::get_sm
 FNDA:1,<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine>::initial
-FNDA:1,<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine as core::default::Default>::default
 FNDA:1,<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine>::new
+FNDA:1,<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine as core::default::Default>::default
 FNDA:1,<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine>::other_exit
 FNDA:1,hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::{closure#0}
 FNDA:1,<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine>::state1
@@ -274,7 +274,7 @@ FNF:135
 FNH:131
 BRF:0
 BRH:0
-DA:1,1
+DA:1,9
 DA:28,16
 DA:29,16
 DA:30,16

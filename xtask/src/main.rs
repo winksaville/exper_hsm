@@ -34,7 +34,7 @@ fn main() -> Result<(), DynError> {
 fn print_help() {
     eprintln!(
         r#"Tasks:
-pre-commit:    Runs `cargo fmt`, `cargo clippy`, `cargo test` and `gen-cov`
+pre-commit:    Runs `cargo fmt`, `cargo clippy` and `cargo test`
 gen-cov:       Removes <current-dir>/coverage/ then generates coverage data in <current-dir>/coverage/
                using gen-profraw, gen-html gen-lcov and gen-covdir.
 
@@ -57,12 +57,12 @@ fn pre_commit(remaining_args: &Vec<String>) -> Result<(), DynError> {
     cargo_cmd(&project_root(), "fmt", remaining_args)?;
     cargo_cmd(&project_root(), "clippy", remaining_args)?;
     cargo_cmd(&project_root(), "test", remaining_args)?;
-    gen_cov(&project_root())?;
 
     Ok(())
 }
 
 fn gen_cov(root: &Path) -> Result<(), DynError> {
+    cargo_clean()?;
     mk_empty_cov_dir(root)?;
     gen_profraw(root)?;
     gen_html(root)?;
@@ -87,8 +87,22 @@ fn gen_profraw(root: &Path) -> Result<(), DynError> {
     eprintln!("Create profraw data at {coverage_dir}");
 
     let status = Command::new("cargo")
+        // env flags from:
+        //   https://doc.rust-lang.org/beta/unstable-book/compiler-flags/profile.html
+        //   https://github.com/mozilla/grcov/blob/master/README.md
         .env("CARGO_INCREMENTAL", "0")
-        .env("RUSTFLAGS", "-C instrument-coverage")
+
+        // Using -Zprofile:
+        //   Directory	        Line Coverage	    Functions	        Branches
+        //   hsm0-executor/src  98.21%	494 / 503	95.21%	139 / 146	46.98%	311 / 662
+        //.env("RUSTFLAGS", "-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort")
+
+        // Using -Zinstrument-coverage:
+        //   Directory	        Line Coverage	    Functions	        Branches
+        //   hsm0-executor/src	100%	362 / 362	97.04%	131 / 135	100%	0 / 0
+        .env("RUSTFLAGS", "-Cinstrument-coverage -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort")
+
+        .env("RUSTDOCFLAGS", "-Cpanic=abort")
         .env("TMPDIR", coverage_dir)
         .env("LLVM_PROFILE_FILE", "%t/cargo-test-%p-%m.profraw")
         .arg("test")
@@ -174,6 +188,10 @@ fn pcr() -> Result<(), DynError> {
     eprintln!("{coverage_dir}");
 
     Ok(())
+}
+
+fn cargo_clean() -> Result<(), DynError> {
+    cargo_cmd(&get_current_dir(), "clean", &Vec::<String>::new())
 }
 
 fn cargo_cmd(root: &Path, cmd: &str, remaining_args: &Vec<String>) -> Result<(), DynError> {
