@@ -2,6 +2,7 @@
 
 use std::collections::VecDeque;
 
+pub type DynError = Box<dyn std::error::Error>;
 type ProcessFn<SM, P> = fn(&mut SM, &P) -> StateResult;
 type EnterFn<SM, P> = fn(&mut SM, &P);
 type ExitFn<SM, P> = fn(&mut SM, &P);
@@ -86,7 +87,7 @@ impl<SM, P> StateMachineExecutor<SM, P> {
     //
     // The first state will be the initial state as identified by the
     // idx_initial_state parameter in build.
-    pub fn initialize(&mut self) {
+    pub fn initialize(&mut self) -> Result<(), DynError> {
         // Always push the destination
         let mut idx_enter = self.idx_current_state;
         //log::trace!("initialialize: push idx_enter={} {}", idx_enter, self.state_name(idx_enter));
@@ -99,6 +100,8 @@ impl<SM, P> StateMachineExecutor<SM, P> {
             //log::trace!("initialialize: push idx_enter={} {}", idx_enter, self.state_name(idx_enter));
             self.idxs_enter_fns.push(idx_enter);
         }
+
+        Ok(())
     }
 
     pub fn get_state_name(&self, idx: usize) -> &str {
@@ -262,7 +265,8 @@ mod test {
                 let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
 
                 sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
-                    .initialize();
+                    .initialize()
+                    .expect("Unexpected error initializing");
 
                 sme
             }
@@ -315,7 +319,8 @@ mod test {
                 let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
 
                 sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
-                    .initialize();
+                    .initialize()
+                    .expect("Unexpected error initializing");
 
                 sme
             }
@@ -366,7 +371,8 @@ mod test {
 
                 sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
                     .add_state(StateInfo::new("state2", None, Self::state2, None, None))
-                    .initialize();
+                    .initialize()
+                    .expect("Unexpected error initializing");
 
                 sme
             }
@@ -432,7 +438,8 @@ mod test {
                     None,
                     None,
                 ))
-                .initialize();
+                .initialize()
+                .expect("Unexpected error initializing");
 
                 sme
             }
@@ -497,7 +504,8 @@ mod test {
 
                 sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
                     .add_state(StateInfo::new("state1", None, Self::state2, None, None))
-                    .initialize();
+                    .initialize()
+                    .expect("Unexpected error initializing");
 
                 sme
             }
@@ -580,7 +588,8 @@ mod test {
                         None,
                         Some(IDX_PARENT),
                     ))
-                    .initialize();
+                    .initialize()
+                    .expect("Unexpected error initializing");
 
                 sme
             }
@@ -677,7 +686,8 @@ mod test {
                     Some(Self::other_exit),
                     Some(IDX_BASE),
                 ))
-                .initialize();
+                .initialize()
+                .expect("Unexpected error initializing");
 
                 sme
             }
@@ -835,7 +845,8 @@ mod test {
                     Some(Self::other_exit),
                     Some(IDX_OTHER_BASE),
                 ))
-                .initialize();
+                .initialize()
+                .expect("Unexpected error initializing");
 
                 sme
             }
