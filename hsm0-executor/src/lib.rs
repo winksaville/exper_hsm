@@ -82,21 +82,21 @@ impl<SM, P> StateMachineExecutor<SM, P> {
         self
     }
 
-    // Initialize and so the executor is ready to dispatch messages.
+    // Initialize and make the executor ready to dispatch messages.
     //
     // The first state will be the initial state as identified by the
     // idx_initial_state parameter in build.
     pub fn initialize(&mut self) {
         // Always push the destination
         let mut idx_enter = self.idx_current_state;
-        //log::trace!("initial_enter_fns_idxs: push idx_enter={} {}", idx_enter, self.state_name(idx_enter));
+        //log::trace!("initialialize: push idx_enter={} {}", idx_enter, self.state_name(idx_enter));
         self.idxs_enter_fns.push(idx_enter);
 
         // Then push any parents
         while let Some(idx) = self.states[idx_enter].parent {
             idx_enter = idx;
 
-            //log::trace!("initial_enter_fns_idxs: push idx_enter={} {}", idx_enter, self.state_name(idx_enter));
+            //log::trace!("initialialize: push idx_enter={} {}", idx_enter, self.state_name(idx_enter));
             self.idxs_enter_fns.push(idx_enter);
         }
     }
