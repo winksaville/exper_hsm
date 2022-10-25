@@ -1,6 +1,6 @@
 use custom_logger::env_logger_init;
 
-use hsm0_executor::{StateInfo, StateMachineExecutor, StateResult};
+use hsm0_executor::{DynError, StateInfo, StateMachineExecutor, StateResult};
 
 // StateMachine simply transitions back and forth
 // between initial and other.
@@ -23,7 +23,7 @@ const IDX_INITIAL: usize = 1;
 const IDX_OTHER: usize = 2;
 
 impl StateMachine {
-    pub fn new() -> StateMachineExecutor<Self, NoMessages> {
+    pub fn new() -> Result<StateMachineExecutor<Self, NoMessages>, DynError> {
         let sm = StateMachine::default();
         let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_INITIAL);
 
@@ -48,7 +48,8 @@ impl StateMachine {
             Some(Self::other_exit),
             Some(IDX_BASE),
         ))
-        .initialize();
+        .initialize()
+        .expect("Unexpected error initializing");
 
         log::trace!(
             "new: inital state={} idxs_enter_fns={:?}",
@@ -56,7 +57,7 @@ impl StateMachine {
             sme.idxs_enter_fns
         );
 
-        sme
+        Ok(sme)
     }
 
     fn base_enter(&mut self, _msg: &NoMessages) {}
@@ -89,7 +90,7 @@ impl StateMachine {
 
 fn test_transition_between_leafs_in_a_tree() {
     // Create a sme and validate it's in the expected state
-    let mut sme = StateMachine::new();
+    let mut sme = StateMachine::new().unwrap();
     assert_eq!(std::mem::size_of_val(sme.get_sm()), 0);
     assert_eq!(sme.get_state_enter_cnt(IDX_BASE), 0);
     assert_eq!(sme.get_state_process_cnt(IDX_BASE), 0);
