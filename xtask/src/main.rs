@@ -94,12 +94,12 @@ fn gen_profraw(root: &Path) -> Result<(), DynError> {
 
         // Using -Zprofile:
         //   Directory	        Line Coverage	    Functions	        Branches
-        //   hsm0-executor/src  98.21%	494 / 503	95.21%	139 / 146	46.98%	311 / 662
+        //   hsm0-executor/src  89.49%	664 / 742	86.44%	255 / 295	46.1%	651 / 1412
         //.env("RUSTFLAGS", "-Zprofile -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort")
 
         // Using -Zinstrument-coverage:
         //   Directory	        Line Coverage	    Functions	        Branches
-        //   hsm0-executor/src	100%	362 / 362	97.04%	131 / 135	100%	0 / 0
+        //   hsm0-executor/src	100%	240 / 240	91.55%	195 / 213	100%	0 / 0
         .env("RUSTFLAGS", "-Cinstrument-coverage -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort")
 
         .env("RUSTDOCFLAGS", "-Cpanic=abort")

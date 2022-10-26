@@ -1,245 +1,327 @@
 TN:
 SF:hsm0-executor/src/lib.rs
-FN:222,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::setup_exit_enter_fns_idxs
-FN:94,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::initialize
-FN:70,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_one_self_cycle::StateMachine, hsm0_executor::test::test_2s_one_self_cycle::NoMessages>>::build
-FN:187,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_one_self_cycle::StateMachine, hsm0_executor::test::test_2s_one_self_cycle::NoMessages>>::initialize_states_children
-FN:342,hsm0_executor::test::test_sm_1s_no_enter_no_exit::{closure#0}
-FN:84,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::add_state
-FN:181,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_3s_one_cycle::StateMachine, hsm0_executor::test::test_3s_one_cycle::NoMessages>>::initialize_children
-FN:134,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_3s_one_cycle::StateMachine, hsm0_executor::test::test_3s_one_cycle::NoMessages>>::cycle_detector
-FN:187,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::initialize_states_children
-FN:900,hsm0_executor::test::test_leaf_transitions_between_trees::{closure#0}
-FN:94,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_one_self_cycle::StateMachine, hsm0_executor::test::test_2s_one_self_cycle::NoMessages>>::initialize
-FN:70,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_1s_cycle::StateMachine, hsm0_executor::test::test_1s_cycle::NoMessages>>::build
-FN:134,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_one_self_cycle::StateMachine, hsm0_executor::test::test_2s_one_self_cycle::NoMessages>>::cycle_detector
-FN:214,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::get_state_process_cnt
-FN:222,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::setup_exit_enter_fns_idxs
-FN:70,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::build
-FN:214,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::get_state_process_cnt
-FN:199,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::get_state_name
-FN:181,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::initialize_children
-FN:94,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_3s_one_cycle::StateMachine, hsm0_executor::test::test_3s_one_cycle::NoMessages>>::initialize
-FN:272,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::dispatch_idx
-FN:181,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::initialize_children
+FN:235,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::setup_exit_enter_fns_idxs
+FN:200,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::initialize_states_children
+FN:73,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_one_self_cycle::StateMachine, hsm0_executor::test::test_2s_one_self_cycle::NoMessages>>::build
+FN:200,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_one_self_cycle::StateMachine, hsm0_executor::test::test_2s_one_self_cycle::NoMessages>>::initialize_states_children
+FN:224,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::get_state_enter_cnt
+FN:88,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::add_state
+FN:98,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::initialize
+FN:193,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_3s_one_cycle::StateMachine, hsm0_executor::test::test_3s_one_cycle::NoMessages>>::initialize_children
+FN:151,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_3s_one_cycle::StateMachine, hsm0_executor::test::test_3s_one_cycle::NoMessages>>::cycle_detector
+FN:200,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::initialize_states_children
+FN:1114,hsm0_executor::test::test_leaf_transitions_between_trees::{closure#0}
+FN:224,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::get_state_enter_cnt
+FN:98,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_one_self_cycle::StateMachine, hsm0_executor::test::test_2s_one_self_cycle::NoMessages>>::initialize
+FN:227,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::get_state_process_cnt
+FN:73,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_1s_cycle::StateMachine, hsm0_executor::test::test_1s_cycle::NoMessages>>::build
+FN:151,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_one_self_cycle::StateMachine, hsm0_executor::test::test_2s_one_self_cycle::NoMessages>>::cycle_detector
+FN:227,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::get_state_process_cnt
+FN:235,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::setup_exit_enter_fns_idxs
+FN:193,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_invalid_initial_state::StateMachine, hsm0_executor::test::test_sm_invalid_initial_state::NoMessages>>::initialize_children
+FN:151,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_invalid_initial_state::StateMachine, hsm0_executor::test::test_sm_invalid_initial_state::NoMessages>>::cycle_detector
+FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::new
+FN:193,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::initialize_children
+FN:227,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::get_state_process_cnt
+FN:73,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::build
+FN:212,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::get_state_name
+FN:98,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_3s_one_cycle::StateMachine, hsm0_executor::test::test_3s_one_cycle::NoMessages>>::initialize
+FN:351,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::dispatch
+FN:193,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::initialize_children
+FN:285,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::dispatch_idx
 FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::new
-FN:70,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_5s_long_cycle::StateMachine, hsm0_executor::test::test_5s_long_cycle::NoMessages>>::build
-FN:187,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::initialize_states_children
-FN:330,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::dispatch
-FN:218,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::get_state_exit_cnt
-FN:181,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::initialize_children
-FN:187,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_1s_cycle::StateMachine, hsm0_executor::test::test_1s_cycle::NoMessages>>::initialize_states_children
-FN:181,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::initialize_children
-FN:84,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::add_state
-FN:94,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::initialize
-FN:94,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_cycle::StateMachine, hsm0_executor::test::test_2s_cycle::NoMessages>>::initialize
-FN:181,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_cycle::StateMachine, hsm0_executor::test::test_2s_cycle::NoMessages>>::initialize_children
-FN:187,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::initialize_states_children
-FN:272,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::dispatch_idx
-FN:94,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::initialize
-FN:199,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::get_state_name
-FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_2s_one_self_cycle::StateMachine, hsm0_executor::test::test_2s_one_self_cycle::NoMessages>>::new
-FN:181,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::initialize_children
-FN:272,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::dispatch_idx
-FN:70,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::build
-FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::new
-FN:330,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::dispatch
-FN:207,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::get_sm
-FN:207,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::get_sm
-FN:187,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::initialize_states_children
-FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::new
-FN:222,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::setup_exit_enter_fns_idxs
-FN:187,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::initialize_states_children
-FN:187,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_5s_long_cycle::StateMachine, hsm0_executor::test::test_5s_long_cycle::NoMessages>>::initialize_states_children
-FN:181,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::initialize_children
-FN:84,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_1s_cycle::StateMachine, hsm0_executor::test::test_1s_cycle::NoMessages>>::add_state
-FN:84,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_3s_one_cycle::StateMachine, hsm0_executor::test::test_3s_one_cycle::NoMessages>>::add_state
-FN:214,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::get_state_process_cnt
-FN:207,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::get_sm
-FN:134,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::cycle_detector
-FN:181,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_5s_long_cycle::StateMachine, hsm0_executor::test::test_5s_long_cycle::NoMessages>>::initialize_children
-FN:203,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::get_current_state_name
-FN:211,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::get_state_enter_cnt
-FN:743,hsm0_executor::test::test_leaf_transitions_in_a_tree::{closure#0}
-FN:272,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::dispatch_idx
-FN:211,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::get_state_enter_cnt
-FN:94,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::initialize
-FN:84,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::add_state
-FN:330,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::dispatch
-FN:1206,hsm0_executor::test::test_2s_cycle::{closure#0}
-FN:134,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::cycle_detector
-FN:134,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_1s_cycle::StateMachine, hsm0_executor::test::test_1s_cycle::NoMessages>>::cycle_detector
-FN:1339,hsm0_executor::test::test_5s_long_cycle::{closure#0}
-FN:70,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::build
-FN:94,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_5s_long_cycle::StateMachine, hsm0_executor::test::test_5s_long_cycle::NoMessages>>::initialize
-FN:94,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::initialize
-FN:187,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::initialize_states_children
-FN:134,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::cycle_detector
-FN:134,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::cycle_detector
-FN:70,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_cycle::StateMachine, hsm0_executor::test::test_2s_cycle::NoMessages>>::build
-FN:70,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::build
-FN:187,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_3s_one_cycle::StateMachine, hsm0_executor::test::test_3s_one_cycle::NoMessages>>::initialize_states_children
-FN:218,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::get_state_exit_cnt
-FN:222,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::setup_exit_enter_fns_idxs
-FN:70,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::build
-FN:798,<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine>::base_enter
-FN:214,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::get_state_process_cnt
-FN:134,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_5s_long_cycle::StateMachine, hsm0_executor::test::test_5s_long_cycle::NoMessages>>::cycle_detector
-FN:222,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::setup_exit_enter_fns_idxs
-FN:84,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::add_state
-FN:272,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::dispatch_idx
-FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_5s_long_cycle::StateMachine, hsm0_executor::test::test_5s_long_cycle::NoMessages>>::new
-FN:94,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::initialize
-FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_1s_cycle::StateMachine, hsm0_executor::test::test_1s_cycle::NoMessages>>::new
-FN:207,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::get_sm
-FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::new
-FN:218,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::get_state_exit_cnt
-FN:272,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::dispatch_idx
-FN:134,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::cycle_detector
-FN:70,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::build
-FN:70,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_3s_one_cycle::StateMachine, hsm0_executor::test::test_3s_one_cycle::NoMessages>>::build
-FN:214,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::get_state_process_cnt
-FN:330,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::dispatch
-FN:211,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::get_state_enter_cnt
-FN:134,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::cycle_detector
-FN:181,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_one_self_cycle::StateMachine, hsm0_executor::test::test_2s_one_self_cycle::NoMessages>>::initialize_children
-FN:583,hsm0_executor::test::test_sm_2s_no_enter_no_exit::{closure#0}
-FN:84,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_5s_long_cycle::StateMachine, hsm0_executor::test::test_5s_long_cycle::NoMessages>>::add_state
-FN:187,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_cycle::StateMachine, hsm0_executor::test::test_2s_cycle::NoMessages>>::initialize_states_children
-FN:1149,hsm0_executor::test::test_2s_one_self_cycle::{closure#0}
-FN:134,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::cycle_detector
-FN:187,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::initialize_states_children
-FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_2s_cycle::StateMachine, hsm0_executor::test::test_2s_cycle::NoMessages>>::new
-FN:84,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::add_state
-FN:203,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::get_current_state_name
-FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::new
-FN:211,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::get_state_enter_cnt
-FN:84,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::add_state
-FN:218,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::get_state_exit_cnt
-FN:70,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::build
-FN:511,hsm0_executor::test::test_sm_1s_enter_no_exit::{closure#0}
-FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::new
-FN:1099,hsm0_executor::test::test_1s_cycle::{closure#0}
-FN:70,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::build
-FN:272,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::dispatch_idx
-FN:207,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::get_sm
-FN:84,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::add_state
-FN:94,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::initialize
-FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_3s_one_cycle::StateMachine, hsm0_executor::test::test_3s_one_cycle::NoMessages>>::new
-FN:94,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_1s_cycle::StateMachine, hsm0_executor::test::test_1s_cycle::NoMessages>>::initialize
-FN:222,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::setup_exit_enter_fns_idxs
-FN:181,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::initialize_children
-FN:222,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::setup_exit_enter_fns_idxs
-FN:207,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::get_sm
+FN:88,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_invalid_initial_state::StateMachine, hsm0_executor::test::test_sm_invalid_initial_state::NoMessages>>::add_state
+FN:73,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_5s_long_cycle::StateMachine, hsm0_executor::test::test_5s_long_cycle::NoMessages>>::build
+FN:200,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::initialize_states_children
+FN:151,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::cycle_detector
+FN:351,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::dispatch
+FN:231,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::get_state_exit_cnt
+FN:193,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::initialize_children
 FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::new
-FN:1270,hsm0_executor::test::test_3s_one_cycle::{closure#0}
-FN:181,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::initialize_children
+FN:200,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_1s_cycle::StateMachine, hsm0_executor::test::test_1s_cycle::NoMessages>>::initialize_states_children
+FN:98,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::initialize
+FN:193,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::initialize_children
+FN:98,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::initialize
+FN:88,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::add_state
+FN:151,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::cycle_detector
+FN:98,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_cycle::StateMachine, hsm0_executor::test::test_2s_cycle::NoMessages>>::initialize
+FN:193,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_cycle::StateMachine, hsm0_executor::test::test_2s_cycle::NoMessages>>::initialize_children
+FN:285,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::dispatch_idx
+FN:200,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::initialize_states_children
+FN:98,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::initialize
+FN:212,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::get_state_name
+FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_2s_one_self_cycle::StateMachine, hsm0_executor::test::test_2s_one_self_cycle::NoMessages>>::new
+FN:220,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::get_sm
+FN:193,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::initialize_children
+FN:231,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::get_state_exit_cnt
+FN:285,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::dispatch_idx
+FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::new
+FN:73,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::build
+FN:351,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::dispatch
+FN:220,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::get_sm
+FN:235,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::setup_exit_enter_fns_idxs
+FN:200,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::initialize_states_children
+FN:531,hsm0_executor::test::test_sm_out_of_bounds_initial_transition::{closure#0}
+FN:220,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::get_sm
+FN:200,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::initialize_states_children
+FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::new
+FN:200,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::initialize_states_children
+FN:235,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::setup_exit_enter_fns_idxs
+FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::new
+FN:98,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::initialize
+FN:200,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_5s_long_cycle::StateMachine, hsm0_executor::test::test_5s_long_cycle::NoMessages>>::initialize_states_children
+FN:193,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::initialize_children
+FN:88,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_3s_one_cycle::StateMachine, hsm0_executor::test::test_3s_one_cycle::NoMessages>>::add_state
+FN:227,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::get_state_process_cnt
+FN:285,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::dispatch_idx
+FN:224,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::get_state_enter_cnt
+FN:220,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::get_sm
+FN:88,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_1s_cycle::StateMachine, hsm0_executor::test::test_1s_cycle::NoMessages>>::add_state
+FN:151,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::cycle_detector
+FN:285,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::dispatch_idx
+FN:193,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_5s_long_cycle::StateMachine, hsm0_executor::test::test_5s_long_cycle::NoMessages>>::initialize_children
+FN:216,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::get_current_state_name
+FN:224,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::get_state_enter_cnt
+FN:957,hsm0_executor::test::test_leaf_transitions_in_a_tree::{closure#0}
+FN:285,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::dispatch_idx
+FN:224,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::get_state_enter_cnt
+FN:235,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::setup_exit_enter_fns_idxs
+FN:220,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::get_sm
+FN:88,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::add_state
+FN:351,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::dispatch
+FN:1420,hsm0_executor::test::test_2s_cycle::{closure#0}
+FN:235,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::setup_exit_enter_fns_idxs
+FN:98,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::initialize
+FN:151,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::cycle_detector
+FN:1553,hsm0_executor::test::test_5s_long_cycle::{closure#0}
+FN:151,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_1s_cycle::StateMachine, hsm0_executor::test::test_1s_cycle::NoMessages>>::cycle_detector
+FN:73,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::build
+FN:73,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::build
+FN:88,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::add_state
+FN:98,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_5s_long_cycle::StateMachine, hsm0_executor::test::test_5s_long_cycle::NoMessages>>::initialize
+FN:98,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::initialize
+FN:200,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::initialize_states_children
+FN:151,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::cycle_detector
+FN:73,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::build
+FN:151,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::cycle_detector
+FN:227,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::get_state_process_cnt
+FN:73,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_cycle::StateMachine, hsm0_executor::test::test_2s_cycle::NoMessages>>::build
+FN:231,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::get_state_exit_cnt
+FN:73,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::build
+FN:200,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_3s_one_cycle::StateMachine, hsm0_executor::test::test_3s_one_cycle::NoMessages>>::initialize_states_children
+FN:235,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::setup_exit_enter_fns_idxs
+FN:73,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::build
+FN:1012,<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine>::base_enter
+FN:227,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::get_state_process_cnt
+FN:151,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_5s_long_cycle::StateMachine, hsm0_executor::test::test_5s_long_cycle::NoMessages>>::cycle_detector
+FN:235,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::setup_exit_enter_fns_idxs
+FN:88,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::add_state
+FN:285,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::dispatch_idx
+FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_5s_long_cycle::StateMachine, hsm0_executor::test::test_5s_long_cycle::NoMessages>>::new
+FN:98,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::initialize
+FN:193,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::initialize_children
+FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_1s_cycle::StateMachine, hsm0_executor::test::test_1s_cycle::NoMessages>>::new
+FN:220,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::get_sm
+FN:200,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::initialize_states_children
+FN:351,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::dispatch
+FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::new
+FN:285,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::dispatch_idx
+FN:151,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::cycle_detector
+FN:73,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::build
+FN:73,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_3s_one_cycle::StateMachine, hsm0_executor::test::test_3s_one_cycle::NoMessages>>::build
+FN:231,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::get_state_exit_cnt
+FN:351,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::dispatch
+FN:224,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::get_state_enter_cnt
+FN:151,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::cycle_detector
+FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_invalid_initial_state::StateMachine, hsm0_executor::test::test_sm_invalid_initial_state::NoMessages>>::new
+FN:98,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_invalid_initial_state::StateMachine, hsm0_executor::test::test_sm_invalid_initial_state::NoMessages>>::initialize
+FN:193,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_one_self_cycle::StateMachine, hsm0_executor::test::test_2s_one_self_cycle::NoMessages>>::initialize_children
+FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::new
+FN:88,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_5s_long_cycle::StateMachine, hsm0_executor::test::test_5s_long_cycle::NoMessages>>::add_state
+FN:624,hsm0_executor::test::test_sm_2s_invalid_transition::{closure#0}
+FN:151,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::cycle_detector
+FN:151,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::cycle_detector
+FN:88,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::add_state
+FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_2s_cycle::StateMachine, hsm0_executor::test::test_2s_cycle::NoMessages>>::new
+FN:224,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::get_state_enter_cnt
+FN:1363,hsm0_executor::test::test_2s_one_self_cycle::{closure#0}
+FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::new
+FN:98,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::initialize
+FN:200,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::initialize_states_children
+FN:220,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::get_sm
+FN:88,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::add_state
+FN:725,hsm0_executor::test::test_sm_1s_enter_no_exit::{closure#0}
+FN:231,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::get_state_exit_cnt
+FN:216,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::get_current_state_name
+FN:73,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::build
+FN:285,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::dispatch_idx
+FN:797,hsm0_executor::test::test_sm_2s_no_enter_no_exit::{closure#0}
+FN:285,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::dispatch_idx
+FN:235,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::setup_exit_enter_fns_idxs
+FN:200,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_invalid_initial_state::StateMachine, hsm0_executor::test::test_sm_invalid_initial_state::NoMessages>>::initialize_states_children
+FN:98,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_1s_cycle::StateMachine, hsm0_executor::test::test_1s_cycle::NoMessages>>::initialize
+FN:224,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::get_state_enter_cnt
+FN:98,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::initialize
+FN:88,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::add_state
+FN:220,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::get_sm
+FN:235,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::setup_exit_enter_fns_idxs
+FN:193,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::initialize_children
+FN:220,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::get_sm
 FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::new
-FN:214,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::get_state_process_cnt
-FN:134,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::cycle_detector
-FN:450,hsm0_executor::test::test_sm_2s_get_names::{closure#0}
-FN:211,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::get_state_enter_cnt
-FN:330,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::dispatch
+FN:193,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::initialize_children
+FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_3s_one_cycle::StateMachine, hsm0_executor::test::test_3s_one_cycle::NoMessages>>::new
+FN:227,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::get_state_process_cnt
+FN:151,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::cycle_detector
+FN:471,hsm0_executor::test::test_sm_2s_get_names::{closure#0}
+FN:231,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::get_state_exit_cnt
+FN:193,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::initialize_children
+FN:88,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::add_state
+FN:227,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::get_state_process_cnt
+FN:1313,hsm0_executor::test::test_1s_cycle::{closure#0}
+FN:193,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::initialize_children
+FN:1484,hsm0_executor::test::test_3s_one_cycle::{closure#0}
+FN:575,hsm0_executor::test::test_sm_invalid_initial_state::{closure#0}
+FN:224,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::get_state_enter_cnt
+FN:351,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::dispatch
+FN:73,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::build
+FN:351,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::dispatch
+FN:220,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::get_sm
 FN:1,hsm0_executor::main
-FN:207,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::get_sm
-FN:84,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_cycle::StateMachine, hsm0_executor::test::test_2s_cycle::NoMessages>>::add_state
-FN:330,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::dispatch
-FN:398,hsm0_executor::test::test_sm_1s_get_names::{closure#0}
-FN:94,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::initialize
-FN:661,hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::{closure#0}
-FN:330,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::dispatch
-FN:222,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::setup_exit_enter_fns_idxs
-FN:207,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::get_sm
-FN:330,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::dispatch
-FN:218,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::get_state_exit_cnt
-FN:84,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_one_self_cycle::StateMachine, hsm0_executor::test::test_2s_one_self_cycle::NoMessages>>::add_state
-FN:272,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::dispatch_idx
-FN:187,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::initialize_states_children
-FN:181,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_1s_cycle::StateMachine, hsm0_executor::test::test_1s_cycle::NoMessages>>::initialize_children
-FN:218,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::get_state_exit_cnt
-FN:134,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_cycle::StateMachine, hsm0_executor::test::test_2s_cycle::NoMessages>>::cycle_detector
-FN:211,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::get_state_enter_cnt
-FN:84,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::add_state
+FN:88,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_cycle::StateMachine, hsm0_executor::test::test_2s_cycle::NoMessages>>::add_state
+FN:30,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::new
+FN:200,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_cycle::StateMachine, hsm0_executor::test::test_2s_cycle::NoMessages>>::initialize_states_children
+FN:351,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::dispatch
+FN:419,hsm0_executor::test::test_sm_1s_get_names::{closure#0}
+FN:231,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::get_state_exit_cnt
+FN:73,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_invalid_initial_state::StateMachine, hsm0_executor::test::test_sm_invalid_initial_state::NoMessages>>::build
+FN:875,hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::{closure#0}
+FN:73,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::build
+FN:98,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::initialize
+FN:681,hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::{closure#0}
+FN:351,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::dispatch
+FN:227,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::get_state_process_cnt
+FN:220,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::get_sm
+FN:235,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::setup_exit_enter_fns_idxs
+FN:351,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::dispatch
+FN:231,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::get_state_exit_cnt
+FN:88,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::add_state
+FN:285,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::dispatch_idx
+FN:88,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_one_self_cycle::StateMachine, hsm0_executor::test::test_2s_one_self_cycle::NoMessages>>::add_state
+FN:193,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_1s_cycle::StateMachine, hsm0_executor::test::test_1s_cycle::NoMessages>>::initialize_children
+FN:200,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::initialize_states_children
+FN:231,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::get_state_exit_cnt
+FN:151,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_cycle::StateMachine, hsm0_executor::test::test_2s_cycle::NoMessages>>::cycle_detector
+FN:363,hsm0_executor::test::test_sm_1s_no_enter_no_exit::{closure#0}
+FN:88,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::add_state
 FNDA:0,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::setup_exit_enter_fns_idxs
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::initialize
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::initialize_states_children
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_one_self_cycle::StateMachine, hsm0_executor::test::test_2s_one_self_cycle::NoMessages>>::build
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_one_self_cycle::StateMachine, hsm0_executor::test::test_2s_one_self_cycle::NoMessages>>::initialize_states_children
-FNDA:1,hsm0_executor::test::test_sm_1s_no_enter_no_exit::{closure#0}
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::get_state_enter_cnt
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::add_state
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::initialize
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_3s_one_cycle::StateMachine, hsm0_executor::test::test_3s_one_cycle::NoMessages>>::initialize_children
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_3s_one_cycle::StateMachine, hsm0_executor::test::test_3s_one_cycle::NoMessages>>::cycle_detector
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::initialize_states_children
 FNDA:1,hsm0_executor::test::test_leaf_transitions_between_trees::{closure#0}
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::get_state_enter_cnt
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_one_self_cycle::StateMachine, hsm0_executor::test::test_2s_one_self_cycle::NoMessages>>::initialize
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::get_state_process_cnt
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_1s_cycle::StateMachine, hsm0_executor::test::test_1s_cycle::NoMessages>>::build
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_one_self_cycle::StateMachine, hsm0_executor::test::test_2s_one_self_cycle::NoMessages>>::cycle_detector
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::get_state_process_cnt
 FNDA:0,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::setup_exit_enter_fns_idxs
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::build
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::get_state_process_cnt
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::get_state_name
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_invalid_initial_state::StateMachine, hsm0_executor::test::test_sm_invalid_initial_state::NoMessages>>::initialize_children
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_invalid_initial_state::StateMachine, hsm0_executor::test::test_sm_invalid_initial_state::NoMessages>>::cycle_detector
+FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::new
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::initialize_children
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::get_state_process_cnt
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::build
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::get_state_name
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_3s_one_cycle::StateMachine, hsm0_executor::test::test_3s_one_cycle::NoMessages>>::initialize
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::dispatch_idx
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::dispatch
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::initialize_children
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::dispatch_idx
 FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::new
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_invalid_initial_state::StateMachine, hsm0_executor::test::test_sm_invalid_initial_state::NoMessages>>::add_state
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_5s_long_cycle::StateMachine, hsm0_executor::test::test_5s_long_cycle::NoMessages>>::build
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::initialize_states_children
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::cycle_detector
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::dispatch
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::get_state_exit_cnt
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::initialize_children
+FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::new
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_1s_cycle::StateMachine, hsm0_executor::test::test_1s_cycle::NoMessages>>::initialize_states_children
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::initialize_children
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::add_state
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::initialize
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::initialize_children
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::initialize
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::add_state
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::cycle_detector
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_cycle::StateMachine, hsm0_executor::test::test_2s_cycle::NoMessages>>::initialize
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_cycle::StateMachine, hsm0_executor::test::test_2s_cycle::NoMessages>>::initialize_children
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::initialize_states_children
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::dispatch_idx
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::initialize_states_children
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::initialize
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::get_state_name
 FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_2s_one_self_cycle::StateMachine, hsm0_executor::test::test_2s_one_self_cycle::NoMessages>>::new
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::get_sm
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::initialize_children
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::get_state_exit_cnt
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::dispatch_idx
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::build
 FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::new
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::build
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::dispatch
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::get_sm
+FNDA:0,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::setup_exit_enter_fns_idxs
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::initialize_states_children
+FNDA:1,hsm0_executor::test::test_sm_out_of_bounds_initial_transition::{closure#0}
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::get_sm
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::initialize_states_children
-FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::new
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::setup_exit_enter_fns_idxs
+FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::new
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::initialize_states_children
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::setup_exit_enter_fns_idxs
+FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::new
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::initialize
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_5s_long_cycle::StateMachine, hsm0_executor::test::test_5s_long_cycle::NoMessages>>::initialize_states_children
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::initialize_children
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_1s_cycle::StateMachine, hsm0_executor::test::test_1s_cycle::NoMessages>>::add_state
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_3s_one_cycle::StateMachine, hsm0_executor::test::test_3s_one_cycle::NoMessages>>::add_state
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::get_state_process_cnt
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::dispatch_idx
+FNDA:0,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::get_state_enter_cnt
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::get_sm
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_1s_cycle::StateMachine, hsm0_executor::test::test_1s_cycle::NoMessages>>::add_state
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::cycle_detector
+FNDA:0,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::dispatch_idx
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_5s_long_cycle::StateMachine, hsm0_executor::test::test_5s_long_cycle::NoMessages>>::initialize_children
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::get_current_state_name
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::get_state_enter_cnt
 FNDA:1,hsm0_executor::test::test_leaf_transitions_in_a_tree::{closure#0}
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::dispatch_idx
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::get_state_enter_cnt
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::initialize
+FNDA:0,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::setup_exit_enter_fns_idxs
+FNDA:0,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::get_sm
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::add_state
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::dispatch
 FNDA:1,hsm0_executor::test::test_2s_cycle::{closure#0}
+FNDA:0,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::setup_exit_enter_fns_idxs
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::initialize
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::cycle_detector
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_1s_cycle::StateMachine, hsm0_executor::test::test_1s_cycle::NoMessages>>::cycle_detector
 FNDA:1,hsm0_executor::test::test_5s_long_cycle::{closure#0}
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_1s_cycle::StateMachine, hsm0_executor::test::test_1s_cycle::NoMessages>>::cycle_detector
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::build
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::build
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::add_state
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_5s_long_cycle::StateMachine, hsm0_executor::test::test_5s_long_cycle::NoMessages>>::initialize
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::initialize
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::initialize_states_children
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::cycle_detector
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::build
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::cycle_detector
+FNDA:0,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::get_state_process_cnt
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_cycle::StateMachine, hsm0_executor::test::test_2s_cycle::NoMessages>>::build
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::get_state_exit_cnt
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::build
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_3s_one_cycle::StateMachine, hsm0_executor::test::test_3s_one_cycle::NoMessages>>::initialize_states_children
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::get_state_exit_cnt
 FNDA:0,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::setup_exit_enter_fns_idxs
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::build
 FNDA:1,<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine>::base_enter
@@ -250,307 +332,344 @@ FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_e
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::dispatch_idx
 FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_5s_long_cycle::StateMachine, hsm0_executor::test::test_5s_long_cycle::NoMessages>>::new
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::initialize
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::initialize_children
 FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_1s_cycle::StateMachine, hsm0_executor::test::test_1s_cycle::NoMessages>>::new
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::get_sm
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::initialize_states_children
+FNDA:0,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::dispatch
 FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::new
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::get_state_exit_cnt
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::dispatch_idx
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::cycle_detector
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::build
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_3s_one_cycle::StateMachine, hsm0_executor::test::test_3s_one_cycle::NoMessages>>::build
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::get_state_process_cnt
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::get_state_exit_cnt
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::dispatch
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::get_state_enter_cnt
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::cycle_detector
+FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_invalid_initial_state::StateMachine, hsm0_executor::test::test_sm_invalid_initial_state::NoMessages>>::new
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_invalid_initial_state::StateMachine, hsm0_executor::test::test_sm_invalid_initial_state::NoMessages>>::initialize
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_one_self_cycle::StateMachine, hsm0_executor::test::test_2s_one_self_cycle::NoMessages>>::initialize_children
-FNDA:1,hsm0_executor::test::test_sm_2s_no_enter_no_exit::{closure#0}
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_5s_long_cycle::StateMachine, hsm0_executor::test::test_5s_long_cycle::NoMessages>>::add_state
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_cycle::StateMachine, hsm0_executor::test::test_2s_cycle::NoMessages>>::initialize_states_children
-FNDA:1,hsm0_executor::test::test_2s_one_self_cycle::{closure#0}
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::cycle_detector
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::initialize_states_children
-FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_2s_cycle::StateMachine, hsm0_executor::test::test_2s_cycle::NoMessages>>::new
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::add_state
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::get_current_state_name
-FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::new
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::get_state_enter_cnt
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::add_state
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::get_state_exit_cnt
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::build
-FNDA:1,hsm0_executor::test::test_sm_1s_enter_no_exit::{closure#0}
 FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::new
-FNDA:1,hsm0_executor::test::test_1s_cycle::{closure#0}
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_5s_long_cycle::StateMachine, hsm0_executor::test::test_5s_long_cycle::NoMessages>>::add_state
+FNDA:1,hsm0_executor::test::test_sm_2s_invalid_transition::{closure#0}
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::cycle_detector
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::cycle_detector
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::add_state
+FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_2s_cycle::StateMachine, hsm0_executor::test::test_2s_cycle::NoMessages>>::new
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::get_state_enter_cnt
+FNDA:1,hsm0_executor::test::test_2s_one_self_cycle::{closure#0}
+FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::new
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::initialize
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::initialize_states_children
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::get_sm
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::add_state
+FNDA:1,hsm0_executor::test::test_sm_1s_enter_no_exit::{closure#0}
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::get_state_exit_cnt
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::get_current_state_name
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::build
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::dispatch_idx
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::get_sm
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::add_state
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::initialize
-FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_3s_one_cycle::StateMachine, hsm0_executor::test::test_3s_one_cycle::NoMessages>>::new
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_1s_cycle::StateMachine, hsm0_executor::test::test_1s_cycle::NoMessages>>::initialize
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::setup_exit_enter_fns_idxs
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::initialize_children
+FNDA:1,hsm0_executor::test::test_sm_2s_no_enter_no_exit::{closure#0}
+FNDA:0,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::dispatch_idx
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::setup_exit_enter_fns_idxs
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_invalid_initial_state::StateMachine, hsm0_executor::test::test_sm_invalid_initial_state::NoMessages>>::initialize_states_children
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_1s_cycle::StateMachine, hsm0_executor::test::test_1s_cycle::NoMessages>>::initialize
+FNDA:0,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::get_state_enter_cnt
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::initialize
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::add_state
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::get_sm
-FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::new
-FNDA:1,hsm0_executor::test::test_3s_one_cycle::{closure#0}
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::setup_exit_enter_fns_idxs
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::initialize_children
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::get_sm
 FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::new
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::initialize_children
+FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_3s_one_cycle::StateMachine, hsm0_executor::test::test_3s_one_cycle::NoMessages>>::new
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::get_state_process_cnt
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::cycle_detector
 FNDA:1,hsm0_executor::test::test_sm_2s_get_names::{closure#0}
+FNDA:0,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::get_state_exit_cnt
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::initialize_children
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::add_state
+FNDA:0,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::get_state_process_cnt
+FNDA:1,hsm0_executor::test::test_1s_cycle::{closure#0}
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::initialize_children
+FNDA:1,hsm0_executor::test::test_3s_one_cycle::{closure#0}
+FNDA:1,hsm0_executor::test::test_sm_invalid_initial_state::{closure#0}
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::get_state_enter_cnt
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::dispatch
-FNDA:1,hsm0_executor::main
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::build
+FNDA:0,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::dispatch
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::get_sm
+FNDA:1,hsm0_executor::main
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_cycle::StateMachine, hsm0_executor::test::test_2s_cycle::NoMessages>>::add_state
+FNDA:1,<hsm0_executor::StateInfo<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::new
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_cycle::StateMachine, hsm0_executor::test::test_2s_cycle::NoMessages>>::initialize_states_children
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::dispatch
 FNDA:1,hsm0_executor::test::test_sm_1s_get_names::{closure#0}
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::initialize
+FNDA:0,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_initial_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_initial_transition::NoMessages>>::get_state_exit_cnt
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_invalid_initial_state::StateMachine, hsm0_executor::test::test_sm_invalid_initial_state::NoMessages>>::build
 FNDA:1,hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::{closure#0}
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_get_names::StateMachine, hsm0_executor::test::test_sm_1s_get_names::NoMessages>>::build
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_enter_no_exit::Message>>::initialize
+FNDA:1,hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::{closure#0}
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::dispatch
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::setup_exit_enter_fns_idxs
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_invalid_transition::StateMachine, hsm0_executor::test::test_sm_2s_invalid_transition::NoMessages>>::get_state_process_cnt
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::get_sm
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::setup_exit_enter_fns_idxs
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1s_no_enter_no_exit::NoMessages>>::dispatch
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::get_state_exit_cnt
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_one_self_cycle::StateMachine, hsm0_executor::test::test_2s_one_self_cycle::NoMessages>>::add_state
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::StateMachine, hsm0_executor::test::test_sm_out_of_bounds_invalid_transition::NoMessages>>::add_state
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_in_a_tree::StateMachine, hsm0_executor::test::test_leaf_transitions_in_a_tree::NoMessages>>::dispatch_idx
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::initialize_states_children
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_one_self_cycle::StateMachine, hsm0_executor::test::test_2s_one_self_cycle::NoMessages>>::add_state
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_1s_cycle::StateMachine, hsm0_executor::test::test_1s_cycle::NoMessages>>::initialize_children
+FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_get_names::StateMachine, hsm0_executor::test::test_sm_2s_get_names::NoMessages>>::initialize_states_children
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_1h_2s_not_handled_no_enter_no_exit::Message>>::get_state_exit_cnt
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_2s_cycle::StateMachine, hsm0_executor::test::test_2s_cycle::NoMessages>>::cycle_detector
-FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_leaf_transitions_between_trees::StateMachine, hsm0_executor::test::test_leaf_transitions_between_trees::NoMessages>>::get_state_enter_cnt
+FNDA:1,hsm0_executor::test::test_sm_1s_no_enter_no_exit::{closure#0}
 FNDA:1,<hsm0_executor::StateMachineExecutor<hsm0_executor::test::test_sm_2s_no_enter_no_exit::StateMachine, hsm0_executor::test::test_sm_2s_no_enter_no_exit::Message>>::add_state
-FNF:160
-FNH:156
+FNF:213
+FNH:195
 BRF:0
 BRH:0
-DA:1,14
-DA:30,29
-DA:31,29
-DA:32,29
-DA:33,29
-DA:34,29
-DA:35,29
-DA:36,29
-DA:37,29
-DA:38,29
-DA:39,29
-DA:40,29
-DA:41,29
-DA:42,29
-DA:43,29
-DA:44,29
-DA:45,29
-DA:46,29
-DA:47,29
-DA:48,29
-DA:49,29
-DA:70,13
-DA:71,13
-DA:72,13
-DA:73,13
-DA:74,13
-DA:75,13
-DA:76,13
-DA:77,13
-DA:78,13
-DA:79,13
-DA:80,13
-DA:81,13
-DA:84,29
-DA:85,29
-DA:86,29
-DA:87,29
-DA:88,29
-DA:94,13
-DA:95,13
-DA:98,29
-DA:99,29
-DA:100,29
-DA:101,29
-DA:102,29
-DA:103,29
-DA:104,29
-DA:105,29
-DA:106,29
-DA:107,16
-DA:108,16
-DA:110,13
-DA:111,13
-DA:112,13
-DA:113,5
-DA:114,8
-DA:115,8
-DA:116,8
-DA:117,8
-DA:118,8
-DA:119,8
-DA:122,11
-DA:123,3
-DA:124,3
-DA:125,3
-DA:126,3
-DA:127,3
-DA:129,8
-DA:130,13
-DA:134,13
-DA:135,13
-DA:136,13
-DA:137,13
-DA:138,13
-DA:139,33
-DA:140,20
-DA:141,20
-DA:144,20
-DA:146,7
-DA:147,7
-DA:148,7
-DA:149,7
-DA:150,7
-DA:151,7
-DA:152,11
-DA:153,11
-DA:154,4
-DA:155,4
-DA:156,7
-DA:159,7
-DA:160,4
-DA:161,4
-DA:162,4
-DA:163,4
-DA:164,3
-DA:165,3
-DA:166,3
-DA:167,3
-DA:168,3
-DA:169,3
+DA:1,18
+DA:30,35
+DA:31,35
+DA:32,35
+DA:33,35
+DA:34,35
+DA:35,35
+DA:36,35
+DA:37,35
+DA:38,35
+DA:39,35
+DA:40,35
+DA:41,35
+DA:42,35
+DA:43,35
+DA:44,35
+DA:45,35
+DA:46,35
+DA:47,35
+DA:48,35
+DA:49,35
+DA:73,17
+DA:74,17
+DA:75,17
+DA:76,17
+DA:77,17
+DA:78,17
+DA:79,17
+DA:80,17
+DA:81,17
+DA:82,17
+DA:83,17
+DA:84,17
+DA:85,17
+DA:88,35
+DA:89,35
+DA:90,35
+DA:91,35
+DA:92,35
+DA:98,17
+DA:99,17
+DA:100,17
+DA:101,17
+DA:102,17
+DA:103,35
+DA:104,35
+DA:105,35
+DA:108,35
+DA:109,35
+DA:110,35
+DA:111,35
+DA:112,20
+DA:113,20
+DA:114,20
+DA:119,17
+DA:120,5
+DA:121,12
+DA:122,12
+DA:123,12
+DA:124,11
+DA:126,2
+DA:127,2
+DA:128,2
+DA:129,2
+DA:130,10
+DA:131,10
+DA:132,10
+DA:133,10
+DA:134,10
+DA:135,10
+DA:136,10
+DA:139,14
+DA:140,4
+DA:141,4
+DA:142,4
+DA:143,4
+DA:144,4
+DA:146,10
+DA:147,15
+DA:151,17
+DA:152,17
+DA:153,17
+DA:154,17
+DA:155,17
+DA:156,43
+DA:157,26
+DA:161,26
+DA:163,9
+DA:164,9
+DA:165,9
+DA:166,9
+DA:167,9
+DA:168,9
+DA:169,13
 DA:170,13
-DA:172,13
-DA:173,13
-DA:174,13
-DA:175,13
-DA:176,13
-DA:177,13
-DA:178,13
-DA:181,13
-DA:182,29
-DA:183,29
-DA:184,29
-DA:185,13
-DA:187,29
-DA:189,83
-DA:190,83
-DA:191,16
-DA:192,16
-DA:193,16
-DA:194,16
-DA:195,67
-DA:197,29
-DA:199,12
-DA:200,12
-DA:201,12
-DA:203,6
-DA:204,6
-DA:205,6
-DA:207,24
-DA:208,24
-DA:209,24
-DA:211,60
-DA:212,60
-DA:213,60
-DA:214,60
-DA:215,60
-DA:216,60
-DA:218,60
-DA:219,60
-DA:220,60
-DA:222,14
-DA:223,14
-DA:226,19
-DA:227,19
-DA:228,19
-DA:230,19
-DA:231,10
-DA:235,9
-DA:238,10
-DA:242,5
-DA:243,5
-DA:251,14
-DA:252,14
-DA:253,14
-DA:254,14
-DA:255,14
-DA:256,14
-DA:258,19
-DA:259,10
-DA:260,10
-DA:261,10
-DA:264,5
-DA:265,5
-DA:266,5
-DA:267,5
-DA:268,5
-DA:270,14
-DA:272,24
-DA:273,24
-DA:274,24
-DA:275,24
-DA:277,43
-DA:278,25
-DA:279,17
-DA:280,17
-DA:281,17
-DA:282,17
-DA:283,17
-DA:285,18
-DA:286,6
-DA:291,24
-DA:292,24
-DA:294,2
-DA:295,2
-DA:296,2
-DA:297,2
-DA:302,8
-DA:303,8
-DA:304,8
-DA:305,8
-DA:306,14
-DA:307,14
-DA:308,14
-DA:309,14
-DA:310,14
-DA:311,14
-DA:312,14
-DA:313,14
-DA:316,24
-DA:317,33
-DA:318,19
+DA:171,4
+DA:172,4
+DA:173,9
+DA:176,9
+DA:177,6
+DA:178,6
+DA:179,6
+DA:180,6
+DA:181,3
+DA:182,3
+DA:183,3
+DA:184,3
+DA:185,17
+DA:189,17
+DA:190,17
+DA:193,17
+DA:194,35
+DA:195,35
+DA:196,35
+DA:197,35
+DA:198,17
+DA:200,35
+DA:202,93
+DA:203,93
+DA:204,18
+DA:205,18
+DA:206,18
+DA:207,18
+DA:208,75
+DA:210,35
+DA:212,12
+DA:213,12
+DA:214,12
+DA:216,6
+DA:217,6
+DA:218,6
+DA:220,26
+DA:221,26
+DA:222,26
+DA:224,61
+DA:225,61
+DA:226,61
+DA:227,61
+DA:228,61
+DA:229,61
+DA:231,61
+DA:232,61
+DA:233,61
+DA:235,14
+DA:236,14
+DA:239,19
+DA:240,19
+DA:241,19
+DA:243,19
+DA:244,10
+DA:248,9
+DA:251,10
+DA:255,5
+DA:256,5
+DA:264,14
+DA:265,14
+DA:266,14
+DA:267,14
+DA:268,14
+DA:269,14
+DA:271,19
+DA:272,10
+DA:273,10
+DA:274,10
+DA:277,5
+DA:278,5
+DA:279,5
+DA:280,5
+DA:281,5
+DA:283,14
+DA:285,25
+DA:286,25
+DA:287,25
+DA:288,25
+DA:290,46
+DA:291,27
+DA:292,17
+DA:293,17
+DA:294,17
+DA:295,17
+DA:296,17
+DA:298,19
+DA:299,6
+DA:304,25
+DA:305,25
+DA:307,2
+DA:308,2
+DA:309,2
+DA:310,2
+DA:315,8
+DA:316,8
+DA:317,8
+DA:318,8
 DA:319,15
 DA:320,15
-DA:321,15
-DA:322,15
-DA:323,15
-DA:325,10
-DA:328,24
-DA:330,22
-DA:331,22
-DA:332,22
-DA:333,22
-DA:334,22
-DA:342,1
-DA:398,1
-DA:450,1
-DA:511,1
-DA:583,1
-DA:661,1
-DA:743,1
-DA:798,1
-DA:900,1
-DA:1099,1
-DA:1149,1
-DA:1206,1
-DA:1270,1
-DA:1339,1
-LF:227
-LH:227
+DA:321,14
+DA:322,14
+DA:323,14
+DA:324,14
+DA:325,14
+DA:326,14
+DA:327,14
+DA:328,14
+DA:329,1
+DA:330,1
+DA:331,1
+DA:332,1
+DA:337,24
+DA:338,33
+DA:339,19
+DA:340,15
+DA:341,15
+DA:342,15
+DA:343,15
+DA:344,15
+DA:346,10
+DA:349,24
+DA:351,23
+DA:352,23
+DA:353,23
+DA:354,23
+DA:355,23
+DA:363,1
+DA:419,1
+DA:471,1
+DA:531,1
+DA:575,1
+DA:624,1
+DA:681,1
+DA:725,1
+DA:797,1
+DA:875,1
+DA:957,1
+DA:1012,1
+DA:1114,1
+DA:1313,1
+DA:1363,1
+DA:1420,1
+DA:1484,1
+DA:1553,1
+LF:240
+LH:240
 end_of_record
