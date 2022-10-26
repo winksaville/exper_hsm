@@ -61,6 +61,9 @@ pub struct StateMachineExecutor<SM, P> {
 
     // These are leaf states, i.e. states with no children
     pub transition_targets: Vec<usize>,
+
+    // Returns `true` if array idx is in transition_targets
+    pub transition_targets_set: Vec<bool>,
 }
 
 impl<SM, P> StateMachineExecutor<SM, P> {
@@ -77,6 +80,7 @@ impl<SM, P> StateMachineExecutor<SM, P> {
             idxs_enter_fns: Vec::<usize>::with_capacity(max_states),
             idxs_exit_fns: VecDeque::<usize>::with_capacity(max_states),
             transition_targets: Vec::<usize>::with_capacity(max_states),
+            transition_targets_set: Vec::<bool>::with_capacity(max_states),
         }
     }
 
@@ -92,33 +96,46 @@ impl<SM, P> StateMachineExecutor<SM, P> {
     // The first state will be the initial state as identified by the
     // idx_initial_state parameter in build.
     pub fn initialize(&mut self) -> Result<(), DynError> {
+        // Initialize StateInfo.children_for_cycle_dector for each state
         self.initialize_children();
 
-        // Initialize roots and set active to false for all states
+        // Initialize transition_targets_set to false
+        for _ in 0..self.states.len() {
+            self.transition_targets_set.push(false);
+        }
+
+        // Initialize transition_targets and transition_targets_set
         for idx in 0..self.states.len() {
-            println!(
-                "{idx:3}: {} {:?}",
-                self.states[idx].children_for_cycle_detector.len(),
-                self.states[idx].children_for_cycle_detector
-            );
             let cur_state = &mut self.states[idx];
-            cur_state.active = false;
+
             if cur_state.children_for_cycle_detector.is_empty() {
                 self.transition_targets.push(idx);
+                self.transition_targets_set[idx] = true;
             }
         }
-        println!("transition_targets: {:?}", self.transition_targets);
+        //println!("transition_targets: {:?}", self.transition_targets);
+        //println!("transition_targets_set: {:?}", self.transition_targets_set);
 
         if self.cycle_detector() {
             return Err("Cycle detected".into());
         }
 
-        // Always push the destination
+        if self.idx_current_state >= self.states.len()
+            || !self.transition_targets_set[self.idx_current_state]
+        {
+            panic!(
+                "{} is not a valid initial state, only {:?} are allowed",
+                self.idx_current_state, self.transition_targets
+            );
+        }
+
+        // Initialize the idx_enter_fns array, start by
+        // always pushing the destination
         let mut idx_enter = self.idx_current_state;
         //log::trace!("initialialize: push idx_enter={} {}", idx_enter, self.state_name(idx_enter));
         self.idxs_enter_fns.push(idx_enter);
 
-        // Then push any parents
+        // Then push parents of the destination state so they are also entered.
         while let Some(idx) = self.states[idx_enter].parent {
             idx_enter = idx;
 
@@ -133,12 +150,12 @@ impl<SM, P> StateMachineExecutor<SM, P> {
     //   https://www.geeksforgeeks.org/detect-cycle-in-a-directed-graph-using-bfs/
     fn cycle_detector(&mut self) -> bool {
         let mut leafs = self.transition_targets.to_vec();
-        println!("cycle_dector: leafs: {leafs:?}");
+        //println!("cycle_dector: leafs: {leafs:?}");
 
         let mut visited_cnt = 0usize;
         while let Some(leaf_idx) = leafs.pop() {
             visited_cnt += 1;
-            println!("cycle_dector: leaf_idx={leaf_idx} visited_cnt={visited_cnt}");
+            //println!("cycle_dector: leaf_idx={leaf_idx} visited_cnt={visited_cnt}");
 
             // Check if we have an "edge"
             if let Some(parent_idx) = self.states[leaf_idx].parent {
@@ -159,20 +176,15 @@ impl<SM, P> StateMachineExecutor<SM, P> {
                 if other_children.is_empty() {
                     // There are NO other_children so the parent_idx is now a leaf
                     leafs.push(parent_idx);
-                    println!("cycle_dector: add new leaf {parent_idx} leafs: {leafs:?}");
+                    //println!("cycle_dector: add new leaf {parent_idx} leafs: {leafs:?}");
                 } else {
                     // Thre are other_children so copy it to children_for_cycle_dector
-                    println!(
-                        "cycle_dector: states[{parent_idx}] other_children: {other_children:?}"
-                    );
+                    //println!("cycle_dector: states[{parent_idx}] other_children: {other_children:?}");
                     parent_state.children_for_cycle_detector = other_children.to_vec();
                 }
             }
         }
-        println!(
-            "cycle_dector: visited_cnt: {visited_cnt} state.len()={}",
-            self.states.len()
-        );
+        //println!("cycle_dector: visited_cnt: {visited_cnt} state.len()={}", self.states.len());
 
         visited_cnt != self.states.len()
     }
@@ -181,6 +193,7 @@ impl<SM, P> StateMachineExecutor<SM, P> {
     fn initialize_children(&mut self) {
         for idx in 0..self.states.len() {
             self.initialize_states_children(idx);
+            //println!( "{idx:3}: {} {:?}", self.states[idx].children_for_cycle_detector.len(), self.states[idx].children_for_cycle_detector);
         }
     }
 
@@ -304,12 +317,20 @@ impl<SM, P> StateMachineExecutor<SM, P> {
                 //log::trace!("dispatch_idx: idx={} {} Handled", idx, self.state_name(idx));
             }
             StateResult::TransitionTo(idx_next_state) => {
-                //log::trace!("dispatch_idx: transition_to idx={} {}", idx_next_state, self.state_name(idx_next_state));
-                self.setup_exit_enter_fns_idxs(idx_next_state);
+                if idx_next_state < self.states.len() && self.transition_targets_set[idx_next_state]
+                {
+                    //log::trace!("dispatch_idx: transition_to idx={} {}", idx_next_state, self.state_name(idx_next_state));
+                    self.setup_exit_enter_fns_idxs(idx_next_state);
 
-                self.idx_previous_state = self.idx_current_state;
-                self.idx_current_state = idx_next_state;
-                self.current_state_changed = true;
+                    self.idx_previous_state = self.idx_current_state;
+                    self.idx_current_state = idx_next_state;
+                    self.current_state_changed = true;
+                } else {
+                    panic!(
+                        "{idx_next_state} is not a valid transition target, only {:?} are allowed",
+                        self.transition_targets
+                    );
+                }
             }
         }
 
@@ -446,7 +467,7 @@ mod test {
         assert_eq!(sme.get_current_state_name(), "state1");
     }
 
-    // Test SM with one state getting names
+    // Test SM with two states getting names
     #[test]
     #[no_coverage]
     fn test_sm_2s_get_names() {
@@ -505,6 +526,199 @@ mod test {
         assert_eq!(sme.get_sm().state, 0);
         assert_eq!(sme.get_state_name(IDX_STATE1), "state1");
         assert_eq!(sme.get_current_state_name(), "state1");
+    }
+
+    #[test]
+    #[no_coverage]
+    #[should_panic]
+    fn test_sm_out_of_bounds_initial_transition() {
+        pub struct StateMachine;
+
+        // Create a Protocol
+        pub struct NoMessages;
+
+        const MAX_STATES: usize = 1;
+        const IDX_STATE1: usize = 0;
+        const INVALID_STATE: usize = 1;
+
+        impl StateMachine {
+            #[no_coverage]
+            fn new() -> StateMachineExecutor<Self, NoMessages> {
+                let sm = StateMachine;
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, INVALID_STATE);
+
+                sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
+                    .initialize()
+                    .expect("Unexpected error initializing");
+
+                sme
+            }
+
+            #[no_coverage]
+            fn state1(&mut self, _: &NoMessages) -> StateResult {
+                // Invalid transition that is not less than MAX_STATES
+                StateResult::TransitionTo(1)
+            }
+        }
+
+        // Create a sme and validate it's in the expected state
+        let mut sme = StateMachine::new();
+        assert_eq!(std::mem::size_of_val(sme.get_sm()), 4);
+        assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
+
+        // This will panic because state1 returns an invalid transition
+        sme.dispatch(&NoMessages);
+    }
+
+    #[test]
+    #[no_coverage]
+    #[should_panic]
+    fn test_sm_invalid_initial_state() {
+        pub struct StateMachine;
+
+        // Create a Protocol
+        pub struct NoMessages;
+
+        const MAX_STATES: usize = 1;
+        const IDX_STATE1: usize = 0;
+        const _IDX_STATE2: usize = 1;
+
+        impl StateMachine {
+            #[no_coverage]
+            fn new() -> StateMachineExecutor<Self, NoMessages> {
+                let sm = StateMachine;
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
+
+                sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
+                    .add_state(StateInfo::new(
+                        "state1",
+                        None,
+                        Self::state2,
+                        None,
+                        Some(IDX_STATE1),
+                    ))
+                    .initialize()
+                    .expect("Unexpected error initializing");
+
+                sme
+            }
+
+            #[no_coverage]
+            fn state1(&mut self, _: &NoMessages) -> StateResult {
+                StateResult::Handled
+            }
+
+            #[no_coverage]
+            fn state2(&mut self, _: &NoMessages) -> StateResult {
+                // Invalid transition IDX_STATE1 isn't a leaf
+                StateResult::TransitionTo(IDX_STATE1)
+            }
+        }
+
+        // Create a sme and validate it's in the expected state
+        let _ = StateMachine::new();
+    }
+
+    #[test]
+    #[no_coverage]
+    #[should_panic]
+    fn test_sm_2s_invalid_transition() {
+        pub struct StateMachine;
+
+        // Create a Protocol
+        pub struct NoMessages;
+
+        const MAX_STATES: usize = 1;
+        const IDX_STATE1: usize = 0;
+        const IDX_STATE2: usize = 1;
+
+        impl StateMachine {
+            #[no_coverage]
+            fn new() -> StateMachineExecutor<Self, NoMessages> {
+                let sm = StateMachine;
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE2);
+
+                sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
+                    .add_state(StateInfo::new(
+                        "state1",
+                        None,
+                        Self::state2,
+                        None,
+                        Some(IDX_STATE1),
+                    ))
+                    .initialize()
+                    .expect("Unexpected error initializing");
+
+                sme
+            }
+
+            #[no_coverage]
+            fn state1(&mut self, _: &NoMessages) -> StateResult {
+                StateResult::Handled
+            }
+
+            #[no_coverage]
+            fn state2(&mut self, _: &NoMessages) -> StateResult {
+                // Invalid transition IDX_STATE1 isn't a leaf
+                StateResult::TransitionTo(IDX_STATE1)
+            }
+        }
+
+        // Create a sme and validate it's in the expected state
+        let mut sme = StateMachine::new();
+        assert_eq!(std::mem::size_of_val(sme.get_sm()), 0);
+        assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
+
+        // This will panic because state2 returns an invalid transition
+        // to state1 which isn't a leaf
+        sme.dispatch(&NoMessages);
+    }
+
+    #[test]
+    #[no_coverage]
+    #[should_panic]
+    fn test_sm_out_of_bounds_invalid_transition() {
+        pub struct StateMachine;
+
+        // Create a Protocol
+        pub struct NoMessages;
+
+        const MAX_STATES: usize = 1;
+        const IDX_STATE1: usize = 0;
+
+        impl StateMachine {
+            #[no_coverage]
+            fn new() -> StateMachineExecutor<Self, NoMessages> {
+                let sm = StateMachine;
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
+
+                sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
+                    .initialize()
+                    .expect("Unexpected error initializing");
+
+                sme
+            }
+
+            #[no_coverage]
+            fn state1(&mut self, _: &NoMessages) -> StateResult {
+                // Invalid transition that is not less than MAX_STATES
+                StateResult::TransitionTo(1)
+            }
+        }
+
+        // Create a sme and validate it's in the expected state
+        let mut sme = StateMachine::new();
+        assert_eq!(std::mem::size_of_val(sme.get_sm()), 4);
+        assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
+
+        // This will panic because state1 returns an invalid transition
+        sme.dispatch(&NoMessages);
     }
 
     // Test SM with one state with one field
