@@ -20,6 +20,7 @@ pub struct StateInfo<SM, P> {
     pub process: ProcessFn<SM, P>,
     pub exit: Option<ExitFn<SM, P>>,
     pub active: bool,
+    pub children_for_cycle_detector: Vec<usize>,
     pub enter_cnt: usize,
     pub process_cnt: usize,
     pub exit_cnt: usize,
@@ -40,6 +41,7 @@ impl<SM, P> StateInfo<SM, P> {
             process: process_fn,
             exit: exit_fn,
             active: false,
+            children_for_cycle_detector: Vec::<usize>::new(),
             enter_cnt: 0,
             process_cnt: 0,
             exit_cnt: 0,
@@ -56,7 +58,9 @@ pub struct StateMachineExecutor<SM, P> {
     pub idx_previous_state: usize,
     pub idxs_enter_fns: Vec<usize>,
     pub idxs_exit_fns: std::collections::VecDeque<usize>,
-    //pub transition_dest_idx: Option<usize>,
+
+    // These are leaf states, i.e. states with no children
+    pub transition_targets: Vec<usize>,
 }
 
 impl<SM, P> StateMachineExecutor<SM, P> {
@@ -67,12 +71,12 @@ impl<SM, P> StateMachineExecutor<SM, P> {
         StateMachineExecutor {
             sm,
             states: Vec::<StateInfo<SM, P>>::with_capacity(max_states),
-            idxs_enter_fns: Vec::<usize>::with_capacity(max_states),
-            idxs_exit_fns: VecDeque::<usize>::with_capacity(max_states),
+            current_state_changed: true,
             idx_current_state: idx_initial_state,
             idx_previous_state: idx_initial_state,
-            current_state_changed: true,
-            //transition_dest_idx: Option<usize>,
+            idxs_enter_fns: Vec::<usize>::with_capacity(max_states),
+            idxs_exit_fns: VecDeque::<usize>::with_capacity(max_states),
+            transition_targets: Vec::<usize>::with_capacity(max_states),
         }
     }
 
@@ -88,6 +92,27 @@ impl<SM, P> StateMachineExecutor<SM, P> {
     // The first state will be the initial state as identified by the
     // idx_initial_state parameter in build.
     pub fn initialize(&mut self) -> Result<(), DynError> {
+        self.initialize_children();
+
+        // Initialize roots and set active to false for all states
+        for idx in 0..self.states.len() {
+            println!(
+                "{idx:3}: {} {:?}",
+                self.states[idx].children_for_cycle_detector.len(),
+                self.states[idx].children_for_cycle_detector
+            );
+            let cur_state = &mut self.states[idx];
+            cur_state.active = false;
+            if cur_state.children_for_cycle_detector.is_empty() {
+                self.transition_targets.push(idx);
+            }
+        }
+        println!("transition_targets: {:?}", self.transition_targets);
+
+        if self.cycle_detector() {
+            return Err("Cycle detected".into());
+        }
+
         // Always push the destination
         let mut idx_enter = self.idx_current_state;
         //log::trace!("initialialize: push idx_enter={} {}", idx_enter, self.state_name(idx_enter));
@@ -102,6 +127,73 @@ impl<SM, P> StateMachineExecutor<SM, P> {
         }
 
         Ok(())
+    }
+
+    // Kahns algorithm for detecting cycles using a Breath First Search
+    //   https://www.geeksforgeeks.org/detect-cycle-in-a-directed-graph-using-bfs/
+    fn cycle_detector(&mut self) -> bool {
+        let mut leafs = self.transition_targets.to_vec();
+        println!("cycle_dector: leafs: {leafs:?}");
+
+        let mut visited_cnt = 0usize;
+        while let Some(leaf_idx) = leafs.pop() {
+            visited_cnt += 1;
+            println!("cycle_dector: leaf_idx={leaf_idx} visited_cnt={visited_cnt}");
+
+            // Check if we have an "edge"
+            if let Some(parent_idx) = self.states[leaf_idx].parent {
+                // Yes, reference to that parent
+                let parent_state = &mut self.states[parent_idx];
+
+                // We need to remove the edge from leaf to parent, we'll do
+                // that by creating other_children which will be children_for_cycle_dector
+                // but with the "leaf_idx" removed.
+                let mut other_children = Vec::<usize>::new();
+                for child_idx in 0..parent_state.children_for_cycle_detector.len() {
+                    if parent_state.children_for_cycle_detector[child_idx] != leaf_idx {
+                        // This isn't the leaf index so save it in other_children
+                        other_children.push(parent_state.children_for_cycle_detector[child_idx]);
+                    }
+                }
+
+                if other_children.is_empty() {
+                    // There are NO other_children so the parent_idx is now a leaf
+                    leafs.push(parent_idx);
+                    println!("cycle_dector: add new leaf {parent_idx} leafs: {leafs:?}");
+                } else {
+                    // Thre are other_children so copy it to children_for_cycle_dector
+                    println!(
+                        "cycle_dector: states[{parent_idx}] other_children: {other_children:?}"
+                    );
+                    parent_state.children_for_cycle_detector = other_children.to_vec();
+                }
+            }
+        }
+        println!(
+            "cycle_dector: visited_cnt: {visited_cnt} state.len()={}",
+            self.states.len()
+        );
+
+        visited_cnt != self.states.len()
+    }
+
+    // Determine Transition targets, (states with no children aka leafs)
+    fn initialize_children(&mut self) {
+        for idx in 0..self.states.len() {
+            self.initialize_states_children(idx);
+        }
+    }
+
+    fn initialize_states_children(&mut self, cur_state_idx: usize) {
+        // Itereate over all of the states looking for nodes that point to cur_state_idx
+        for idx in 0..self.states.len() {
+            if self.states[idx].parent == Some(cur_state_idx) {
+                // Add a child state
+                self.states[cur_state_idx]
+                    .children_for_cycle_detector
+                    .push(idx);
+            }
+        }
     }
 
     pub fn get_state_name(&self, idx: usize) -> &str {
@@ -245,6 +337,7 @@ impl<SM, P> StateMachineExecutor<SM, P> {
 #[cfg(test)]
 mod test {
     use super::*;
+
     // Test SM with one state with one field
     #[test]
     #[no_coverage]
@@ -260,7 +353,8 @@ mod test {
         const IDX_STATE1: usize = 0;
 
         impl StateMachine {
-            pub fn new() -> StateMachineExecutor<Self, NoMessages> {
+            #[no_coverage]
+            fn new() -> StateMachineExecutor<Self, NoMessages> {
                 let sm = StateMachine { state: 0 };
                 let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
 
@@ -271,6 +365,7 @@ mod test {
                 sme
             }
 
+            #[no_coverage]
             fn state1(&mut self, _msg: &NoMessages) -> StateResult {
                 self.state += 1;
 
@@ -314,7 +409,8 @@ mod test {
         const IDX_STATE1: usize = 0;
 
         impl StateMachine {
-            pub fn new() -> StateMachineExecutor<Self, NoMessages> {
+            #[no_coverage]
+            fn new() -> StateMachineExecutor<Self, NoMessages> {
                 let sm = StateMachine { state: 0 };
                 let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
 
@@ -325,6 +421,7 @@ mod test {
                 sme
             }
 
+            #[no_coverage]
             fn state1(&mut self, _msg: &NoMessages) -> StateResult {
                 self.state += 1;
 
@@ -365,7 +462,8 @@ mod test {
         const IDX_STATE2: usize = 1;
 
         impl StateMachine {
-            pub fn new() -> StateMachineExecutor<Self, NoMessages> {
+            #[no_coverage]
+            fn new() -> StateMachineExecutor<Self, NoMessages> {
                 let sm = StateMachine { state: 0 };
                 let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
 
@@ -377,12 +475,14 @@ mod test {
                 sme
             }
 
+            #[no_coverage]
             fn state1(&mut self, _msg: &NoMessages) -> StateResult {
                 self.state += 1;
 
                 StateResult::TransitionTo(IDX_STATE2)
             }
 
+            #[no_coverage]
             fn state2(&mut self, _msg: &NoMessages) -> StateResult {
                 self.state -= 1;
 
@@ -408,11 +508,9 @@ mod test {
     }
 
     // Test SM with one state with one field
-    // plus derive Default
     #[test]
     #[no_coverage]
     fn test_sm_1s_enter_no_exit() {
-        #[derive(Default)]
         pub struct StateMachine {
             state: i32,
         }
@@ -427,8 +525,9 @@ mod test {
         const IDX_STATE1: usize = 0;
 
         impl StateMachine {
-            pub fn new() -> StateMachineExecutor<Self, Message> {
-                let sm = StateMachine::default();
+            #[no_coverage]
+            fn new() -> StateMachineExecutor<Self, Message> {
+                let sm = StateMachine { state: 0 };
                 let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
 
                 sme.add_state(StateInfo::new(
@@ -444,10 +543,12 @@ mod test {
                 sme
             }
 
+            #[no_coverage]
             fn state1_enter(&mut self, _msg: &Message) {
                 self.state = 100;
             }
 
+            #[no_coverage]
             fn state1(&mut self, msg: &Message) -> StateResult {
                 match msg {
                     Message::Add { val } => self.state += val,
@@ -479,11 +580,9 @@ mod test {
     }
 
     // Test SM with twos state with one field
-    // plus derive Default
     #[test]
     #[no_coverage]
     fn test_sm_2s_no_enter_no_exit() {
-        #[derive(Default)]
         pub struct StateMachine {
             state: i32,
         }
@@ -498,8 +597,9 @@ mod test {
         const IDX_STATE2: usize = 1;
 
         impl StateMachine {
-            pub fn new() -> StateMachineExecutor<Self, Message> {
-                let sm = StateMachine::default();
+            #[no_coverage]
+            fn new() -> StateMachineExecutor<Self, Message> {
+                let sm = StateMachine { state: 0 };
                 let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
 
                 sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
@@ -510,6 +610,7 @@ mod test {
                 sme
             }
 
+            #[no_coverage]
             fn state1(&mut self, msg: &Message) -> StateResult {
                 match msg {
                     Message::Add { val } => self.state += val,
@@ -517,6 +618,7 @@ mod test {
                 StateResult::TransitionTo(IDX_STATE2)
             }
 
+            #[no_coverage]
             fn state2(&mut self, msg: &Message) -> StateResult {
                 match msg {
                     Message::Add { val } => self.state += 2 * val,
@@ -556,11 +658,9 @@ mod test {
     }
 
     // Test SM with twos state with one field
-    // plus derive Default
     #[test]
     #[no_coverage]
     fn test_sm_1h_2s_not_handled_no_enter_no_exit() {
-        #[derive(Default)]
         pub struct StateMachine {
             state: i32,
         }
@@ -576,8 +676,9 @@ mod test {
         const IDX_CHILD: usize = 1;
 
         impl StateMachine {
-            pub fn new() -> StateMachineExecutor<Self, Message> {
-                let sm = StateMachine::default();
+            #[no_coverage]
+            fn new() -> StateMachineExecutor<Self, Message> {
+                let sm = StateMachine { state: 0 };
                 let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_CHILD);
 
                 sme.add_state(StateInfo::new("parent", None, Self::parent, None, None))
@@ -594,6 +695,7 @@ mod test {
                 sme
             }
 
+            #[no_coverage]
             fn parent(&mut self, msg: &Message) -> StateResult {
                 match msg {
                     Message::Add { val } => self.state += val,
@@ -602,6 +704,7 @@ mod test {
                 StateResult::Handled
             }
 
+            #[no_coverage]
             fn child(&mut self, _msg: &Message) -> StateResult {
                 StateResult::NotHandled
             }
@@ -649,7 +752,6 @@ mod test {
         //      /                     \
         //    other=2   <======>   initial=1
 
-        #[derive(Default)]
         struct StateMachine;
 
         // Create a Protocol with no messages
@@ -661,8 +763,9 @@ mod test {
         const IDX_OTHER: usize = 2;
 
         impl StateMachine {
-            pub fn new() -> StateMachineExecutor<Self, NoMessages> {
-                let sm = StateMachine::default();
+            #[no_coverage]
+            fn new() -> StateMachineExecutor<Self, NoMessages> {
+                let sm = StateMachine;
                 let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_INITIAL);
 
                 sme.add_state(StateInfo::new(
@@ -700,22 +803,28 @@ mod test {
                 StateResult::Handled
             }
 
+            #[no_coverage]
             fn initial_enter(&mut self, _msg: &NoMessages) {}
 
             // This state has idx 0
+            #[no_coverage]
             fn initial(&mut self, _msg: &NoMessages) -> StateResult {
                 StateResult::TransitionTo(IDX_OTHER)
             }
 
+            #[no_coverage]
             fn initial_exit(&mut self, _msg: &NoMessages) {}
 
+            #[no_coverage]
             fn other_enter(&mut self, _msg: &NoMessages) {}
 
             // This state has idx 0
+            #[no_coverage]
             fn other(&mut self, _msg: &NoMessages) -> StateResult {
                 StateResult::TransitionTo(IDX_INITIAL)
             }
 
+            #[no_coverage]
             fn other_exit(&mut self, _msg: &NoMessages) {}
         }
 
@@ -800,7 +909,6 @@ mod test {
         //       |                     |
         //     other=3              initial=1
 
-        #[derive(Default)]
         pub struct StateMachine;
 
         // Create a Protocol with no messages
@@ -813,8 +921,9 @@ mod test {
         const IDX_OTHER: usize = 3;
 
         impl StateMachine {
-            pub fn new() -> StateMachineExecutor<Self, NoMessages> {
-                let sm = StateMachine::default();
+            #[no_coverage]
+            fn new() -> StateMachineExecutor<Self, NoMessages> {
+                let sm = StateMachine;
                 let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_INITIAL);
 
                 sme.add_state(StateInfo::new(
@@ -851,6 +960,7 @@ mod test {
                 sme
             }
 
+            #[no_coverage]
             fn initial_base_enter(&mut self, _msg: &NoMessages) {}
 
             // This state has hdl 0
@@ -859,17 +969,22 @@ mod test {
                 StateResult::Handled
             }
 
+            #[no_coverage]
             fn initial_base_exit(&mut self, _msg: &NoMessages) {}
 
+            #[no_coverage]
             fn initial_enter(&mut self, _msg: &NoMessages) {}
 
             // This state has hdl 0
+            #[no_coverage]
             fn initial(&mut self, _msg: &NoMessages) -> StateResult {
                 StateResult::TransitionTo(IDX_OTHER)
             }
 
+            #[no_coverage]
             fn initial_exit(&mut self, _msg: &NoMessages) {}
 
+            #[no_coverage]
             fn other_base_enter(&mut self, _msg: &NoMessages) {}
 
             // This state has hdl 0
@@ -878,15 +993,19 @@ mod test {
                 StateResult::Handled
             }
 
+            #[no_coverage]
             fn other_base_exit(&mut self, _msg: &NoMessages) {}
 
+            #[no_coverage]
             fn other_enter(&mut self, _msg: &NoMessages) {}
 
             // This state has hdl 0
+            #[no_coverage]
             fn other(&mut self, _msg: &NoMessages) -> StateResult {
                 StateResult::TransitionTo(IDX_INITIAL)
             }
 
+            #[no_coverage]
             fn other_exit(&mut self, _msg: &NoMessages) {}
         }
 
@@ -975,5 +1094,354 @@ mod test {
         assert_eq!(sme.get_state_enter_cnt(IDX_OTHER), 2);
         assert_eq!(sme.get_state_process_cnt(IDX_OTHER), 2);
         assert_eq!(sme.get_state_exit_cnt(IDX_OTHER), 2);
+    }
+
+    #[test]
+    #[no_coverage]
+    fn test_1s_cycle() {
+        // StateMachine with one state and has itself as parent,
+        // this should fail to initialize!
+        //
+        //     ------
+        //     |    |
+        //     v    |
+        //  state1 --
+
+        pub struct StateMachine;
+
+        // Create a Protocol
+        pub struct NoMessages;
+
+        const MAX_STATES: usize = 1;
+        const IDX_STATE1: usize = 0;
+
+        impl StateMachine {
+            #[no_coverage]
+            fn new() {
+                let sm = StateMachine;
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
+
+                // Add state that has itself as it's parent
+                let r = sme
+                    .add_state(StateInfo::new(
+                        "state1",
+                        None,
+                        Self::state1,
+                        None,
+                        Some(IDX_STATE1),
+                    ))
+                    .initialize();
+                match r {
+                    Ok(()) => panic!("Expected a cycle it wasn't detected"),
+                    Err(e) => assert_eq!(e.to_string(), "Cycle detected"),
+                }
+            }
+
+            #[no_coverage]
+            fn state1(&mut self, _msg: &NoMessages) -> StateResult {
+                StateResult::Handled
+            }
+        }
+
+        StateMachine::new();
+    }
+
+    #[test]
+    #[no_coverage]
+    fn test_2s_one_self_cycle() {
+        // StateMachine with one state and has itself as parent,
+        // this should fail to initialize!
+        //
+        //     ------
+        //     |    |
+        //     v    |
+        //  state1 --     state2
+
+        pub struct StateMachine;
+
+        // Create a Protocol
+        pub struct NoMessages;
+
+        const MAX_STATES: usize = 1;
+        const IDX_STATE1: usize = 0;
+        const _IDX_STATE2: usize = 1;
+
+        impl StateMachine {
+            #[no_coverage]
+            fn new() {
+                let sm = StateMachine;
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
+
+                // Add state that has itself as it's parent
+                let r = sme
+                    .add_state(StateInfo::new(
+                        "state1",
+                        None,
+                        Self::state1,
+                        None,
+                        Some(IDX_STATE1),
+                    ))
+                    .add_state(StateInfo::new("state2", None, Self::state2, None, None))
+                    .initialize();
+                match r {
+                    Ok(()) => panic!("Expected a cycle it wasn't detected"),
+                    Err(e) => assert_eq!(e.to_string(), "Cycle detected"),
+                }
+            }
+
+            #[no_coverage]
+            fn state1(&mut self, _msg: &NoMessages) -> StateResult {
+                StateResult::Handled
+            }
+
+            #[no_coverage]
+            fn state2(&mut self, _msg: &NoMessages) -> StateResult {
+                StateResult::Handled
+            }
+        }
+
+        StateMachine::new();
+    }
+
+    #[test]
+    #[no_coverage]
+    fn test_2s_cycle() {
+        // StateMachine with two states each has the other as parent,
+        // this should fail to initialize!
+        //
+        //  state2
+        //   |  ^
+        //   v  |
+        //  state1
+
+        pub struct StateMachine;
+
+        // Create a Protocol
+        pub struct NoMessages;
+
+        const MAX_STATES: usize = 2;
+        const IDX_STATE1: usize = 0;
+        const IDX_STATE2: usize = 1;
+        const _IDX_STATE3: usize = 2;
+
+        impl StateMachine {
+            #[no_coverage]
+            fn new() {
+                let sm = StateMachine;
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
+
+                // Add state that has itself as it's parent
+                let r = sme
+                    .add_state(StateInfo::new(
+                        "state1",
+                        None,
+                        Self::state1,
+                        None,
+                        Some(IDX_STATE2),
+                    ))
+                    .add_state(StateInfo::new(
+                        "state2",
+                        None,
+                        Self::state2,
+                        None,
+                        Some(IDX_STATE1),
+                    ))
+                    .initialize();
+                match r {
+                    Ok(()) => panic!("Expected a cycle it wasn't detected"),
+                    Err(e) => assert_eq!(e.to_string(), "Cycle detected"),
+                }
+            }
+
+            #[no_coverage]
+            fn state1(&mut self, _msg: &NoMessages) -> StateResult {
+                StateResult::Handled
+            }
+
+            #[no_coverage]
+            fn state2(&mut self, _msg: &NoMessages) -> StateResult {
+                StateResult::Handled
+            }
+        }
+
+        StateMachine::new();
+    }
+
+    #[test]
+    #[no_coverage]
+    fn test_3s_one_cycle() {
+        // StateMachine with three states two have other as parent third is standalone,
+        // this should fail to initialize!
+        //
+        //  state2   state3
+        //   |  ^
+        //   v  |
+        //  state1
+
+        pub struct StateMachine;
+
+        // Create a Protocol
+        pub struct NoMessages;
+
+        const MAX_STATES: usize = 2;
+        const IDX_STATE1: usize = 0;
+        const IDX_STATE2: usize = 1;
+
+        impl StateMachine {
+            #[no_coverage]
+            fn new() {
+                let sm = StateMachine;
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
+
+                // Add state that has itself as it's parent
+                let r = sme
+                    .add_state(StateInfo::new(
+                        "state1",
+                        None,
+                        Self::state1,
+                        None,
+                        Some(IDX_STATE2),
+                    ))
+                    .add_state(StateInfo::new(
+                        "state2",
+                        None,
+                        Self::state2,
+                        None,
+                        Some(IDX_STATE1),
+                    ))
+                    .add_state(StateInfo::new("state3", None, Self::state3, None, None))
+                    .initialize();
+                match r {
+                    Ok(()) => panic!("Expected a cycle it wasn't detected"),
+                    Err(e) => assert_eq!(e.to_string(), "Cycle detected"),
+                }
+            }
+
+            #[no_coverage]
+            fn state1(&mut self, _msg: &NoMessages) -> StateResult {
+                StateResult::Handled
+            }
+
+            #[no_coverage]
+            fn state2(&mut self, _msg: &NoMessages) -> StateResult {
+                StateResult::Handled
+            }
+
+            #[no_coverage]
+            fn state3(&mut self, _msg: &NoMessages) -> StateResult {
+                StateResult::Handled
+            }
+        }
+
+        StateMachine::new();
+    }
+
+    #[test]
+    #[no_coverage]
+    fn test_5s_long_cycle() {
+        // StateMachine with 5 states twi leafs and a long cycle from state1 to state3
+        // this should fail to initialize!
+        //
+        //  --- state1
+        //  |      ^
+        //  |      |
+        //  |   state2
+        //  |      ^
+        //  |      |
+        //  --> state3 <-------
+        //         ^          |
+        //         |          |
+        //      state4     state5
+        //
+
+        pub struct StateMachine;
+
+        // Create a Protocol
+        pub struct NoMessages;
+
+        const MAX_STATES: usize = 5;
+        const IDX_STATE1: usize = 0;
+        const IDX_STATE2: usize = 1;
+        const IDX_STATE3: usize = 2;
+        const _IDX_STATE4: usize = 3;
+        const _IDX_STATE5: usize = 4;
+
+        impl StateMachine {
+            #[no_coverage]
+            fn new() {
+                let sm = StateMachine;
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
+
+                // Add state that has itself as it's parent
+                let r = sme
+                    .add_state(StateInfo::new(
+                        "state1",
+                        None,
+                        Self::state1,
+                        None,
+                        Some(IDX_STATE3),
+                    ))
+                    .add_state(StateInfo::new(
+                        "state2",
+                        None,
+                        Self::state2,
+                        None,
+                        Some(IDX_STATE1),
+                    ))
+                    .add_state(StateInfo::new(
+                        "state3",
+                        None,
+                        Self::state3,
+                        None,
+                        Some(IDX_STATE2),
+                    ))
+                    .add_state(StateInfo::new(
+                        "state4",
+                        None,
+                        Self::state4,
+                        None,
+                        Some(IDX_STATE3),
+                    ))
+                    .add_state(StateInfo::new(
+                        "state5",
+                        None,
+                        Self::state5,
+                        None,
+                        Some(IDX_STATE3),
+                    ))
+                    .initialize();
+                match r {
+                    Ok(()) => panic!("Expected a cycle it wasn't detected"),
+                    Err(e) => assert_eq!(e.to_string(), "Cycle detected"),
+                }
+            }
+
+            #[no_coverage]
+            fn state1(&mut self, _msg: &NoMessages) -> StateResult {
+                StateResult::Handled
+            }
+
+            #[no_coverage]
+            fn state2(&mut self, _msg: &NoMessages) -> StateResult {
+                StateResult::Handled
+            }
+
+            #[no_coverage]
+            fn state3(&mut self, _msg: &NoMessages) -> StateResult {
+                StateResult::Handled
+            }
+
+            #[no_coverage]
+            fn state4(&mut self, _msg: &NoMessages) -> StateResult {
+                StateResult::Handled
+            }
+
+            #[no_coverage]
+            fn state5(&mut self, _msg: &NoMessages) -> StateResult {
+                StateResult::Handled
+            }
+        }
+
+        StateMachine::new();
     }
 }
