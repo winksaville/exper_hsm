@@ -25,7 +25,7 @@ const IDX_OTHER: usize = 3;
 impl StateMachine {
     pub fn new() -> Result<StateMachineExecutor<Self, NoMessages>, DynError> {
         let sm = StateMachine::default();
-        let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_INITIAL);
+        let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
 
         sme.add_state(StateInfo::new(
             "initial_base",
@@ -55,7 +55,7 @@ impl StateMachine {
             Some(Self::other_exit),
             Some(IDX_OTHER_BASE),
         ))
-        .initialize()?;
+        .initialize(IDX_INITIAL)?;
 
         log::trace!(
             "new: inital state={} idxs_enter_fns={:?}",

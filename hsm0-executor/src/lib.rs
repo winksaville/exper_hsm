@@ -70,13 +70,13 @@ impl<SM, P> StateMachineExecutor<SM, P> {
     // Begin building an executor.
     //
     // You must call add_state to add one or more states
-    pub fn build(sm: SM, max_states: usize, idx_initial_state: usize) -> Self {
+    pub fn build(sm: SM, max_states: usize) -> Self {
         StateMachineExecutor {
             sm,
             states: Vec::<StateInfo<SM, P>>::with_capacity(max_states),
             current_state_changed: true,
-            idx_current_state: idx_initial_state,
-            idx_previous_state: idx_initial_state,
+            idx_current_state: 0,
+            idx_previous_state: 0,
             idxs_enter_fns: Vec::<usize>::with_capacity(max_states),
             idxs_exit_fns: VecDeque::<usize>::with_capacity(max_states),
             transition_targets: Vec::<usize>::with_capacity(max_states),
@@ -93,9 +93,8 @@ impl<SM, P> StateMachineExecutor<SM, P> {
 
     // Initialize and make the executor ready to dispatch messages.
     //
-    // The first state will be the initial state as identified by the
-    // idx_initial_state parameter in build.
-    pub fn initialize(&mut self) -> Result<(), DynError> {
+    // The first state will be the state at idx_initial_state
+    pub fn initialize(&mut self, idx_initial_state: usize) -> Result<(), DynError> {
         // Initialize StateInfo.children_for_cycle_dector for each state
         self.initialize_children();
 
@@ -120,14 +119,18 @@ impl<SM, P> StateMachineExecutor<SM, P> {
             return Err("Cycle detected".into());
         }
 
-        if self.idx_current_state >= self.states.len()
-            || !self.transition_targets_set[self.idx_current_state]
+        // Validate idx_initial_state is valid.
+        if idx_initial_state >= self.states.len() || !self.transition_targets_set[idx_initial_state]
         {
             panic!(
-                "{} is not a valid initial state, only {:?} are allowed",
-                self.idx_current_state, self.transition_targets
+                "{idx_initial_state} is not a valid initial state, only {:?} are allowed",
+                self.transition_targets
             );
         }
+
+        // Initialize current and previuos state to initial state
+        self.idx_current_state = idx_initial_state;
+        self.idx_previous_state = idx_initial_state;
 
         // Initialize the idx_enter_fns array, start by
         // always pushing the destination
@@ -377,10 +380,10 @@ mod test {
             #[no_coverage]
             fn new() -> StateMachineExecutor<Self, NoMessages> {
                 let sm = StateMachine { state: 0 };
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
 
                 sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
-                    .initialize()
+                    .initialize(IDX_STATE1)
                     .expect("Unexpected error initializing");
 
                 sme
@@ -433,10 +436,10 @@ mod test {
             #[no_coverage]
             fn new() -> StateMachineExecutor<Self, NoMessages> {
                 let sm = StateMachine { state: 0 };
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
 
                 sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
-                    .initialize()
+                    .initialize(IDX_STATE1)
                     .expect("Unexpected error initializing");
 
                 sme
@@ -486,11 +489,11 @@ mod test {
             #[no_coverage]
             fn new() -> StateMachineExecutor<Self, NoMessages> {
                 let sm = StateMachine { state: 0 };
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
 
                 sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
                     .add_state(StateInfo::new("state2", None, Self::state2, None, None))
-                    .initialize()
+                    .initialize(IDX_STATE1)
                     .expect("Unexpected error initializing");
 
                 sme
@@ -545,10 +548,10 @@ mod test {
             #[no_coverage]
             fn new() -> StateMachineExecutor<Self, NoMessages> {
                 let sm = StateMachine;
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, INVALID_STATE);
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
 
                 sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
-                    .initialize()
+                    .initialize(INVALID_STATE)
                     .expect("Unexpected error initializing");
 
                 sme
@@ -589,7 +592,7 @@ mod test {
             #[no_coverage]
             fn new() -> StateMachineExecutor<Self, NoMessages> {
                 let sm = StateMachine;
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
 
                 sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
                     .add_state(StateInfo::new(
@@ -599,7 +602,7 @@ mod test {
                         None,
                         Some(IDX_STATE1),
                     ))
-                    .initialize()
+                    .initialize(IDX_STATE1)
                     .expect("Unexpected error initializing");
 
                 sme
@@ -638,7 +641,7 @@ mod test {
             #[no_coverage]
             fn new() -> StateMachineExecutor<Self, NoMessages> {
                 let sm = StateMachine;
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE2);
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
 
                 sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
                     .add_state(StateInfo::new(
@@ -648,7 +651,7 @@ mod test {
                         None,
                         Some(IDX_STATE1),
                     ))
-                    .initialize()
+                    .initialize(IDX_STATE2)
                     .expect("Unexpected error initializing");
 
                 sme
@@ -694,10 +697,10 @@ mod test {
             #[no_coverage]
             fn new() -> StateMachineExecutor<Self, NoMessages> {
                 let sm = StateMachine;
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
 
                 sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
-                    .initialize()
+                    .initialize(IDX_STATE1)
                     .expect("Unexpected error initializing");
 
                 sme
@@ -742,7 +745,7 @@ mod test {
             #[no_coverage]
             fn new() -> StateMachineExecutor<Self, Message> {
                 let sm = StateMachine { state: 0 };
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
 
                 sme.add_state(StateInfo::new(
                     "state1",
@@ -751,7 +754,7 @@ mod test {
                     None,
                     None,
                 ))
-                .initialize()
+                .initialize(IDX_STATE1)
                 .expect("Unexpected error initializing");
 
                 sme
@@ -814,11 +817,11 @@ mod test {
             #[no_coverage]
             fn new() -> StateMachineExecutor<Self, Message> {
                 let sm = StateMachine { state: 0 };
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
 
                 sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
                     .add_state(StateInfo::new("state1", None, Self::state2, None, None))
-                    .initialize()
+                    .initialize(IDX_STATE1)
                     .expect("Unexpected error initializing");
 
                 sme
@@ -893,7 +896,7 @@ mod test {
             #[no_coverage]
             fn new() -> StateMachineExecutor<Self, Message> {
                 let sm = StateMachine { state: 0 };
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_CHILD);
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
 
                 sme.add_state(StateInfo::new("parent", None, Self::parent, None, None))
                     .add_state(StateInfo::new(
@@ -903,7 +906,7 @@ mod test {
                         None,
                         Some(IDX_PARENT),
                     ))
-                    .initialize()
+                    .initialize(IDX_CHILD)
                     .expect("Unexpected error initializing");
 
                 sme
@@ -980,7 +983,7 @@ mod test {
             #[no_coverage]
             fn new() -> StateMachineExecutor<Self, NoMessages> {
                 let sm = StateMachine;
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_INITIAL);
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
 
                 sme.add_state(StateInfo::new(
                     "base",
@@ -1003,7 +1006,7 @@ mod test {
                     Some(Self::other_exit),
                     Some(IDX_BASE),
                 ))
-                .initialize()
+                .initialize(IDX_INITIAL)
                 .expect("Unexpected error initializing");
 
                 sme
@@ -1138,7 +1141,7 @@ mod test {
             #[no_coverage]
             fn new() -> StateMachineExecutor<Self, NoMessages> {
                 let sm = StateMachine;
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_INITIAL);
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
 
                 sme.add_state(StateInfo::new(
                     "initial_base",
@@ -1168,7 +1171,7 @@ mod test {
                     Some(Self::other_exit),
                     Some(IDX_OTHER_BASE),
                 ))
-                .initialize()
+                .initialize(IDX_INITIAL)
                 .expect("Unexpected error initializing");
 
                 sme
@@ -1333,7 +1336,7 @@ mod test {
             #[no_coverage]
             fn new() {
                 let sm = StateMachine;
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
 
                 // Add state that has itself as it's parent
                 let r = sme
@@ -1344,7 +1347,7 @@ mod test {
                         None,
                         Some(IDX_STATE1),
                     ))
-                    .initialize();
+                    .initialize(IDX_STATE1);
                 match r {
                     Ok(()) => panic!("Expected a cycle it wasn't detected"),
                     Err(e) => assert_eq!(e.to_string(), "Cycle detected"),
@@ -1384,7 +1387,7 @@ mod test {
             #[no_coverage]
             fn new() {
                 let sm = StateMachine;
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
 
                 // Add state that has itself as it's parent
                 let r = sme
@@ -1396,7 +1399,7 @@ mod test {
                         Some(IDX_STATE1),
                     ))
                     .add_state(StateInfo::new("state2", None, Self::state2, None, None))
-                    .initialize();
+                    .initialize(IDX_STATE1);
                 match r {
                     Ok(()) => panic!("Expected a cycle it wasn't detected"),
                     Err(e) => assert_eq!(e.to_string(), "Cycle detected"),
@@ -1442,7 +1445,7 @@ mod test {
             #[no_coverage]
             fn new() {
                 let sm = StateMachine;
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
 
                 // Add state that has itself as it's parent
                 let r = sme
@@ -1460,7 +1463,7 @@ mod test {
                         None,
                         Some(IDX_STATE1),
                     ))
-                    .initialize();
+                    .initialize(IDX_STATE1);
                 match r {
                     Ok(()) => panic!("Expected a cycle it wasn't detected"),
                     Err(e) => assert_eq!(e.to_string(), "Cycle detected"),
@@ -1505,7 +1508,7 @@ mod test {
             #[no_coverage]
             fn new() {
                 let sm = StateMachine;
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
 
                 // Add state that has itself as it's parent
                 let r = sme
@@ -1524,7 +1527,7 @@ mod test {
                         Some(IDX_STATE1),
                     ))
                     .add_state(StateInfo::new("state3", None, Self::state3, None, None))
-                    .initialize();
+                    .initialize(IDX_STATE1);
                 match r {
                     Ok(()) => panic!("Expected a cycle it wasn't detected"),
                     Err(e) => assert_eq!(e.to_string(), "Cycle detected"),
@@ -1584,7 +1587,7 @@ mod test {
             #[no_coverage]
             fn new() {
                 let sm = StateMachine;
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES, IDX_STATE1);
+                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
 
                 // Add state that has itself as it's parent
                 let r = sme
@@ -1623,7 +1626,7 @@ mod test {
                         None,
                         Some(IDX_STATE3),
                     ))
-                    .initialize();
+                    .initialize(IDX_STATE1);
                 match r {
                     Ok(()) => panic!("Expected a cycle it wasn't detected"),
                     Err(e) => assert_eq!(e.to_string(), "Cycle detected"),
