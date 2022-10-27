@@ -1,35 +1,27 @@
 ![code-coverage](coverage/html/badges/flat.svg)
 
-# Attempt to use an executor model
+# Separate StateMachine from the code that executes it
 
-An Executor Model where there is a seperation between
-the Users `StateMachine` and the code that executes the
-state machine, `StateMachineExecutor`.
+In this model there is an `Executor` and the `StateMachine`. The user
+creates the state machine and then passes it to `Executor::new()` which
+builds the Executor.
 
 ## Run
 
 Debug:
 ```
 $ cargo run
-   Compiling memchr v2.5.0
-   Compiling libc v0.2.126
-   ..
-   Compiling hsm0-executor v0.3.0 (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/hsm0-executor)
-    Finished dev [unoptimized + debuginfo] target(s) in 2.31s
+    Finished dev [unoptimized + debuginfo] target(s) in 0.01s
      Running `/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/hsm0-executor`
 main
-[2022-10-23T18:08:11.763590830Z INFO  hsm0_executor  163  1] main:+
-[2022-10-23T18:08:11.763635314Z INFO  hsm0_executor  167  1] main:-
+[2022-10-27T21:59:10.109484354Z INFO  hsm0_executor  163  1] main:+
+[2022-10-27T21:59:10.109526463Z INFO  hsm0_executor  167  1] main:-
 ```
 
 Release:
 ```
 $ cargo run --release
-   Compiling memchr v2.5.0
-   Compiling libc v0.2.126
-   ...
-   Compiling hsm0-executor v0.3.0 (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/hsm0-executor)
-    Finished release [optimized] target(s) in 2.92s
+    Finished release [optimized] target(s) in 0.02s
      Running `/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/release/hsm0-executor`
 main
 ```
@@ -38,23 +30,32 @@ main
 
 ```
 $ cargo test
-   Compiling hsm0-executor v0.3.0 (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/hsm0-executor)
-    Finished test [unoptimized + debuginfo] target(s) in 0.37s
-     Running unittests src/lib.rs (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/deps/hsm0_executor-8f4c28fe171892bf)
+   Compiling hsm0-executor v0.6.0 (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/hsm0-executor)
+    Finished test [unoptimized + debuginfo] target(s) in 0.46s
+     Running unittests src/lib.rs (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/deps/hsm0_executor-66fb8aaa1aba2c1e)
 
-running 8 tests
-test test::test_leaf_transitions_in_a_tree ... ok
+running 17 tests
+test test::test_1s_cycle ... ok
+test test::test_2s_one_self_cycle ... ok
+test test::test_2s_cycle ... ok
+test test::test_3s_one_cycle ... ok
+test test::test_5s_long_cycle ... ok
 test test::test_leaf_transitions_between_trees ... ok
 test test::test_sm_1h_2s_not_handled_no_enter_no_exit ... ok
 test test::test_sm_1s_enter_no_exit ... ok
+test test::test_leaf_transitions_in_a_tree ... ok
 test test::test_sm_1s_get_names ... ok
 test test::test_sm_1s_no_enter_no_exit ... ok
 test test::test_sm_2s_get_names ... ok
 test test::test_sm_2s_no_enter_no_exit ... ok
+test test::test_sm_2s_invalid_transition - should panic ... ok
+test test::test_sm_invalid_initial_state - should panic ... ok
+test test::test_sm_out_of_bounds_initial_transition - should panic ... ok
+test test::test_sm_out_of_bounds_invalid_transition - should panic ... ok
 
-test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running unittests src/main.rs (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/deps/hsm0_executor-4025c8c27d8102c6)
+     Running unittests src/main.rs (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/deps/hsm0_executor-9723d24c8ebea6da)
 
 running 0 tests
 
@@ -90,23 +91,47 @@ execute `google-chrome coverage/html/index.html` at the command line:
 
 ```
 $ cargo xt gen-cov
-    Finished dev [unoptimized + debuginfo] target(s) in 0.01s
+   Compiling xtask v0.1.0 (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/xtask)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.32s
      Running `/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/xtask gen-cov`
+Run cargo clean []
 Create profraw data at /home/wink/prgs/rust/myrepos/proc-macro-hsm1/hsm0-executor/coverage
-    Finished test [unoptimized + debuginfo] target(s) in 0.02s
-     Running unittests src/lib.rs (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/deps/hsm0_executor-8a71702aeb1d740f)
+   Compiling memchr v2.5.0
+   Compiling libc v0.2.126
+   Compiling log v0.4.17
+   Compiling regex-syntax v0.6.27
+   Compiling cfg-if v1.0.0
+   Compiling termcolor v1.1.3
+   Compiling humantime v2.1.0
+   Compiling aho-corasick v0.7.18
+   Compiling atty v0.2.14
+   Compiling regex v1.6.0
+   Compiling env_logger v0.9.1
+   Compiling custom-logger v0.1.0 (https://github.com/winksaville/custom-logger#4d828a35)
+   Compiling hsm0-executor v0.6.0 (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/hsm0-executor)
+    Finished test [unoptimized + debuginfo] target(s) in 3.64s
+     Running unittests src/lib.rs (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/deps/hsm0_executor-4748ba702caea268)
 
-running 8 tests
-test test::test_leaf_transitions_in_a_tree ... ok
+running 17 tests
+test test::test_2s_cycle ... ok
+test test::test_2s_one_self_cycle ... ok
+test test::test_5s_long_cycle ... ok
 test test::test_leaf_transitions_between_trees ... ok
-test test::test_sm_1h_2s_not_handled_no_enter_no_exit ... ok
-test test::test_sm_1s_get_names ... ok
-test test::test_sm_1s_enter_no_exit ... ok
 test test::test_sm_1s_no_enter_no_exit ... ok
-test test::test_sm_2s_get_names ... ok
+test test::test_leaf_transitions_in_a_tree ... ok
+test test::test_3s_one_cycle ... ok
+test test::test_sm_1s_get_names ... ok
+test test::test_sm_invalid_initial_state - should panic ... ok
+test test::test_1s_cycle ... ok
+test test::test_sm_1h_2s_not_handled_no_enter_no_exit ... ok
 test test::test_sm_2s_no_enter_no_exit ... ok
+test test::test_sm_out_of_bounds_invalid_transition - should panic ... ok
+test test::test_sm_2s_invalid_transition - should panic ... ok
+test test::test_sm_1s_enter_no_exit ... ok
+test test::test_sm_2s_get_names ... ok
+test test::test_sm_out_of_bounds_initial_transition - should panic ... ok
 
-test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
 Create /home/wink/prgs/rust/myrepos/proc-macro-hsm1/hsm0-executor/coverage/html
 Create /home/wink/prgs/rust/myrepos/proc-macro-hsm1/hsm0-executor/coverage/tests.lcov
