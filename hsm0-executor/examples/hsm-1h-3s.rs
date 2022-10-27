@@ -1,6 +1,6 @@
 use custom_logger::env_logger_init;
 
-use hsm0_executor::{DynError, StateInfo, StateMachineExecutor, StateResult};
+use hsm0_executor::{DynError, Executor, StateInfo, StateResult};
 
 // StateMachine simply transitions back and forth
 // between initial and other.
@@ -23,25 +23,25 @@ const IDX_INITIAL: usize = 1;
 const IDX_OTHER: usize = 2;
 
 impl StateMachine {
-    pub fn new() -> Result<StateMachineExecutor<Self, NoMessages>, DynError> {
+    pub fn new() -> Result<Executor<Self, NoMessages>, DynError> {
         let sm = StateMachine::default();
-        let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
+        let mut sme = Executor::new(sm, MAX_STATES);
 
-        sme.add_state(StateInfo::new(
+        sme.state(StateInfo::new(
             "base",
             Some(Self::base_enter),
             Self::base,
             Some(Self::base_exit),
             None,
         ))
-        .add_state(StateInfo::new(
+        .state(StateInfo::new(
             "initial",
             Some(Self::initial_enter),
             Self::initial,
             Some(Self::initial_exit),
             Some(IDX_BASE),
         ))
-        .add_state(StateInfo::new(
+        .state(StateInfo::new(
             "other",
             Some(Self::other_enter),
             Self::other,

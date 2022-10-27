@@ -49,7 +49,7 @@ impl<SM, P> StateInfo<SM, P> {
     }
 }
 
-pub struct StateMachineExecutor<SM, P> {
+pub struct Executor<SM, P> {
     //pub name: String, // TODO: add StateMachineInfo::name
     pub sm: SM,
     pub states: Vec<StateInfo<SM, P>>,
@@ -66,12 +66,12 @@ pub struct StateMachineExecutor<SM, P> {
     pub transition_targets_set: Vec<bool>,
 }
 
-impl<SM, P> StateMachineExecutor<SM, P> {
+impl<SM, P> Executor<SM, P> {
     // Begin building an executor.
     //
     // You must call add_state to add one or more states
-    pub fn build(sm: SM, max_states: usize) -> Self {
-        StateMachineExecutor {
+    pub fn new(sm: SM, max_states: usize) -> Self {
+        Executor {
             sm,
             states: Vec::<StateInfo<SM, P>>::with_capacity(max_states),
             current_state_changed: true,
@@ -85,7 +85,7 @@ impl<SM, P> StateMachineExecutor<SM, P> {
     }
 
     // Add a state to the the executor
-    pub fn add_state(&mut self, state_info: StateInfo<SM, P>) -> &mut Self {
+    pub fn state(&mut self, state_info: StateInfo<SM, P>) -> &mut Self {
         self.states.push(state_info);
 
         self
@@ -378,11 +378,11 @@ mod test {
 
         impl StateMachine {
             #[no_coverage]
-            fn new() -> StateMachineExecutor<Self, NoMessages> {
+            fn new() -> Executor<Self, NoMessages> {
                 let sm = StateMachine { state: 0 };
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
+                let mut sme = Executor::new(sm, MAX_STATES);
 
-                sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
+                sme.state(StateInfo::new("state1", None, Self::state1, None, None))
                     .initialize(IDX_STATE1)
                     .expect("Unexpected error initializing");
 
@@ -434,11 +434,11 @@ mod test {
 
         impl StateMachine {
             #[no_coverage]
-            fn new() -> StateMachineExecutor<Self, NoMessages> {
+            fn new() -> Executor<Self, NoMessages> {
                 let sm = StateMachine { state: 0 };
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
+                let mut sme = Executor::new(sm, MAX_STATES);
 
-                sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
+                sme.state(StateInfo::new("state1", None, Self::state1, None, None))
                     .initialize(IDX_STATE1)
                     .expect("Unexpected error initializing");
 
@@ -487,12 +487,12 @@ mod test {
 
         impl StateMachine {
             #[no_coverage]
-            fn new() -> StateMachineExecutor<Self, NoMessages> {
+            fn new() -> Executor<Self, NoMessages> {
                 let sm = StateMachine { state: 0 };
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
+                let mut sme = Executor::new(sm, MAX_STATES);
 
-                sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
-                    .add_state(StateInfo::new("state2", None, Self::state2, None, None))
+                sme.state(StateInfo::new("state1", None, Self::state1, None, None))
+                    .state(StateInfo::new("state2", None, Self::state2, None, None))
                     .initialize(IDX_STATE1)
                     .expect("Unexpected error initializing");
 
@@ -546,11 +546,11 @@ mod test {
 
         impl StateMachine {
             #[no_coverage]
-            fn new() -> StateMachineExecutor<Self, NoMessages> {
+            fn new() -> Executor<Self, NoMessages> {
                 let sm = StateMachine;
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
+                let mut sme = Executor::new(sm, MAX_STATES);
 
-                sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
+                sme.state(StateInfo::new("state1", None, Self::state1, None, None))
                     .initialize(INVALID_STATE)
                     .expect("Unexpected error initializing");
 
@@ -590,12 +590,12 @@ mod test {
 
         impl StateMachine {
             #[no_coverage]
-            fn new() -> StateMachineExecutor<Self, NoMessages> {
+            fn new() -> Executor<Self, NoMessages> {
                 let sm = StateMachine;
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
+                let mut sme = Executor::new(sm, MAX_STATES);
 
-                sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
-                    .add_state(StateInfo::new(
+                sme.state(StateInfo::new("state1", None, Self::state1, None, None))
+                    .state(StateInfo::new(
                         "state1",
                         None,
                         Self::state2,
@@ -639,12 +639,12 @@ mod test {
 
         impl StateMachine {
             #[no_coverage]
-            fn new() -> StateMachineExecutor<Self, NoMessages> {
+            fn new() -> Executor<Self, NoMessages> {
                 let sm = StateMachine;
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
+                let mut sme = Executor::new(sm, MAX_STATES);
 
-                sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
-                    .add_state(StateInfo::new(
+                sme.state(StateInfo::new("state1", None, Self::state1, None, None))
+                    .state(StateInfo::new(
                         "state1",
                         None,
                         Self::state2,
@@ -695,11 +695,11 @@ mod test {
 
         impl StateMachine {
             #[no_coverage]
-            fn new() -> StateMachineExecutor<Self, NoMessages> {
+            fn new() -> Executor<Self, NoMessages> {
                 let sm = StateMachine;
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
+                let mut sme = Executor::new(sm, MAX_STATES);
 
-                sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
+                sme.state(StateInfo::new("state1", None, Self::state1, None, None))
                     .initialize(IDX_STATE1)
                     .expect("Unexpected error initializing");
 
@@ -743,11 +743,11 @@ mod test {
 
         impl StateMachine {
             #[no_coverage]
-            fn new() -> StateMachineExecutor<Self, Message> {
+            fn new() -> Executor<Self, Message> {
                 let sm = StateMachine { state: 0 };
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
+                let mut sme = Executor::new(sm, MAX_STATES);
 
-                sme.add_state(StateInfo::new(
+                sme.state(StateInfo::new(
                     "state1",
                     Some(Self::state1_enter),
                     Self::state1,
@@ -815,12 +815,12 @@ mod test {
 
         impl StateMachine {
             #[no_coverage]
-            fn new() -> StateMachineExecutor<Self, Message> {
+            fn new() -> Executor<Self, Message> {
                 let sm = StateMachine { state: 0 };
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
+                let mut sme = Executor::new(sm, MAX_STATES);
 
-                sme.add_state(StateInfo::new("state1", None, Self::state1, None, None))
-                    .add_state(StateInfo::new("state1", None, Self::state2, None, None))
+                sme.state(StateInfo::new("state1", None, Self::state1, None, None))
+                    .state(StateInfo::new("state1", None, Self::state2, None, None))
                     .initialize(IDX_STATE1)
                     .expect("Unexpected error initializing");
 
@@ -894,12 +894,12 @@ mod test {
 
         impl StateMachine {
             #[no_coverage]
-            fn new() -> StateMachineExecutor<Self, Message> {
+            fn new() -> Executor<Self, Message> {
                 let sm = StateMachine { state: 0 };
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
+                let mut sme = Executor::new(sm, MAX_STATES);
 
-                sme.add_state(StateInfo::new("parent", None, Self::parent, None, None))
-                    .add_state(StateInfo::new(
+                sme.state(StateInfo::new("parent", None, Self::parent, None, None))
+                    .state(StateInfo::new(
                         "child",
                         None,
                         Self::child,
@@ -981,25 +981,25 @@ mod test {
 
         impl StateMachine {
             #[no_coverage]
-            fn new() -> StateMachineExecutor<Self, NoMessages> {
+            fn new() -> Executor<Self, NoMessages> {
                 let sm = StateMachine;
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
+                let mut sme = Executor::new(sm, MAX_STATES);
 
-                sme.add_state(StateInfo::new(
+                sme.state(StateInfo::new(
                     "base",
                     Some(Self::base_enter),
                     Self::base,
                     None,
                     None,
                 ))
-                .add_state(StateInfo::new(
+                .state(StateInfo::new(
                     "initial",
                     Some(Self::initial_enter),
                     Self::initial,
                     Some(Self::initial_exit),
                     Some(IDX_BASE),
                 ))
-                .add_state(StateInfo::new(
+                .state(StateInfo::new(
                     "other",
                     Some(Self::other_enter),
                     Self::other,
@@ -1139,32 +1139,32 @@ mod test {
 
         impl StateMachine {
             #[no_coverage]
-            fn new() -> StateMachineExecutor<Self, NoMessages> {
+            fn new() -> Executor<Self, NoMessages> {
                 let sm = StateMachine;
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
+                let mut sme = Executor::new(sm, MAX_STATES);
 
-                sme.add_state(StateInfo::new(
+                sme.state(StateInfo::new(
                     "initial_base",
                     Some(Self::initial_base_enter),
                     Self::initial_base,
                     Some(Self::initial_base_exit),
                     None,
                 ))
-                .add_state(StateInfo::new(
+                .state(StateInfo::new(
                     "initial",
                     Some(Self::initial_enter),
                     Self::initial,
                     Some(Self::initial_exit),
                     Some(IDX_INITIAL_BASE),
                 ))
-                .add_state(StateInfo::new(
+                .state(StateInfo::new(
                     "other_base",
                     Some(Self::other_base_enter),
                     Self::other_base,
                     Some(Self::other_base_exit),
                     None,
                 ))
-                .add_state(StateInfo::new(
+                .state(StateInfo::new(
                     "other",
                     Some(Self::other_enter),
                     Self::other,
@@ -1336,11 +1336,11 @@ mod test {
             #[no_coverage]
             fn new() {
                 let sm = StateMachine;
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
+                let mut sme = Executor::new(sm, MAX_STATES);
 
                 // Add state that has itself as it's parent
                 let r = sme
-                    .add_state(StateInfo::new(
+                    .state(StateInfo::new(
                         "state1",
                         None,
                         Self::state1,
@@ -1387,18 +1387,18 @@ mod test {
             #[no_coverage]
             fn new() {
                 let sm = StateMachine;
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
+                let mut sme = Executor::new(sm, MAX_STATES);
 
                 // Add state that has itself as it's parent
                 let r = sme
-                    .add_state(StateInfo::new(
+                    .state(StateInfo::new(
                         "state1",
                         None,
                         Self::state1,
                         None,
                         Some(IDX_STATE1),
                     ))
-                    .add_state(StateInfo::new("state2", None, Self::state2, None, None))
+                    .state(StateInfo::new("state2", None, Self::state2, None, None))
                     .initialize(IDX_STATE1);
                 match r {
                     Ok(()) => panic!("Expected a cycle it wasn't detected"),
@@ -1445,18 +1445,18 @@ mod test {
             #[no_coverage]
             fn new() {
                 let sm = StateMachine;
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
+                let mut sme = Executor::new(sm, MAX_STATES);
 
                 // Add state that has itself as it's parent
                 let r = sme
-                    .add_state(StateInfo::new(
+                    .state(StateInfo::new(
                         "state1",
                         None,
                         Self::state1,
                         None,
                         Some(IDX_STATE2),
                     ))
-                    .add_state(StateInfo::new(
+                    .state(StateInfo::new(
                         "state2",
                         None,
                         Self::state2,
@@ -1508,25 +1508,25 @@ mod test {
             #[no_coverage]
             fn new() {
                 let sm = StateMachine;
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
+                let mut sme = Executor::new(sm, MAX_STATES);
 
                 // Add state that has itself as it's parent
                 let r = sme
-                    .add_state(StateInfo::new(
+                    .state(StateInfo::new(
                         "state1",
                         None,
                         Self::state1,
                         None,
                         Some(IDX_STATE2),
                     ))
-                    .add_state(StateInfo::new(
+                    .state(StateInfo::new(
                         "state2",
                         None,
                         Self::state2,
                         None,
                         Some(IDX_STATE1),
                     ))
-                    .add_state(StateInfo::new("state3", None, Self::state3, None, None))
+                    .state(StateInfo::new("state3", None, Self::state3, None, None))
                     .initialize(IDX_STATE1);
                 match r {
                     Ok(()) => panic!("Expected a cycle it wasn't detected"),
@@ -1587,39 +1587,39 @@ mod test {
             #[no_coverage]
             fn new() {
                 let sm = StateMachine;
-                let mut sme = StateMachineExecutor::build(sm, MAX_STATES);
+                let mut sme = Executor::new(sm, MAX_STATES);
 
                 // Add state that has itself as it's parent
                 let r = sme
-                    .add_state(StateInfo::new(
+                    .state(StateInfo::new(
                         "state1",
                         None,
                         Self::state1,
                         None,
                         Some(IDX_STATE3),
                     ))
-                    .add_state(StateInfo::new(
+                    .state(StateInfo::new(
                         "state2",
                         None,
                         Self::state2,
                         None,
                         Some(IDX_STATE1),
                     ))
-                    .add_state(StateInfo::new(
+                    .state(StateInfo::new(
                         "state3",
                         None,
                         Self::state3,
                         None,
                         Some(IDX_STATE2),
                     ))
-                    .add_state(StateInfo::new(
+                    .state(StateInfo::new(
                         "state4",
                         None,
                         Self::state4,
                         None,
                         Some(IDX_STATE3),
                     ))
-                    .add_state(StateInfo::new(
+                    .state(StateInfo::new(
                         "state5",
                         None,
                         Self::state5,
