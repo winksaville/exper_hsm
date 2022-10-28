@@ -7,12 +7,14 @@ type ProcessFn<SM, P> = fn(&mut SM, &P) -> StateResult;
 type EnterFn<SM, P> = fn(&mut SM, &P);
 type ExitFn<SM, P> = fn(&mut SM, &P);
 
-pub enum StateResult {
-    NotHandled,
-    NotHandledTransitionTo(usize),
-    Handled,
-    HandledTransitionTo(usize),
+pub enum Handled {
+    Yes,
+    No,
 }
+
+pub type Transition = usize;
+
+pub type StateResult = (Handled, Option<Transition>);
 
 pub struct StateInfo<SM, P> {
     pub name: String,
@@ -308,8 +310,15 @@ impl<SM, P> Executor<SM, P> {
         //log::trace!("dispatch_idx: processing idx={} {}", idx, self.state_name(idx));
 
         self.states[idx].process_cnt += 1;
-        match (self.states[idx].process)(&mut self.sm, msg) {
-            StateResult::NotHandled => {
+        let (handled, transition) = (self.states[idx].process)(&mut self.sm, msg);
+        if let Some(idx_next_state) = transition {
+            if self.idx_transition_dest.is_none() {
+                // First Transition it will be the idx_transition_dest
+                self.idx_transition_dest = Some(idx_next_state);
+            }
+        }
+        match handled {
+            Handled::No => {
                 if let Some(idx_parent) = self.states[idx].parent {
                     //log::trace!("dispatch_idx: idx={} {} NotHandled, recurse into dispatch_idx", idx, self.state_name(idx));
                     self.dispatch_idx(msg, idx_parent);
@@ -318,36 +327,15 @@ impl<SM, P> Executor<SM, P> {
                 //    log::trace!("dispatch_idx: idx={} {}, NotHandled, no parent, ignoring messages", idx, self.state_name(idx));
                 //}
             }
-            StateResult::NotHandledTransitionTo (idx_next_state )  => {
-                if self.idx_transition_dest.is_none() {
-                    // First Transition it will be the idx_transition_dest
-                    self.idx_transition_dest = Some(idx_next_state);
-                }
-                if let Some(idx_parent) = self.states[idx].parent {
-                    //log::trace!("dispatch_idx: idx={} {} NotHandledTransitionTo, recurse into dispatch_idx", idx, self.state_name(idx));
-                    self.dispatch_idx(msg, idx_parent);
-                }
-                //} else {
-                //    log::trace!("dispatch_idx: idx={} {}, NotHandledTransitionTo, no parent, ignoring messages", idx, self.state_name(idx));
-                //}
-            }
-            StateResult::Handled => {
+            Handled::Yes => {
                 // Nothing to do
                 //log::trace!("dispatch_idx: idx={} {} Handled", idx, self.state_name(idx));
-            }
-            StateResult::HandledTransitionTo(idx_next_state) => {
-                if self.idx_transition_dest.is_none() {
-                    // First Transition it will be the idx_transition_dest
-                    self.idx_transition_dest = Some(idx_next_state);
-                }
-                //log::trace!("dispatch_idx: idx={} {} HandledTransitionTo", idx, self.state_name(idx));
             }
         }
 
         if let Some(idx_next_state) = self.idx_transition_dest {
             self.idx_transition_dest = None;
-            if idx_next_state < self.states.len() && self.transition_targets_set[idx_next_state]
-            {
+            if idx_next_state < self.states.len() && self.transition_targets_set[idx_next_state] {
                 //log::trace!("dispatch_idx: transition_to idx={} {}", idx_next_state, self.state_name(idx_next_state));
                 self.setup_exit_enter_fns_idxs(idx_next_state);
 
@@ -418,7 +406,8 @@ mod test {
             fn state1(&mut self, _msg: &NoMessages) -> StateResult {
                 self.state += 1;
 
-                StateResult::Handled
+                (Handled::Yes, None)
+                //(Handled::Yes, None)
             }
         }
 
@@ -474,7 +463,7 @@ mod test {
             fn state1(&mut self, _msg: &NoMessages) -> StateResult {
                 self.state += 1;
 
-                StateResult::Handled
+                (Handled::Yes, None)
             }
         }
 
@@ -528,14 +517,14 @@ mod test {
             fn state1(&mut self, _msg: &NoMessages) -> StateResult {
                 self.state += 1;
 
-                StateResult::HandledTransitionTo(IDX_STATE2)
+                (Handled::Yes, Some(IDX_STATE2))
             }
 
             #[no_coverage]
             fn state2(&mut self, _msg: &NoMessages) -> StateResult {
                 self.state -= 1;
 
-                StateResult::HandledTransitionTo(IDX_STATE1)
+                (Handled::Yes, Some(IDX_STATE1))
             }
         }
 
@@ -585,7 +574,7 @@ mod test {
             #[no_coverage]
             fn state1(&mut self, _: &NoMessages) -> StateResult {
                 // Invalid transition that is not less than MAX_STATES
-                StateResult::HandledTransitionTo(1)
+                (Handled::Yes, Some(1))
             }
         }
 
@@ -635,13 +624,13 @@ mod test {
 
             #[no_coverage]
             fn state1(&mut self, _: &NoMessages) -> StateResult {
-                StateResult::Handled
+                (Handled::Yes, None)
             }
 
             #[no_coverage]
             fn state2(&mut self, _: &NoMessages) -> StateResult {
                 // Invalid transition IDX_STATE1 isn't a leaf
-                StateResult::HandledTransitionTo(IDX_STATE1)
+                (Handled::Yes, Some(IDX_STATE1))
             }
         }
 
@@ -684,13 +673,13 @@ mod test {
 
             #[no_coverage]
             fn state1(&mut self, _: &NoMessages) -> StateResult {
-                StateResult::Handled
+                (Handled::Yes, None)
             }
 
             #[no_coverage]
             fn state2(&mut self, _: &NoMessages) -> StateResult {
                 // Invalid transition IDX_STATE1 isn't a leaf
-                StateResult::HandledTransitionTo(IDX_STATE1)
+                (Handled::Yes, Some(IDX_STATE1))
             }
         }
 
@@ -734,7 +723,7 @@ mod test {
             #[no_coverage]
             fn state1(&mut self, _: &NoMessages) -> StateResult {
                 // Invalid transition that is not less than MAX_STATES
-                StateResult::HandledTransitionTo(1)
+                (Handled::Yes, Some(1))
             }
         }
 
@@ -796,7 +785,7 @@ mod test {
                     Message::Add { val } => self.state += val,
                     Message::Sub { val } => self.state -= val,
                 }
-                StateResult::Handled
+                (Handled::Yes, None)
             }
         }
 
@@ -857,7 +846,7 @@ mod test {
                 match msg {
                     Message::Add { val } => self.state += val,
                 }
-                StateResult::HandledTransitionTo(IDX_STATE2)
+                (Handled::Yes, Some(IDX_STATE2))
             }
 
             #[no_coverage]
@@ -865,7 +854,7 @@ mod test {
                 match msg {
                     Message::Add { val } => self.state += 2 * val,
                 }
-                StateResult::HandledTransitionTo(IDX_STATE1)
+                (Handled::Yes, Some(IDX_STATE1))
             }
         }
 
@@ -943,12 +932,12 @@ mod test {
                     Message::Add { val } => self.state += val,
                     Message::Sub { val } => self.state -= val,
                 }
-                StateResult::Handled
+                (Handled::Yes, None)
             }
 
             #[no_coverage]
             fn child(&mut self, _msg: &Message) -> StateResult {
-                StateResult::NotHandled
+                (Handled::No, None)
             }
         }
 
@@ -1042,7 +1031,7 @@ mod test {
             // This state has idx 0
             #[no_coverage]
             fn base(&mut self, _msg: &NoMessages) -> StateResult {
-                StateResult::Handled
+                (Handled::Yes, None)
             }
 
             #[no_coverage]
@@ -1051,7 +1040,7 @@ mod test {
             // This state has idx 0
             #[no_coverage]
             fn initial(&mut self, _msg: &NoMessages) -> StateResult {
-                StateResult::HandledTransitionTo(IDX_OTHER)
+                (Handled::Yes, Some(IDX_OTHER))
             }
 
             #[no_coverage]
@@ -1063,7 +1052,7 @@ mod test {
             // This state has idx 0
             #[no_coverage]
             fn other(&mut self, _msg: &NoMessages) -> StateResult {
-                StateResult::HandledTransitionTo(IDX_INITIAL)
+                (Handled::Yes, Some(IDX_INITIAL))
             }
 
             #[no_coverage]
@@ -1208,7 +1197,7 @@ mod test {
             // This state has hdl 0
             #[no_coverage]
             fn initial_base(&mut self, _msg: &NoMessages) -> StateResult {
-                StateResult::Handled
+                (Handled::Yes, None)
             }
 
             #[no_coverage]
@@ -1220,7 +1209,7 @@ mod test {
             // This state has hdl 0
             #[no_coverage]
             fn initial(&mut self, _msg: &NoMessages) -> StateResult {
-                StateResult::HandledTransitionTo(IDX_OTHER)
+                (Handled::Yes, Some(IDX_OTHER))
             }
 
             #[no_coverage]
@@ -1232,7 +1221,7 @@ mod test {
             // This state has hdl 0
             #[no_coverage]
             fn other_base(&mut self, _msg: &NoMessages) -> StateResult {
-                StateResult::Handled
+                (Handled::Yes, None)
             }
 
             #[no_coverage]
@@ -1244,7 +1233,7 @@ mod test {
             // This state has hdl 0
             #[no_coverage]
             fn other(&mut self, _msg: &NoMessages) -> StateResult {
-                StateResult::HandledTransitionTo(IDX_INITIAL)
+                (Handled::Yes, Some(IDX_INITIAL))
             }
 
             #[no_coverage]
@@ -1381,7 +1370,7 @@ mod test {
 
             #[no_coverage]
             fn state1(&mut self, _msg: &NoMessages) -> StateResult {
-                StateResult::Handled
+                (Handled::Yes, None)
             }
         }
 
@@ -1433,12 +1422,12 @@ mod test {
 
             #[no_coverage]
             fn state1(&mut self, _msg: &NoMessages) -> StateResult {
-                StateResult::Handled
+                (Handled::Yes, None)
             }
 
             #[no_coverage]
             fn state2(&mut self, _msg: &NoMessages) -> StateResult {
-                StateResult::Handled
+                (Handled::Yes, None)
             }
         }
 
@@ -1497,12 +1486,12 @@ mod test {
 
             #[no_coverage]
             fn state1(&mut self, _msg: &NoMessages) -> StateResult {
-                StateResult::Handled
+                (Handled::Yes, None)
             }
 
             #[no_coverage]
             fn state2(&mut self, _msg: &NoMessages) -> StateResult {
-                StateResult::Handled
+                (Handled::Yes, None)
             }
         }
 
@@ -1561,17 +1550,17 @@ mod test {
 
             #[no_coverage]
             fn state1(&mut self, _msg: &NoMessages) -> StateResult {
-                StateResult::Handled
+                (Handled::Yes, None)
             }
 
             #[no_coverage]
             fn state2(&mut self, _msg: &NoMessages) -> StateResult {
-                StateResult::Handled
+                (Handled::Yes, None)
             }
 
             #[no_coverage]
             fn state3(&mut self, _msg: &NoMessages) -> StateResult {
-                StateResult::Handled
+                (Handled::Yes, None)
             }
         }
 
@@ -1660,27 +1649,27 @@ mod test {
 
             #[no_coverage]
             fn state1(&mut self, _msg: &NoMessages) -> StateResult {
-                StateResult::Handled
+                (Handled::Yes, None)
             }
 
             #[no_coverage]
             fn state2(&mut self, _msg: &NoMessages) -> StateResult {
-                StateResult::Handled
+                (Handled::Yes, None)
             }
 
             #[no_coverage]
             fn state3(&mut self, _msg: &NoMessages) -> StateResult {
-                StateResult::Handled
+                (Handled::Yes, None)
             }
 
             #[no_coverage]
             fn state4(&mut self, _msg: &NoMessages) -> StateResult {
-                StateResult::Handled
+                (Handled::Yes, None)
             }
 
             #[no_coverage]
             fn state5(&mut self, _msg: &NoMessages) -> StateResult {
-                StateResult::Handled
+                (Handled::Yes, None)
             }
         }
 
