@@ -1,6 +1,6 @@
 use custom_logger::env_logger_init;
 
-use hsm0_executor::{DynError, Executor, StateInfo, StateResult};
+use hsm0_executor::{DynError, Executor, Handled, StateInfo, StateResult};
 
 // StateMachine simply transitions back and forth
 // between initial and other.
@@ -64,7 +64,7 @@ impl StateMachine {
 
     // This state has hdl 0
     fn base(&mut self, _msg: &NoMessages) -> StateResult {
-        StateResult::Handled
+        (Handled::Yes, None)
     }
 
     fn base_exit(&mut self, _msg: &NoMessages) {}
@@ -73,7 +73,7 @@ impl StateMachine {
 
     // This state has hdl 0
     fn initial(&mut self, _msg: &NoMessages) -> StateResult {
-        StateResult::HandledTransitionTo(IDX_OTHER)
+        (Handled::Yes, Some(IDX_OTHER))
     }
 
     fn initial_exit(&mut self, _msg: &NoMessages) {}
@@ -82,7 +82,7 @@ impl StateMachine {
 
     // This state has hdl 0
     fn other(&mut self, _msg: &NoMessages) -> StateResult {
-        StateResult::HandledTransitionTo(IDX_INITIAL)
+        (Handled::Yes, Some(IDX_INITIAL))
     }
 
     fn other_exit(&mut self, _msg: &NoMessages) {}
