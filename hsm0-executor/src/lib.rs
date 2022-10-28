@@ -9,8 +9,9 @@ type ExitFn<SM, P> = fn(&mut SM, &P);
 
 pub enum StateResult {
     NotHandled,
+    NotHandledTransitionTo(usize),
     Handled,
-    TransitionTo(usize),
+    HandledTransitionTo(usize),
 }
 
 pub struct StateInfo<SM, P> {
@@ -54,6 +55,7 @@ pub struct Executor<SM, P> {
     pub sm: SM,
     pub states: Vec<StateInfo<SM, P>>,
     pub current_state_changed: bool,
+    pub idx_transition_dest: Option<usize>,
     pub idx_current_state: usize,
     pub idx_previous_state: usize,
     pub idxs_enter_fns: Vec<usize>,
@@ -75,6 +77,7 @@ impl<SM, P> Executor<SM, P> {
             sm,
             states: Vec::<StateInfo<SM, P>>::with_capacity(max_states),
             current_state_changed: true,
+            idx_transition_dest: None,
             idx_current_state: 0,
             idx_previous_state: 0,
             idxs_enter_fns: Vec::<usize>::with_capacity(max_states),
@@ -315,25 +318,47 @@ impl<SM, P> Executor<SM, P> {
                 //    log::trace!("dispatch_idx: idx={} {}, NotHandled, no parent, ignoring messages", idx, self.state_name(idx));
                 //}
             }
+            StateResult::NotHandledTransitionTo (idx_next_state )  => {
+                if self.idx_transition_dest.is_none() {
+                    // First Transition it will be the idx_transition_dest
+                    self.idx_transition_dest = Some(idx_next_state);
+                }
+                if let Some(idx_parent) = self.states[idx].parent {
+                    //log::trace!("dispatch_idx: idx={} {} NotHandledTransitionTo, recurse into dispatch_idx", idx, self.state_name(idx));
+                    self.dispatch_idx(msg, idx_parent);
+                }
+                //} else {
+                //    log::trace!("dispatch_idx: idx={} {}, NotHandledTransitionTo, no parent, ignoring messages", idx, self.state_name(idx));
+                //}
+            }
             StateResult::Handled => {
                 // Nothing to do
                 //log::trace!("dispatch_idx: idx={} {} Handled", idx, self.state_name(idx));
             }
-            StateResult::TransitionTo(idx_next_state) => {
-                if idx_next_state < self.states.len() && self.transition_targets_set[idx_next_state]
-                {
-                    //log::trace!("dispatch_idx: transition_to idx={} {}", idx_next_state, self.state_name(idx_next_state));
-                    self.setup_exit_enter_fns_idxs(idx_next_state);
-
-                    self.idx_previous_state = self.idx_current_state;
-                    self.idx_current_state = idx_next_state;
-                    self.current_state_changed = true;
-                } else {
-                    panic!(
-                        "{idx_next_state} is not a valid transition target, only {:?} are allowed",
-                        self.transition_targets
-                    );
+            StateResult::HandledTransitionTo(idx_next_state) => {
+                if self.idx_transition_dest.is_none() {
+                    // First Transition it will be the idx_transition_dest
+                    self.idx_transition_dest = Some(idx_next_state);
                 }
+                //log::trace!("dispatch_idx: idx={} {} HandledTransitionTo", idx, self.state_name(idx));
+            }
+        }
+
+        if let Some(idx_next_state) = self.idx_transition_dest {
+            self.idx_transition_dest = None;
+            if idx_next_state < self.states.len() && self.transition_targets_set[idx_next_state]
+            {
+                //log::trace!("dispatch_idx: transition_to idx={} {}", idx_next_state, self.state_name(idx_next_state));
+                self.setup_exit_enter_fns_idxs(idx_next_state);
+
+                self.idx_previous_state = self.idx_current_state;
+                self.idx_current_state = idx_next_state;
+                self.current_state_changed = true;
+            } else {
+                panic!(
+                    "{idx_next_state} is not a valid transition target, only {:?} are allowed",
+                    self.transition_targets
+                );
             }
         }
 
@@ -503,14 +528,14 @@ mod test {
             fn state1(&mut self, _msg: &NoMessages) -> StateResult {
                 self.state += 1;
 
-                StateResult::TransitionTo(IDX_STATE2)
+                StateResult::HandledTransitionTo(IDX_STATE2)
             }
 
             #[no_coverage]
             fn state2(&mut self, _msg: &NoMessages) -> StateResult {
                 self.state -= 1;
 
-                StateResult::TransitionTo(IDX_STATE1)
+                StateResult::HandledTransitionTo(IDX_STATE1)
             }
         }
 
@@ -560,7 +585,7 @@ mod test {
             #[no_coverage]
             fn state1(&mut self, _: &NoMessages) -> StateResult {
                 // Invalid transition that is not less than MAX_STATES
-                StateResult::TransitionTo(1)
+                StateResult::HandledTransitionTo(1)
             }
         }
 
@@ -616,7 +641,7 @@ mod test {
             #[no_coverage]
             fn state2(&mut self, _: &NoMessages) -> StateResult {
                 // Invalid transition IDX_STATE1 isn't a leaf
-                StateResult::TransitionTo(IDX_STATE1)
+                StateResult::HandledTransitionTo(IDX_STATE1)
             }
         }
 
@@ -665,7 +690,7 @@ mod test {
             #[no_coverage]
             fn state2(&mut self, _: &NoMessages) -> StateResult {
                 // Invalid transition IDX_STATE1 isn't a leaf
-                StateResult::TransitionTo(IDX_STATE1)
+                StateResult::HandledTransitionTo(IDX_STATE1)
             }
         }
 
@@ -709,7 +734,7 @@ mod test {
             #[no_coverage]
             fn state1(&mut self, _: &NoMessages) -> StateResult {
                 // Invalid transition that is not less than MAX_STATES
-                StateResult::TransitionTo(1)
+                StateResult::HandledTransitionTo(1)
             }
         }
 
@@ -832,7 +857,7 @@ mod test {
                 match msg {
                     Message::Add { val } => self.state += val,
                 }
-                StateResult::TransitionTo(IDX_STATE2)
+                StateResult::HandledTransitionTo(IDX_STATE2)
             }
 
             #[no_coverage]
@@ -840,7 +865,7 @@ mod test {
                 match msg {
                     Message::Add { val } => self.state += 2 * val,
                 }
-                StateResult::TransitionTo(IDX_STATE1)
+                StateResult::HandledTransitionTo(IDX_STATE1)
             }
         }
 
@@ -1026,7 +1051,7 @@ mod test {
             // This state has idx 0
             #[no_coverage]
             fn initial(&mut self, _msg: &NoMessages) -> StateResult {
-                StateResult::TransitionTo(IDX_OTHER)
+                StateResult::HandledTransitionTo(IDX_OTHER)
             }
 
             #[no_coverage]
@@ -1038,7 +1063,7 @@ mod test {
             // This state has idx 0
             #[no_coverage]
             fn other(&mut self, _msg: &NoMessages) -> StateResult {
-                StateResult::TransitionTo(IDX_INITIAL)
+                StateResult::HandledTransitionTo(IDX_INITIAL)
             }
 
             #[no_coverage]
@@ -1195,7 +1220,7 @@ mod test {
             // This state has hdl 0
             #[no_coverage]
             fn initial(&mut self, _msg: &NoMessages) -> StateResult {
-                StateResult::TransitionTo(IDX_OTHER)
+                StateResult::HandledTransitionTo(IDX_OTHER)
             }
 
             #[no_coverage]
@@ -1219,7 +1244,7 @@ mod test {
             // This state has hdl 0
             #[no_coverage]
             fn other(&mut self, _msg: &NoMessages) -> StateResult {
-                StateResult::TransitionTo(IDX_INITIAL)
+                StateResult::HandledTransitionTo(IDX_INITIAL)
             }
 
             #[no_coverage]

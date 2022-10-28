@@ -79,7 +79,7 @@ impl StateMachine {
 
     // This state has hdl 0
     fn initial(&mut self, _msg: &NoMessages) -> StateResult {
-        StateResult::TransitionTo(IDX_OTHER)
+        StateResult::HandledTransitionTo(IDX_OTHER)
     }
 
     fn initial_exit(&mut self, _msg: &NoMessages) {}
@@ -97,7 +97,7 @@ impl StateMachine {
 
     // This state has hdl 0
     fn other(&mut self, _msg: &NoMessages) -> StateResult {
-        StateResult::TransitionTo(IDX_INITIAL)
+        StateResult::HandledTransitionTo(IDX_INITIAL)
     }
 
     fn other_exit(&mut self, _msg: &NoMessages) {}
