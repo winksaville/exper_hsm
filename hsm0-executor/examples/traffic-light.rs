@@ -55,7 +55,8 @@ impl Default for InstantWrapper {
 
 
 #[derive(Debug)]
-struct TrafficLight {
+struct  TrafficLight<E> {
+    e: Option<E>,
     color: LightColor,
     change_color_instant: InstantWrapper,
     durations: HashMap<LightColor, Duration>,
@@ -84,19 +85,22 @@ const IDX_RED: usize = 3;
 //      timers be changed should the preempt the current setting
 //      or start after the current setting expires? I think an
 //      argument could go either way.
-impl Default for TrafficLight {
+impl<E> Default for TrafficLight<E> {
     fn default() -> Self {
-        TrafficLight { color: LightColor::Yellow,
+        TrafficLight {
+            e: None,
+            color: LightColor::Yellow,
             change_color_instant: InstantWrapper { instant: Instant::now() },
             durations: HashMap::<LightColor, Duration>::new(),
         }
     }
 }
 
-impl TrafficLight {
+impl<E> TrafficLight<E> {
     pub fn new() -> Result<Executor<Self, Messages>, DynError> {
-        let sm = TrafficLight::default();
+        let sm = TrafficLight::<Executor<TrafficLight, Messages>>::default();
         let mut sme = Executor::new(sm, MAX_STATES);
+        sm.e = Some(sme);
 
         sme.state(StateInfo::new(
             "base",
