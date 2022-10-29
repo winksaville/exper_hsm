@@ -6,22 +6,26 @@ use hsm0_executor::{DynError, Executor, StateInfo, StateResult, Handled};
 
 
 #[derive(Debug, Clone)]
-struct Message {
-    val: i32
+enum Messages {
+    Value {
+        val: i32,
+    },
+    Done,
 }
 
 #[derive(Debug)]
 #[allow(unused)]
 struct SendMsgToSelfSm {
-    self_tx: Sender<Message>,
+    self_tx: Sender<Messages>,
     val: i32
 }
 
 const MAX_STATES: usize = 2;
 const IDX_BASE: usize = 0;
+const IDX_DONE: usize = 0;
 
 impl SendMsgToSelfSm {
-    pub fn new(sender: Sender<Message>) -> Result<Executor<Self, Message>, DynError> {
+    pub fn new(sender: Sender<Messages>) -> Result<Executor<Self, Messages>, DynError> {
         let sm = SendMsgToSelfSm { self_tx: sender, val: 0 };
         let mut sme = Executor::new(sm, MAX_STATES);
 
@@ -29,6 +33,13 @@ impl SendMsgToSelfSm {
             "base",
             None,
             Self::base,
+            None,
+            None,
+        ))
+        .state(StateInfo::new(
+            "done",
+            None,
+            Self::done,
             None,
             None,
         ))
@@ -44,14 +55,46 @@ impl SendMsgToSelfSm {
         Ok(sme)
     }
 
-    fn base(&mut self, msg: &Message) -> StateResult {
-        log::info!("base:+ msg.val={}", msg.val);
+    fn base(&mut self, msg: &Messages) -> StateResult {
 
-        self.val += msg.val;
-        self.self_tx.send(msg.clone()).unwrap();
+        match msg {
+            Messages::Value { val } => {
+                log::info!("base Messages::Value:+ val={}", val);
+                if self.val < 10 {
+                    // Doing work, 
+                    self.val += val;
+                    if self.self_tx.send(msg.clone()).is_ok() {
+                        log::info!("base Messages::Value:- self.val={}", self.val);
+                        (Handled::Yes, None)
+                    } else {
+                        log::info!("base Messages::Value:- ERR so DONE self.val={}", self.val);
+                        (Handled::Yes, Some(IDX_DONE))
+                    }
 
-        log::info!("base:- self.val={}", self.val);
+                } else {
+                    // We're done
+                    self.send_done();
+
+                    log::info!("base Messages::Value:- DONE self.val={}", self.val);
+                    (Handled::Yes, Some(IDX_DONE))
+                }
+            }
+            Messages::Done => {
+                self.send_done();
+                (Handled::Yes, Some(IDX_DONE))
+            }
+        }
+    }
+
+    fn done(&mut self, _msg: &Messages) -> StateResult {
+        // Responsed with Done for any messages
+        self.send_done();
+        log::info!("base:+- self.val={}", self.val);
         (Handled::Yes, None)
+    }
+
+    fn send_done(&mut self) {
+        self.self_tx.send(Messages::Done).ok();
     }
 }
 
@@ -60,16 +103,18 @@ fn main() {
     env_logger_init("info");
     log::info!("main:+");
 
-    let (tx, rx) = std::sync::mpsc::channel::<Message>();
+    let (tx, rx) = std::sync::mpsc::channel::<Messages>();
     let mut sme = SendMsgToSelfSm::new(tx).unwrap();
 
     // Dispatch the first message
-    let msg = Message { val: 1 };
+    let msg = Messages::Value{ val: 1 };
     sme.dispatch(&msg);
 
-    // Receive 10 message from the SendMsgToSelfSm
-    for _ in 0..10 {
-        let m = rx.recv().unwrap();    
+    // Receive messages until SendMsgToSelfSm reports Done or rx is closed
+    while let Ok(m) = rx.recv() {
+        if matches!(m, Messages::Done) {
+            break;
+        }
         sme.dispatch(&m);
     }
 
