@@ -94,9 +94,8 @@ impl Default for TrafficLight {
 }
 
 impl TrafficLight {
-    pub fn new() -> Result<Executor<Self, Messages>, DynError> {
-        let sm = TrafficLight::default();
-        let mut sme = Executor::new(sm, MAX_STATES);
+    pub fn new(self) -> Result<Executor<Self, Messages>, DynError> {
+        let mut sme = Executor::new(self, MAX_STATES);
 
         sme.state(StateInfo::new(
             "base",
@@ -236,7 +235,8 @@ fn main() {
     log::info!("main:+");
 
     let (tx, rx) = std::sync::mpsc::channel::<Messages>();
-    let mut sme = TrafficLight::new().unwrap();
+    let sm = TrafficLight::default();
+    let mut sme = TrafficLight::new(sm).unwrap();
 
     let msg = Messages::Initialize {
         color: LightColor::Green,
