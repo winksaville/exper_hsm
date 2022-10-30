@@ -10,11 +10,12 @@ enum Messages {
     Value {
         val: i32,
     },
-    Done,
+    Done {
+        val: i32,
+    },
 }
 
 #[derive(Debug)]
-#[allow(unused)]
 struct SendMsgToSelfSm {
     self_tx: Sender<Messages>,
     val: i32
@@ -46,7 +47,7 @@ impl SendMsgToSelfSm {
         .initialize(IDX_BASE)
         .expect("Unexpected error initializing");
 
-        log::trace!(
+        log::info!(
             "new: inital state={} idxs_enter_fns={:?}",
             sme.get_current_state_name(),
             sme.idxs_enter_fns
@@ -75,11 +76,11 @@ impl SendMsgToSelfSm {
                     // We're done
                     self.send_done();
 
-                    log::info!("base Messages::Value:- DONE self.val={}", self.val);
+                    log::info!("base Messages::Value:- Done self.val={}", self.val);
                     (Handled::Yes, Some(IDX_DONE))
                 }
             }
-            Messages::Done => {
+            Messages::Done { val: _ } => {
                 self.send_done();
                 (Handled::Yes, Some(IDX_DONE))
             }
@@ -94,12 +95,11 @@ impl SendMsgToSelfSm {
     }
 
     fn send_done(&mut self) {
-        self.self_tx.send(Messages::Done).ok();
+        self.self_tx.send(Messages::Done { val: self.val }).ok();
     }
 }
 
 fn main() {
-    println!("main");
     env_logger_init("info");
     log::info!("main:+");
 
@@ -112,10 +112,16 @@ fn main() {
 
     // Receive messages until SendMsgToSelfSm reports Done or rx is closed
     while let Ok(m) = rx.recv() {
-        if matches!(m, Messages::Done) {
-            break;
+        match m {
+            Messages::Value { val: _ } => {
+                // Dispatch the message received
+                sme.dispatch(&m);
+            }
+            Messages::Done { val } => {
+                println!("main: Done val={val}");
+                break;
+            }
         }
-        sme.dispatch(&m);
     }
 
     log::info!("main:-");
