@@ -1,37 +1,75 @@
-use std::sync::mpsc::{Sender, Receiver};
+use std::{sync::mpsc::{Sender, Receiver, RecvError, SendError, TryRecvError}, rc::Rc, cell::RefCell};
 
 use custom_logger::env_logger_init;
 
 use hsm0_executor::{DynError, Executor, StateInfo, StateResult, Handled};
 
-#[derive(Debug)]
 pub struct MsgMgr<M> {
-    tx: Sender<M>,
-    rx: Receiver<M>,
+    primary_tx: Sender<M>,
+    primary_rx: Receiver<M>,
+    defer_tx: [Sender<M>; 2],
+    defer_rx: [Receiver<M>; 2],
+    current_defer_idx: usize,
 }
 
 impl<M> MsgMgr<M> {
     fn new() -> MsgMgr<M> {
-        let (tx, rx) = std::sync::mpsc::channel::<M>();
+        let (primary_tx, primary_rx) = std::sync::mpsc::channel::<M>();
+        let (defer0_tx, defer0_rx) = std::sync::mpsc::channel::<M>();
+        let (defer1_tx, defer1_rx) = std::sync::mpsc::channel::<M>();
 
         MsgMgr {
-            tx,
-            rx,
+            primary_tx,
+            primary_rx,
+            defer_tx: [defer0_tx, defer1_tx],
+            defer_rx: [defer0_rx, defer1_rx],
+            current_defer_idx: 0,
         }
     }
 
-    fn recveiver(&self) -> &Receiver<M> {
-        &self.rx
+    fn recv(&self) -> Result<M, RecvError> {
+        self.primary_rx.recv()
     }
 
-    fn clone_sender(&self) -> Sender<M> {
-        self.tx.clone()
+    fn try_recv(&self) -> Result<M, TryRecvError> {
+        self.primary_rx.try_recv()
     }
+
+    fn send(&self, m: M) -> Result<(), SendError<M>>  {
+        self.primary_tx.send(m)
+    }
+
+    //fn clone_sender(&self) -> Sender<M> {
+    //    self.primary_tx.clone()
+    //}
+
+    pub fn defer_send(&self,m: M) -> Result<(), SendError<M>> {
+        self.defer_tx[self.current_defer()].send(m)
+    }
+
+    fn defer_try_recv(&self) -> Result<M, TryRecvError> {
+        self.defer_rx[self.other_defer()].try_recv()
+    }
+
+    fn next_defer(&mut self) {
+        self.current_defer_idx = (self.current_defer_idx + 1) % self.defer_tx.len();
+    }
+
+    fn current_defer(&self) -> usize {
+        self.current_defer_idx
+    }
+
+    fn other_defer(&self) -> usize {
+        (self.current_defer_idx + 1) % self.defer_tx.len()
+    }
+
 }
+
+type MsgMgrRcRefCell<M> = Rc<RefCell<MsgMgr<M>>>;
 
 #[derive(Debug, Clone)]
 enum Messages {
-    Value {
+    DeferredValue {
         val: i32,
     },
     Done {
@@ -39,36 +77,40 @@ enum Messages {
     },
 }
 
-#[derive(Debug)]
-struct SendMsgToSelfSm {
-    self_tx: Sender<Messages>,
+struct SendMsgToSelfSm <'a> {
+    mm: &'a MsgMgrRcRefCell<Messages>,
     val: i32
 }
 
-const MAX_STATES: usize = 2;
-const IDX_BASE: usize = 0;
-const IDX_DONE: usize = 0;
+const MAX_STATES: usize = 3;
+const IDX_DEFERRING: usize = 0;
+const IDX_DO_DEFERRED_WORK: usize = 1;
+const IDX_DONE: usize = 2;
 
-impl SendMsgToSelfSm {
-    pub fn new(mm: &MsgMgr<Messages>) -> Result<Executor<Self, Messages>, DynError> {
-        let sm = SendMsgToSelfSm { self_tx: mm.clone_sender(), val: 0 };
+impl<'a> SendMsgToSelfSm<'a> {
+    pub fn new(mm: &'a MsgMgrRcRefCell<Messages>) -> Result<Executor<Self, Messages>, DynError> {
+        let sm = SendMsgToSelfSm { mm, val: 0 };
         let mut sme = Executor::new(sm, MAX_STATES);
 
         sme.state(StateInfo::new(
-            "base",
+            "starting",
             None,
-            Self::base,
+            Self::deferring,
             None,
+            None))
+        .state(StateInfo::new(
+            "deferring",
             None,
-        ))
+            Self::do_deferred_work,
+            None,
+            None))
         .state(StateInfo::new(
             "done",
             None,
             Self::done,
             None,
-            None,
-        ))
-        .initialize(IDX_BASE)
+            None))
+        .initialize(IDX_DEFERRING)
         .expect("Unexpected error initializing");
 
         log::info!(
@@ -80,46 +122,45 @@ impl SendMsgToSelfSm {
         Ok(sme)
     }
 
-    fn base(&mut self, msg: &Messages) -> StateResult {
-
+    fn deferring(&mut self, msg: &Messages) -> StateResult {
         match msg {
-            Messages::Value { val } => {
-                log::info!("base Messages::Value:+ val={}", val);
-                if self.val < 10 {
-                    // Doing work, 
-                    self.val += val;
-                    if self.self_tx.send(msg.clone()).is_ok() {
-                        log::info!("base Messages::Value:- self.val={}", self.val);
-                        (Handled::Yes, None)
-                    } else {
-                        log::info!("base Messages::Value:- ERR so DONE self.val={}", self.val);
-                        (Handled::Yes, Some(IDX_DONE))
-                    }
-
-                } else {
-                    // We're done
-                    self.send_done();
-
-                    log::info!("base Messages::Value:- Done self.val={}", self.val);
-                    (Handled::Yes, Some(IDX_DONE))
-                }
+            Messages::DeferredValue { val } => {
+                log::info!("deferring: Messages::DeferredValue:+ val={}", val);
+                self.mm.borrow().defer_send(msg.clone()).expect("defer_send failed unexpectedly");
+                (Handled::Yes, None)
             }
-            Messages::Done { val: _ } => {
-                self.send_done();
-                (Handled::Yes, Some(IDX_DONE))
+            Messages::Done { val } => {
+                log::info!("deferring: defer Messages::Done val={}", val);
+                self.mm.borrow().defer_send(msg.clone()).expect("defer_send failed unexpectedly");
+                (Handled::Yes, Some(IDX_DO_DEFERRED_WORK))
             }
         }
     }
 
-    fn done(&mut self, _msg: &Messages) -> StateResult {
-        // Responsed with Done for any messages
-        self.send_done();
-        log::info!("base:+- self.val={}", self.val);
-        (Handled::Yes, None)
+    fn do_deferred_work(&mut self, msg: &Messages) -> StateResult {
+        match msg {
+            Messages::DeferredValue { val } => {
+                self.val += val;
+                log::info!("do_deferred_work: Messages::DeferredValue:+ val={} self.val={}", val, self.val);
+
+                (Handled::Yes, None)
+            }
+            Messages::Done { val } => {
+                log::info!("do_deferred_work: defer Messages::Done val={}", val);
+                self.mm.borrow().defer_send(msg.clone()).expect("defer_send failed unexpectedly");
+
+                (Handled::Yes, Some(IDX_DONE))
+            }
+        }
+
     }
 
-    fn send_done(&mut self) {
-        self.self_tx.send(Messages::Done { val: self.val }).ok();
+    fn done(&mut self, _msg: &Messages) -> StateResult {
+        // Responsed with Done for any messages
+        self.mm.borrow().send(Messages::Done { val: self.val }).ok();
+
+        log::info!("done: self.val={}", self.val);
+        (Handled::Yes, None)
     }
 }
 
@@ -127,25 +168,90 @@ fn main() {
     env_logger_init("info");
     log::info!("main:+");
 
-    //let (tx, rx) = std::sync::mpsc::channel::<Messages>();
-    let mm = MsgMgr::<Messages>::new();
-    let mut sme = SendMsgToSelfSm::new(&mm).unwrap();
+    // Create, mm a reference counted RefCell of MsgMgr<Messages>
+    // Which we'll pass a reference to
+    let mm = &Rc::new(RefCell::new(MsgMgr::<Messages>::new()));
+    let mut sme = SendMsgToSelfSm::new(mm).unwrap();
 
-    // Dispatch the first message
-    let msg = Messages::Value{ val: 1 };
-    sme.dispatch(&msg);
+    // Dispatch DeferredValue messages
+    for _ in 0..10 {
+        let msg = Messages::DeferredValue { val: 1 };
+        let transitioned = sme.dispatch(&msg);
+        assert!(!transitioned);
+        println!("main: Sent {msg:?} dispatch ret: {transitioned}");
+    }
 
-    // Receive messages until SendMsgToSelfSm reports Done or rx is closed
-    let rx = mm.recveiver();
-    while let Ok(m) = rx.recv() {
-        match m {
-            Messages::Value { val: _ } => {
-                // Dispatch the message received
-                sme.dispatch(&m);
+    let msg = Messages::Done { val: 0 };
+    let transitioned = sme.dispatch(&msg);
+    println!("main: Sent {msg:?} dispatch ret: {transitioned}");
+
+    assert!(transitioned);
+
+    // Process deferred messages until there are
+    // no transitions and the other deferred channel
+    // is empty.
+    //   DANGER, this could be an endless loop if the
+    //   states processed while deferring transition
+    //   at least once and defers one of the messages!
+    loop {
+        let mut transitioned = false;
+
+        mm.borrow_mut().next_defer();
+        println!("process deferred:+ TOLO other_defer={}", mm.borrow().other_defer());
+
+        // Dispatch deferred messages
+        loop {
+            println!("process deferred:  TOLI other_defer={}", mm.borrow().other_defer());
+
+            let r = mm.borrow().defer_try_recv();
+            match r
+            {
+                Ok(m) => {
+                    transitioned |= sme.dispatch(&m);
+                    if transitioned {
+                        println!("process deferred:  defer_try_recv TRANSITIONED dispatch ret: {transitioned} received m: {:?}", m);
+                    } else {
+                        println!("process deferred:  defer_try_recv dispatch ret: {transitioned} received m: {:?}", m);
+                    }
+                }
+                Err(TryRecvError::Empty) |
+                Err(TryRecvError::Disconnected) => {
+                    println!("process deferred:  BOLI done, Empty/Disconnected");
+                    break;
+                }
             }
-            Messages::Done { val } => {
-                println!("main: Done val={val}");
-                break;
+            println!("process deferred:  BOLI continuing");
+        }
+
+        println!("process deferred:- BOLO transitioned={transitioned}");
+        if !transitioned {
+            break;
+        }
+    }
+
+    // We should now recive one Messages::Done
+    match mm.borrow().recv() {
+        Ok(m) => {
+            match m {
+                Messages::DeferredValue { val: _ } => {
+                    panic!("main: mm.recv() msg: {m:?}");
+                }
+                Messages::Done { val: _ } => {
+                    println!("main: mm.recv() msg: {m:?}");
+                }
+            }
+        }
+        Err(e) => panic!("main: mm.recv() error: {e:?}"),
+    }
+
+    match mm.borrow().try_recv() {
+        Ok(m) => {
+            panic!("main: mm.try_recv() Unexpected msg {m:?}");
+        }
+        Err(e) => {
+            match e {
+                TryRecvError::Empty => println!("main: mm.try_recv() got the expected TryRecvError::Empty"),
+                TryRecvError::Disconnected => panic!("main: mm.try_recv() Uexpected TryRecvError::Disconnected"),
             }
         }
     }
