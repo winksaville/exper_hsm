@@ -364,10 +364,12 @@ impl<SM, P> Executor<SM, P> {
         //log::trace!("dispatch_idx:- idx={} {}", idx, self.state_name(idx));
     }
 
-    pub fn dispatch(&mut self, msg: &P) {
+    pub fn dispatch(&mut self, msg: &P) -> bool {
         //log::trace!( "dispatch:+ current_state_infos_idx={} {}", self.idx_current_state, self.current_state_name());
         self.dispatch_idx(msg, self.idx_current_state);
         //log::trace!( "dispatch:- current_state_infos_idx={} {}", self.idx_current_state, self.current_state_name());
+
+        self.current_state_changed
     }
 }
 
