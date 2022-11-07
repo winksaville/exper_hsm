@@ -2,23 +2,18 @@ use std::sync::mpsc::Sender;
 
 use custom_logger::env_logger_init;
 
-use hsm0_executor::{DynError, Executor, StateInfo, StateResult, Handled};
-
+use hsm0_executor::{DynError, Executor, Handled, StateInfo, StateResult};
 
 #[derive(Debug, Clone)]
 enum Messages {
-    Value {
-        val: i32,
-    },
-    Done {
-        val: i32,
-    },
+    Value { val: i32 },
+    Done { val: i32 },
 }
 
 #[derive(Debug)]
 struct SendMsgToSelfSm {
     self_tx: Sender<Messages>,
-    val: i32
+    val: i32,
 }
 
 const MAX_STATES: usize = 2;
@@ -27,25 +22,16 @@ const IDX_DONE: usize = 0;
 
 impl SendMsgToSelfSm {
     pub fn new(sender: Sender<Messages>) -> Result<Executor<Self, Messages>, DynError> {
-        let sm = SendMsgToSelfSm { self_tx: sender, val: 0 };
+        let sm = SendMsgToSelfSm {
+            self_tx: sender,
+            val: 0,
+        };
         let mut sme = Executor::new(sm, MAX_STATES);
 
-        sme.state(StateInfo::new(
-            "base",
-            None,
-            Self::base,
-            None,
-            None,
-        ))
-        .state(StateInfo::new(
-            "done",
-            None,
-            Self::done,
-            None,
-            None,
-        ))
-        .initialize(IDX_BASE)
-        .expect("Unexpected error initializing");
+        sme.state(StateInfo::new("base", None, Self::base, None, None))
+            .state(StateInfo::new("done", None, Self::done, None, None))
+            .initialize(IDX_BASE)
+            .expect("Unexpected error initializing");
 
         log::info!(
             "new: inital state={} idxs_enter_fns={:?}",
@@ -57,7 +43,6 @@ impl SendMsgToSelfSm {
     }
 
     fn base(&mut self, msg: &Messages) -> StateResult {
-
         match msg {
             Messages::Value { val } => {
                 log::info!("base Messages::Value:+ val={}", val);
@@ -71,7 +56,6 @@ impl SendMsgToSelfSm {
                         log::info!("base Messages::Value:- ERR so DONE self.val={}", self.val);
                         (Handled::Yes, Some(IDX_DONE))
                     }
-
                 } else {
                     // We're done
                     self.send_done();
@@ -107,7 +91,7 @@ fn main() {
     let mut sme = SendMsgToSelfSm::new(tx).unwrap();
 
     // Dispatch the first message
-    let msg = Messages::Value{ val: 1 };
+    let msg = Messages::Value { val: 1 };
     sme.dispatch(&msg);
 
     // Receive messages until SendMsgToSelfSm reports Done or rx is closed
