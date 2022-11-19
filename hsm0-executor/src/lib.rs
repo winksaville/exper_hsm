@@ -3,6 +3,7 @@
 use std::{
     cell::RefCell,
     collections::VecDeque,
+    fmt::Debug,
     rc::Rc,
     sync::mpsc::{Receiver, RecvError, SendError, Sender, TryRecvError},
 };
@@ -82,7 +83,11 @@ pub struct Executor<SM, P> {
     current_defer_idx: usize,
 }
 
-impl<SM, P> Executor<SM, P> {
+impl<SM, P> Executor<SM, P>
+where
+    SM: Debug,
+    P: Debug,
+{
     // Begin building an executor.
     //
     // You must call add_state to add one or more states
@@ -394,6 +399,41 @@ impl<SM, P> Executor<SM, P> {
         self.current_state_changed
     }
 
+    pub fn dispatcher(self: &mut Executor<SM, P>, msg: &P) -> bool {
+        println!("dispatcher:+ msg={msg:?} sm={:?}", self.get_sm());
+        let transitioned = self.dispatch(msg);
+        println!(
+            "dispatcher:  msg={msg:?} sm={:?} ret={transitioned}",
+            self.get_sm()
+        );
+
+        if transitioned {
+            self.next_defer();
+
+            // Dispatch deferred messages
+            loop {
+                match self.defer_try_recv() {
+                    Ok(m) => {
+                        // Transitions while handling previously deferred messages
+                        // will be "ignored" because if we did a "next_defer" here
+                        // the expected order would change as any "newly" deferred
+                        // message would be processed before "older" deferred messages!
+                        println!("dispatcher:  deferred msg={m:?} sm={:?}", self.get_sm());
+                        let transitioned = self.dispatch(&m);
+                        println!(
+                            "dispatcher:  deferred msg={m:?} sm={:?} ret={transitioned}",
+                            self.get_sm()
+                        );
+                    }
+                    Err(TryRecvError::Empty) | Err(TryRecvError::Disconnected) => break,
+                }
+            }
+        }
+
+        println!("dispatcher:- msg={msg:?} sm={:?}", self.get_sm());
+        true
+    }
+
     // Defer support
     pub fn recv(&self) -> Result<P, RecvError> {
         self.primary_rx.recv()
@@ -442,12 +482,13 @@ mod test {
     #[test]
     #[no_coverage]
     fn test_sm_1s_no_enter_no_exit() {
+        #[derive(Debug)]
         pub struct StateMachine {
-            sme: Option<Rc<RefCell<Executor<Self, NoMessages>>>>,
             state: i32,
         }
 
         // Create a Protocol
+        #[derive(Debug)]
         pub struct NoMessages;
 
         const MAX_STATES: usize = 1;
@@ -455,27 +496,15 @@ mod test {
 
         impl StateMachine {
             #[no_coverage]
-            fn new() -> Rc<RefCell<Executor<Self, NoMessages>>> {
-                let sm = Rc::new(RefCell::new(StateMachine {
-                    sme: None,
-                    state: 0,
-                }));
-                let sme = Rc::new(RefCell::new(Executor::new(Rc::clone(&sm), MAX_STATES)));
-                sm.borrow_mut().sme = Some(Rc::clone(&sme));
+            fn new() -> Executor<Self, NoMessages> {
+                let sm = Rc::new(RefCell::new(StateMachine { state: 0 }));
+                let mut sme = Executor::new(Rc::clone(&sm), MAX_STATES);
 
-                sme.borrow_mut()
-                    .state(StateInfo::new("state1", None, Self::state1, None, None))
+                sme.state(StateInfo::new("state1", None, Self::state1, None, None))
                     .initialize(IDX_STATE1)
                     .expect("Unexpected error initializing");
 
                 sme
-            }
-
-            fn _get_sme(&self) -> Rc<RefCell<Executor<Self, NoMessages>>> {
-                match &self.sme {
-                    Some(sme) => Rc::clone(&sme),
-                    None => panic!("StateMachine::sme not initialized"),
-                }
             }
 
             #[no_coverage]
@@ -494,24 +523,24 @@ mod test {
         }
 
         // Create a sme and validate it's in the expected state
-        let sme = StateMachine::new();
-        assert_eq!(std::mem::size_of_val(sme.borrow().get_sm()), 8);
-        assert_eq!(sme.borrow().get_state_enter_cnt(IDX_STATE1), 0);
-        assert_eq!(sme.borrow().get_state_process_cnt(IDX_STATE1), 0);
-        assert_eq!(sme.borrow().get_state_exit_cnt(IDX_STATE1), 0);
-        assert_eq!(sme.borrow().get_sm().borrow().state, 0);
+        let mut sme = StateMachine::new();
+        assert_eq!(std::mem::size_of_val(sme.get_sm()), 8);
+        assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_sm().borrow().state, 0);
 
-        sme.borrow_mut().dispatch(&NoMessages);
-        assert_eq!(sme.borrow().get_state_enter_cnt(IDX_STATE1), 0);
-        assert_eq!(sme.borrow().get_state_process_cnt(IDX_STATE1), 1);
-        assert_eq!(sme.borrow().get_state_exit_cnt(IDX_STATE1), 0);
-        assert_eq!(sme.borrow().get_sm().borrow().state, 1);
+        sme.dispatcher(&NoMessages);
+        assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 1);
+        assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_sm().borrow().state, 1);
 
-        sme.borrow_mut().dispatch(&NoMessages);
-        assert_eq!(sme.borrow().get_state_enter_cnt(IDX_STATE1), 0);
-        assert_eq!(sme.borrow().get_state_process_cnt(IDX_STATE1), 2);
-        assert_eq!(sme.borrow().get_state_exit_cnt(IDX_STATE1), 0);
-        assert_eq!(sme.borrow().get_sm().borrow().state, 2);
+        sme.dispatcher(&NoMessages);
+        assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 2);
+        assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
+        assert_eq!(sme.get_sm().borrow().state, 2);
     }
 
     //// Test SM with one state getting names

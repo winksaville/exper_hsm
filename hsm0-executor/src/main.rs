@@ -3,12 +3,13 @@ use std::{cell::RefCell, rc::Rc};
 
 use hsm0_executor::{Executor, Handled, StateInfo, StateResult};
 
+#[derive(Debug)]
 pub struct StateMachine {
     state: i32,
 }
 
 // Create a Protocol
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum Messages {
     Val { val: i32 },
 }
@@ -70,27 +71,36 @@ fn main() {
     assert_eq!(sme.get_state_exit_cnt(IDX_STATE2), 0);
     assert_eq!(sme.get_sm().borrow().state, 0);
 
+    // msg.val == 1 will be deferred and processed in state2
     let msg = Messages::Val { val: 1 };
-    sme.dispatch(&msg);
-    assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
-    assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 1);
-    assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
-    assert_eq!(sme.get_state_enter_cnt(IDX_STATE2), 0);
-    assert_eq!(sme.get_state_process_cnt(IDX_STATE2), 0);
-    assert_eq!(sme.get_state_exit_cnt(IDX_STATE2), 0);
-
-    // msg.val == 1 was defered so this didn't change
-    assert_eq!(sme.get_sm().borrow().state, 0);
-
-    let msg = Messages::Val { val: 2 };
-    sme.dispatch(&msg);
+    sme.dispatcher(&msg);
     assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
     assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 1);
     assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
     assert_eq!(sme.get_state_enter_cnt(IDX_STATE2), 0);
     assert_eq!(sme.get_state_process_cnt(IDX_STATE2), 1);
     assert_eq!(sme.get_state_exit_cnt(IDX_STATE2), 0);
-    assert_eq!(sme.get_sm().borrow().state, -2);
+
+    // msg.val == 1 was deferred and processed in state2
+    assert_eq!(sme.get_sm().borrow().state, -1);
+    // which transitioned to "state2" and which transitioned back to "state1"
+    assert_eq!(sme.get_current_state_name(), "state1");
+
+    // msg.val == 2 will be deferred and processed in state2
+    let msg = Messages::Val { val: 2 };
+    sme.dispatcher(&msg);
+    assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
+    assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 2);
+    assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
+    assert_eq!(sme.get_state_enter_cnt(IDX_STATE2), 0);
+    assert_eq!(sme.get_state_process_cnt(IDX_STATE2), 2);
+    assert_eq!(sme.get_state_exit_cnt(IDX_STATE2), 0);
+
+    // msg.val == 2 was deferred and processed in state2
+    assert_eq!(sme.get_sm().borrow().state, -3);
+
+    // which transitioned to "state2" and which transitioned back to "state1"
+    assert_eq!(sme.get_current_state_name(), "state1");
 
     println!("main:-");
 }
