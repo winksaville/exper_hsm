@@ -8,6 +8,7 @@ pub struct StateMachine {
 }
 
 // Create a Protocol
+#[derive(Clone)]
 pub enum Messages {
     Val { val: i32 },
 }
@@ -33,11 +34,8 @@ impl StateMachine {
     fn state1(&mut self, e: &Executor<Self, Messages>, msg: &Messages) -> StateResult {
         println!("{}:+", e.get_state_name(IDX_STATE1));
 
-        match msg {
-            Messages::Val { val } => {
-                self.state += val;
-            }
-        }
+        // Defer messages
+        e.defer_send(msg.clone());
 
         println!("{}:-", e.get_state_name(IDX_STATE1));
         (Handled::Yes, Some(IDX_STATE2))
@@ -80,8 +78,11 @@ fn main() {
     assert_eq!(sme.get_state_enter_cnt(IDX_STATE2), 0);
     assert_eq!(sme.get_state_process_cnt(IDX_STATE2), 0);
     assert_eq!(sme.get_state_exit_cnt(IDX_STATE2), 0);
-    assert_eq!(sme.get_sm().borrow().state, 1);
 
+    // msg.val == 1 was defered so this didn't change
+    assert_eq!(sme.get_sm().borrow().state, 0);
+
+    let msg = Messages::Val { val: 2 };
     sme.dispatch(&msg);
     assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
     assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 1);
@@ -89,7 +90,7 @@ fn main() {
     assert_eq!(sme.get_state_enter_cnt(IDX_STATE2), 0);
     assert_eq!(sme.get_state_process_cnt(IDX_STATE2), 1);
     assert_eq!(sme.get_state_exit_cnt(IDX_STATE2), 0);
-    assert_eq!(sme.get_sm().borrow().state, 0);
+    assert_eq!(sme.get_sm().borrow().state, -2);
 
     println!("main:-");
 }
