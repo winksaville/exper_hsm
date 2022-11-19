@@ -1,6 +1,6 @@
 #![feature(no_coverage)]
 
-use std::{cell::RefCell, collections::VecDeque, rc::Rc};
+use std::collections::VecDeque;
 
 pub type DynError = Box<dyn std::error::Error>;
 type ProcessFn<SM, P> = fn(&mut SM, &Executor<SM, P>, &P) -> StateResult;
@@ -54,7 +54,7 @@ impl<SM, P> StateInfo<SM, P> {
 
 pub struct Executor<SM, P> {
     //pub name: String, // TODO: add StateMachineInfo::name
-    pub sm: Rc<RefCell<SM>>,
+    pub sm: SM,
     pub states: Vec<StateInfo<SM, P>>,
     pub current_state_changed: bool,
     pub idx_transition_dest: Option<usize>,
@@ -74,7 +74,7 @@ impl<SM, P> Executor<SM, P> {
     // Begin building an executor.
     //
     // You must call add_state to add one or more states
-    pub fn new(sm: Rc<RefCell<SM>>, max_states: usize) -> Self {
+    pub fn new(sm: SM, max_states: usize) -> Self {
         Executor {
             sm,
             states: Vec::<StateInfo<SM, P>>::with_capacity(max_states),
@@ -225,7 +225,7 @@ impl<SM, P> Executor<SM, P> {
         self.get_state_name(self.idx_current_state)
     }
 
-    pub fn get_sm(&self) -> &Rc<RefCell<SM>> {
+    pub fn get_sm(&self) -> &SM {
         &self.sm
     }
 
@@ -299,7 +299,7 @@ impl<SM, P> Executor<SM, P> {
                 if let Some(state_enter) = self.states[idx_enter].enter {
                     //log::trace!("dispatch_idx: entering idx={} {}", idx_enter, self.state_name(idx_enter));
                     self.states[idx_enter].enter_cnt += 1;
-                    (state_enter)(&mut self.sm.borrow_mut(), msg);
+                    (state_enter)(&mut self.sm, msg);
                     self.states[idx_enter].active = true;
                 }
             }
@@ -310,7 +310,18 @@ impl<SM, P> Executor<SM, P> {
         //log::trace!("dispatch_idx: processing idx={} {}", idx, self.state_name(idx));
 
         self.states[idx].process_cnt += 1;
-        let (handled, transition) = (self.states[idx].process)(&mut self.sm.borrow_mut(), self, msg);
+
+        //error[E0502]: cannot borrow `*self` as immutable because it is also borrowed as mutable
+        //   --> hsm0-executor/src/lib.rs:324:78
+        //    |
+        //313 |         let (handled, transition) = (self.states[idx].process)(&mut self.sm, self, msg);
+        //    |                                     -------------------------- ------------  ^^^^ immutable borrow occurs here
+        //    |                                     |                          |
+        //    |                                     |                          mutable borrow occurs here
+        //    |                                     mutable borrow later used by call
+            //
+        //For more information about this error, try `rustc --explain E0502`.
+        let (handled, transition) = (self.states[idx].process)(&mut self.sm, self, msg);
         if let Some(idx_next_state) = transition {
             if self.idx_transition_dest.is_none() {
                 // First Transition it will be the idx_transition_dest
@@ -355,7 +366,7 @@ impl<SM, P> Executor<SM, P> {
                 if let Some(state_exit) = self.states[idx_exit].exit {
                     //log::trace!("dispatch_idx: exiting idx={} {}", idx_exit, self.state_name(idx_exit));
                     self.states[idx_exit].exit_cnt += 1;
-                    (state_exit)(&mut self.sm.borrow_mut(), msg);
+                    (state_exit)(&mut self.sm, msg);
                     self.states[idx_exit].active = false;
                 }
             }
@@ -375,84 +386,84 @@ impl<SM, P> Executor<SM, P> {
 
 #[cfg(test)]
 mod test {
-    use std::{cell::RefCell, rc::Rc};
+    //use std::{cell::RefCell, rc::Rc};
 
-    use super::*;
+    //use super::*;
 
     // Test SM with one state with one field
     #[test]
     #[no_coverage]
     fn test_sm_1s_no_enter_no_exit() {
-        pub struct StateMachine {
-            sme: Option<Rc<RefCell<Executor<Self, NoMessages>>>>,
-            state: i32,
-        }
+        //pub struct StateMachine {
+        //    sme: Option<Rc<RefCell<Executor<Self, NoMessages>>>>,
+        //    state: i32,
+        //}
 
-        // Create a Protocol
-        pub struct NoMessages;
+        //// Create a Protocol
+        //pub struct NoMessages;
 
-        const MAX_STATES: usize = 1;
-        const IDX_STATE1: usize = 0;
+        //const MAX_STATES: usize = 1;
+        //const IDX_STATE1: usize = 0;
 
-        impl StateMachine {
-            #[no_coverage]
-            fn new() -> Rc<RefCell<Executor<Self, NoMessages>>> {
-                let sm = Rc::new(RefCell::new(StateMachine {
-                    sme: None,
-                    state: 0,
-                }));
-                let sme = Rc::new(RefCell::new(Executor::new(Rc::clone(&sm), MAX_STATES)));
-                sm.borrow_mut().sme = Some(Rc::clone(&sme));
+        //impl StateMachine {
+        //    #[no_coverage]
+        //    fn new() -> Rc<RefCell<Executor<Self, NoMessages>>> {
+        //        let sm = Rc::new(RefCell::new(StateMachine {
+        //            sme: None,
+        //            state: 0,
+        //        }));
+        //        let sme = Rc::new(RefCell::new(Executor::new(Rc::clone(&sm), MAX_STATES)));
+        //        sm.borrow_mut().sme = Some(Rc::clone(&sme));
 
-                sme.borrow_mut()
-                    .state(StateInfo::new("state1", None, Self::state1, None, None))
-                    .initialize(IDX_STATE1)
-                    .expect("Unexpected error initializing");
+        //        sme.borrow_mut()
+        //            .state(StateInfo::new("state1", None, Self::state1, None, None))
+        //            .initialize(IDX_STATE1)
+        //            .expect("Unexpected error initializing");
 
-                sme
-            }
+        //        sme
+        //    }
 
-            fn _get_sme(&self) -> Rc<RefCell<Executor<Self, NoMessages>>> {
-                match &self.sme {
-                    Some(sme) => Rc::clone(&sme),
-                    None => panic!("StateMachine::sme not initialized"),
-                }
-            }
+        //    fn _get_sme(&self) -> Rc<RefCell<Executor<Self, NoMessages>>> {
+        //        match &self.sme {
+        //            Some(sme) => Rc::clone(&sme),
+        //            None => panic!("StateMachine::sme not initialized"),
+        //        }
+        //    }
 
-            #[no_coverage]
-            fn state1(&mut self, e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
-                // Enabling the first println! below causes:
-                //  thread 'test::test_sm_1s_no_enter_no_exit' panicked at 'already mutably borrowed: BorrowError', hsm0-executor/src/lib.rs:426:50
-                //println!("{}:+", self._get_sme().borrow().get_state_name(IDX_STATE1));
-                println!("{}:+", e.get_state_name(IDX_STATE1));
-                //println!("{}:+", "state1");
+        //    #[no_coverage]
+        //    fn state1(&mut self, e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+        //        // Enabling the first println! below causes:
+        //        //  thread 'test::test_sm_1s_no_enter_no_exit' panicked at 'already mutably borrowed: BorrowError', hsm0-executor/src/lib.rs:426:50
+        //        //println!("{}:+", self._get_sme().borrow().get_state_name(IDX_STATE1));
+        //        println!("{}:+", e.get_state_name(IDX_STATE1));
+        //        //println!("{}:+", "state1");
 
-                self.state += 1;
+        //        self.state += 1;
 
-                (Handled::Yes, None)
-                //(Handled::Yes, None)
-            }
-        }
+        //        (Handled::Yes, None)
+        //        //(Handled::Yes, None)
+        //    }
+        //}
 
-        // Create a sme and validate it's in the expected state
-        let sme = StateMachine::new();
-        assert_eq!(std::mem::size_of_val(sme.borrow().get_sm()), 8);
-        assert_eq!(sme.borrow().get_state_enter_cnt(IDX_STATE1), 0);
-        assert_eq!(sme.borrow().get_state_process_cnt(IDX_STATE1), 0);
-        assert_eq!(sme.borrow().get_state_exit_cnt(IDX_STATE1), 0);
-        assert_eq!(sme.borrow().get_sm().borrow().state, 0);
+        //// Create a sme and validate it's in the expected state
+        //let sme = StateMachine::new();
+        //assert_eq!(std::mem::size_of_val(sme.borrow().get_sm()), 8);
+        //assert_eq!(sme.borrow().get_state_enter_cnt(IDX_STATE1), 0);
+        //assert_eq!(sme.borrow().get_state_process_cnt(IDX_STATE1), 0);
+        //assert_eq!(sme.borrow().get_state_exit_cnt(IDX_STATE1), 0);
+        //assert_eq!(sme.borrow().get_sm().borrow().state, 0);
 
-        sme.borrow_mut().dispatch(&NoMessages);
-        assert_eq!(sme.borrow().get_state_enter_cnt(IDX_STATE1), 0);
-        assert_eq!(sme.borrow().get_state_process_cnt(IDX_STATE1), 1);
-        assert_eq!(sme.borrow().get_state_exit_cnt(IDX_STATE1), 0);
-        assert_eq!(sme.borrow().get_sm().borrow().state, 1);
+        //sme.borrow_mut().dispatch(&NoMessages);
+        //assert_eq!(sme.borrow().get_state_enter_cnt(IDX_STATE1), 0);
+        //assert_eq!(sme.borrow().get_state_process_cnt(IDX_STATE1), 1);
+        //assert_eq!(sme.borrow().get_state_exit_cnt(IDX_STATE1), 0);
+        //assert_eq!(sme.borrow().get_sm().borrow().state, 1);
 
-        sme.borrow_mut().dispatch(&NoMessages);
-        assert_eq!(sme.borrow().get_state_enter_cnt(IDX_STATE1), 0);
-        assert_eq!(sme.borrow().get_state_process_cnt(IDX_STATE1), 2);
-        assert_eq!(sme.borrow().get_state_exit_cnt(IDX_STATE1), 0);
-        assert_eq!(sme.borrow().get_sm().borrow().state, 2);
+        //sme.borrow_mut().dispatch(&NoMessages);
+        //assert_eq!(sme.borrow().get_state_enter_cnt(IDX_STATE1), 0);
+        //assert_eq!(sme.borrow().get_state_process_cnt(IDX_STATE1), 2);
+        //assert_eq!(sme.borrow().get_state_exit_cnt(IDX_STATE1), 0);
+        //assert_eq!(sme.borrow().get_sm().borrow().state, 2);
     }
 
     //// Test SM with one state getting names

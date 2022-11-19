@@ -4,9 +4,6 @@ use std::{cell::RefCell, rc::Rc};
 use hsm0_executor::{Executor, StateResult, Handled, StateInfo};
 
 pub struct StateMachine {
-    // Use MaybeUninit or some other techinique so get_sme()
-    // can use StateMachine.sme without checking.
-    sme: Option<Rc<RefCell<Executor<Self, NoMessages>>>>,
     state: i32,
 }
 
@@ -17,14 +14,12 @@ const MAX_STATES: usize = 1;
 const IDX_STATE1: usize = 0;
 
 impl StateMachine {
-    fn new() -> Rc<RefCell<Executor<Self, NoMessages>>> {
-        let sm = Rc::new(RefCell::new(StateMachine {
-            sme: None,
+    fn new() -> Executor<Self, NoMessages> {
+        let sm = StateMachine {
             state: 0,
-        }));
+        };
 
-        let sme = Rc::new(RefCell::new(Executor::new(Rc::clone(&sm), MAX_STATES)));
-        sm.borrow_mut().sme = Some(Rc::clone(&sme));
+        let sme = Executor::new(Rc::clone(&sm), MAX_STATES);
 
         sme.borrow_mut()
             .state(StateInfo::new("state1", None, Self::state1, None, None))
