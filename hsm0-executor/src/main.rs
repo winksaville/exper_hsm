@@ -48,11 +48,11 @@ impl StateMachine {
         }
     }
 
-    fn state1(&mut self, _msg: &NoMessages) -> StateResult {
+    fn state1(&mut self, e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
         // Enabling the first println! below causes:
         //  thread 'main' panicked at 'already mutably borrowed: BorrowError', hsm0-executor/src/main.rs:54:41
         //println!("{}:+", self.get_sme().borrow().get_state_name(IDX_STATE1));
-        println!("{}:+", "state1");
+        println!("{}:+", e.get_state_name(IDX_STATE1));
 
         self.state += 1;
 

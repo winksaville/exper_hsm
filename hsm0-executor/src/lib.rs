@@ -3,7 +3,7 @@
 use std::{cell::RefCell, collections::VecDeque, rc::Rc};
 
 pub type DynError = Box<dyn std::error::Error>;
-type ProcessFn<SM, P> = fn(&mut SM, &P) -> StateResult;
+type ProcessFn<SM, P> = fn(&mut SM, &Executor<SM, P>, &P) -> StateResult;
 type EnterFn<SM, P> = fn(&mut SM, &P);
 type ExitFn<SM, P> = fn(&mut SM, &P);
 
@@ -310,7 +310,7 @@ impl<SM, P> Executor<SM, P> {
         //log::trace!("dispatch_idx: processing idx={} {}", idx, self.state_name(idx));
 
         self.states[idx].process_cnt += 1;
-        let (handled, transition) = (self.states[idx].process)(&mut self.sm.borrow_mut(), msg);
+        let (handled, transition) = (self.states[idx].process)(&mut self.sm.borrow_mut(), self, msg);
         if let Some(idx_next_state) = transition {
             if self.idx_transition_dest.is_none() {
                 // First Transition it will be the idx_transition_dest
@@ -420,11 +420,12 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, _msg: &NoMessages) -> StateResult {
+            fn state1(&mut self, e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
                 // Enabling the first println! below causes:
                 //  thread 'test::test_sm_1s_no_enter_no_exit' panicked at 'already mutably borrowed: BorrowError', hsm0-executor/src/lib.rs:426:50
                 //println!("{}:+", self._get_sme().borrow().get_state_name(IDX_STATE1));
-                println!("{}:+", "state1");
+                println!("{}:+", e.get_state_name(IDX_STATE1));
+                //println!("{}:+", "state1");
 
                 self.state += 1;
 
