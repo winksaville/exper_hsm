@@ -1,7 +1,7 @@
 #![allow(unused)]
 use std::{cell::RefCell, rc::Rc};
 
-use hsm0_executor::{Executor, StateResult, Handled, StateInfo};
+use hsm0_executor::{Executor, Handled, StateInfo, StateResult};
 
 pub struct StateMachine {
     // Use MaybeUninit or some other techinique so get_sme()
@@ -43,7 +43,7 @@ impl StateMachine {
 
     fn get_sme(&self) -> Rc<RefCell<Executor<Self, NoMessages>>> {
         match &self.sme {
-            Some(sme) => Rc::clone(&sme),
+            Some(sme) => Rc::clone(sme),
             None => panic!("StateMachine.sme is not initialized"),
         }
     }
@@ -56,11 +56,10 @@ impl StateMachine {
 
         self.state += 1;
 
-        println!("{}:-", "state1");
+        println!("{}:-", e.get_state_name(IDX_STATE1));
         (Handled::Yes, None)
     }
 }
-
 
 #[allow(unused)]
 fn main() {

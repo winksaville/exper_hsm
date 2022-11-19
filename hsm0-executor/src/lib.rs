@@ -1,6 +1,11 @@
 #![feature(no_coverage)]
 
-use std::{cell::RefCell, collections::VecDeque, rc::Rc};
+use std::{
+    cell::RefCell,
+    collections::VecDeque,
+    rc::Rc,
+    sync::mpsc::{Receiver, RecvError, SendError, Sender, TryRecvError},
+};
 
 pub type DynError = Box<dyn std::error::Error>;
 type ProcessFn<SM, P> = fn(&mut SM, &Executor<SM, P>, &P) -> StateResult;
@@ -68,6 +73,13 @@ pub struct Executor<SM, P> {
 
     // Returns `true` if array idx is in transition_targets
     pub transition_targets_set: Vec<bool>,
+
+    // Defer support
+    primary_tx: Sender<P>,
+    primary_rx: Receiver<P>,
+    defer_tx: [Sender<P>; 2],
+    defer_rx: [Receiver<P>; 2],
+    current_defer_idx: usize,
 }
 
 impl<SM, P> Executor<SM, P> {
@@ -75,6 +87,10 @@ impl<SM, P> Executor<SM, P> {
     //
     // You must call add_state to add one or more states
     pub fn new(sm: Rc<RefCell<SM>>, max_states: usize) -> Self {
+        let (primary_tx, primary_rx) = std::sync::mpsc::channel::<P>();
+        let (defer0_tx, defer0_rx) = std::sync::mpsc::channel::<P>();
+        let (defer1_tx, defer1_rx) = std::sync::mpsc::channel::<P>();
+
         Executor {
             sm,
             states: Vec::<StateInfo<SM, P>>::with_capacity(max_states),
@@ -86,6 +102,11 @@ impl<SM, P> Executor<SM, P> {
             idxs_exit_fns: VecDeque::<usize>::with_capacity(max_states),
             transition_targets: Vec::<usize>::with_capacity(max_states),
             transition_targets_set: Vec::<bool>::with_capacity(max_states),
+            primary_tx,
+            primary_rx,
+            defer_tx: [defer0_tx, defer1_tx],
+            defer_rx: [defer0_rx, defer1_rx],
+            current_defer_idx: 0,
         }
     }
 
@@ -310,7 +331,8 @@ impl<SM, P> Executor<SM, P> {
         //log::trace!("dispatch_idx: processing idx={} {}", idx, self.state_name(idx));
 
         self.states[idx].process_cnt += 1;
-        let (handled, transition) = (self.states[idx].process)(&mut self.sm.borrow_mut(), self, msg);
+        let (handled, transition) =
+            (self.states[idx].process)(&mut self.sm.borrow_mut(), self, msg);
         if let Some(idx_next_state) = transition {
             if self.idx_transition_dest.is_none() {
                 // First Transition it will be the idx_transition_dest
@@ -370,6 +392,43 @@ impl<SM, P> Executor<SM, P> {
         //log::trace!( "dispatch:- current_state_infos_idx={} {}", self.idx_current_state, self.current_state_name());
 
         self.current_state_changed
+    }
+
+    // Defer support
+    pub fn recv(&self) -> Result<P, RecvError> {
+        self.primary_rx.recv()
+    }
+
+    pub fn try_recv(&self) -> Result<P, TryRecvError> {
+        self.primary_rx.try_recv()
+    }
+
+    pub fn send(&self, m: P) -> Result<(), SendError<P>> {
+        self.primary_tx.send(m)
+    }
+
+    //fn clone_sender(&self) -> Sender<M> {
+    //    self.primary_tx.clone()
+    //}
+
+    pub fn defer_try_recv(&self) -> Result<P, TryRecvError> {
+        self.defer_rx[self.other_defer()].try_recv()
+    }
+
+    pub fn defer_send(&self, m: P) -> Result<(), SendError<P>> {
+        self.defer_tx[self.current_defer()].send(m)
+    }
+
+    pub fn next_defer(&mut self) {
+        self.current_defer_idx += 1 % self.defer_tx.len();
+    }
+
+    pub fn current_defer(&self) -> usize {
+        self.current_defer_idx
+    }
+
+    pub fn other_defer(&self) -> usize {
+        (self.current_defer_idx + 1) % self.defer_tx.len()
     }
 }
 
