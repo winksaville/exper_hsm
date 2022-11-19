@@ -8,14 +8,16 @@ pub struct StateMachine {
 }
 
 // Create a Protocol
-pub struct NoMessages;
+pub enum Messages {
+    Val { val: i32 },
+}
 
 const MAX_STATES: usize = 2;
 const IDX_STATE1: usize = 0;
 const IDX_STATE2: usize = 1;
 
 impl StateMachine {
-    fn new() -> Executor<Self, NoMessages> {
+    fn new() -> Executor<Self, Messages> {
         let sm = Rc::new(RefCell::new(StateMachine { state: 0 }));
 
         let mut sme = Executor::new(Rc::clone(&sm), MAX_STATES);
@@ -28,19 +30,27 @@ impl StateMachine {
         sme
     }
 
-    fn state1(&mut self, e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+    fn state1(&mut self, e: &Executor<Self, Messages>, msg: &Messages) -> StateResult {
         println!("{}:+", e.get_state_name(IDX_STATE1));
 
-        self.state += 1;
+        match msg {
+            Messages::Val { val } => {
+                self.state += val;
+            }
+        }
 
         println!("{}:-", e.get_state_name(IDX_STATE1));
         (Handled::Yes, Some(IDX_STATE2))
     }
 
-    fn state2(&mut self, e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+    fn state2(&mut self, e: &Executor<Self, Messages>, msg: &Messages) -> StateResult {
         println!("{}:+", e.get_state_name(IDX_STATE2));
 
-        self.state -= 1;
+        match msg {
+            Messages::Val { val } => {
+                self.state -= val;
+            }
+        }
 
         println!("{}:-", e.get_state_name(IDX_STATE2));
         (Handled::Yes, Some(IDX_STATE1))
@@ -62,7 +72,8 @@ fn main() {
     assert_eq!(sme.get_state_exit_cnt(IDX_STATE2), 0);
     assert_eq!(sme.get_sm().borrow().state, 0);
 
-    sme.dispatch(&NoMessages);
+    let msg = Messages::Val { val: 1 };
+    sme.dispatch(&msg);
     assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
     assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 1);
     assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
@@ -71,7 +82,7 @@ fn main() {
     assert_eq!(sme.get_state_exit_cnt(IDX_STATE2), 0);
     assert_eq!(sme.get_sm().borrow().state, 1);
 
-    sme.dispatch(&NoMessages);
+    sme.dispatch(&msg);
     assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
     assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 1);
     assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
