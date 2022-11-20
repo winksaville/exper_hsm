@@ -403,14 +403,14 @@ where
     // is "dangerous" and processing time increases for new messages. There
     // maybe other dangers too!
     pub fn dispatcher(self: &mut Executor<SM, P>, msg: &P) -> bool {
-        log::trace!("dispatcher:+ msg={msg:?} sm={:?}", self.get_sm());
+        //log::trace!("dispatcher:+ msg={msg:?} sm={:?}", self.get_sm());
         let mut transitioned = self.dispatch(msg);
-        log::trace!("dispatcher:  msg={msg:?} sm={:?} ret={transitioned}", self.get_sm());
+        //log::trace!("dispatcher:  msg={msg:?} sm={:?} ret={transitioned}", self.get_sm());
 
         // Process all deferred messages we if we've transitioned
         // above or within the loop below.
         while transitioned {
-            log::trace!("dispatcher:  TOL transitioned");
+            //log::trace!("dispatcher:  TOL transitioned");
             transitioned = false;
 
             // Switch to next set of deferred messages
@@ -423,9 +423,9 @@ where
             // before newly sent messages! TODO: add a messge counter or
             // timestamp so we can guarantee this when testing!
             while let Ok(m) = self.defer_try_recv() {
-                log::trace!("dispatcher:  deferred msg={m:?} sm={:?}", self.get_sm());
+                //log::trace!("dispatcher:  deferred msg={m:?} sm={:?}", self.get_sm());
                 transitioned |= self.dispatch(&m);
-                log::trace!("dispatcher:  deferred msg={m:?} sm={:?} ret={transitioned}", self.get_sm());
+                //log::trace!("dispatcher:  deferred msg={m:?} sm={:?} ret={transitioned}", self.get_sm());
             }
         }
 
@@ -437,7 +437,7 @@ where
         // transition so those will be processed after this fn is
         // called with a new message which causes a transition.
 
-        log::trace!("dispatcher:- msg={msg:?} sm={:?}", self.get_sm());
+        //log::trace!("dispatcher:- msg={msg:?} sm={:?}", self.get_sm());
         true
     }
 
