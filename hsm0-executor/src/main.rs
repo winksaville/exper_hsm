@@ -1,6 +1,7 @@
 #![allow(unused)]
 use std::{cell::RefCell, rc::Rc};
 
+use custom_logger::env_logger_init;
 use hsm0_executor::{Executor, Handled, StateInfo, StateResult};
 
 #[derive(Debug)]
@@ -58,6 +59,7 @@ impl StateMachine {
 
 #[allow(unused)]
 fn main() {
+    env_logger_init("info");
     println!("main:+");
 
     // Create a sme and validate it's in the expected state

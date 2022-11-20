@@ -399,38 +399,45 @@ where
         self.current_state_changed
     }
 
+    // TODO: More testing at warnings are needed that defering messages
+    // is "dangerous" and processing time increases for new messages. There
+    // maybe other dangers too!
     pub fn dispatcher(self: &mut Executor<SM, P>, msg: &P) -> bool {
-        println!("dispatcher:+ msg={msg:?} sm={:?}", self.get_sm());
-        let transitioned = self.dispatch(msg);
-        println!(
-            "dispatcher:  msg={msg:?} sm={:?} ret={transitioned}",
-            self.get_sm()
-        );
+        log::trace!("dispatcher:+ msg={msg:?} sm={:?}", self.get_sm());
+        let mut transitioned = self.dispatch(msg);
+        log::trace!("dispatcher:  msg={msg:?} sm={:?} ret={transitioned}", self.get_sm());
 
-        if transitioned {
+        // Process all deferred messages we if we've transitioned
+        // above or within the loop below.
+        while transitioned {
+            log::trace!("dispatcher:  TOL transitioned");
+            transitioned = false;
+
+            // Switch to next set of deferred messages
             self.next_defer();
 
-            // Dispatch deferred messages
-            loop {
-                match self.defer_try_recv() {
-                    Ok(m) => {
-                        // Transitions while handling previously deferred messages
-                        // will be "ignored" because if we did a "next_defer" here
-                        // the expected order would change as any "newly" deferred
-                        // message would be processed before "older" deferred messages!
-                        println!("dispatcher:  deferred msg={m:?} sm={:?}", self.get_sm());
-                        let transitioned = self.dispatch(&m);
-                        println!(
-                            "dispatcher:  deferred msg={m:?} sm={:?} ret={transitioned}",
-                            self.get_sm()
-                        );
-                    }
-                    Err(TryRecvError::Empty) | Err(TryRecvError::Disconnected) => break,
-                }
+            // And process all of them before we do another next_defer().
+            // If we didn't do this we could process newly deferred message
+            // before we process previously deferred messages. In other words,
+            // we guarantee that previously sent messages are always processed
+            // before newly sent messages! TODO: add a messge counter or
+            // timestamp so we can guarantee this when testing!
+            while let Ok(m) = self.defer_try_recv() {
+                log::trace!("dispatcher:  deferred msg={m:?} sm={:?}", self.get_sm());
+                transitioned |= self.dispatch(&m);
+                log::trace!("dispatcher:  deferred msg={m:?} sm={:?} ret={transitioned}", self.get_sm());
             }
         }
 
-        println!("dispatcher:- msg={msg:?} sm={:?}", self.get_sm());
+        // At this point we've processed the incoming message and let
+        // the SM reprocessed all deferred messages at least one more
+        // time after each subsequent transition.
+        //
+        // There may still have deferred messages but the SM didn't
+        // transition so those will be processed after this fn is
+        // called with a new message which causes a transition.
+
+        log::trace!("dispatcher:- msg={msg:?} sm={:?}", self.get_sm());
         true
     }
 
@@ -460,7 +467,7 @@ where
     }
 
     pub fn next_defer(&mut self) {
-        self.current_defer_idx += 1 % self.defer_tx.len();
+        self.current_defer_idx = (self.current_defer_idx + 1) % self.defer_tx.len();
     }
 
     pub fn current_defer(&self) -> usize {
@@ -509,16 +516,12 @@ mod test {
 
             #[no_coverage]
             fn state1(&mut self, e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
-                // Enabling the first println! below causes:
-                //  thread 'test::test_sm_1s_no_enter_no_exit' panicked at 'already mutably borrowed: BorrowError', hsm0-executor/src/lib.rs:426:50
-                //println!("{}:+", self._get_sme().borrow().get_state_name(IDX_STATE1));
                 println!("{}:+", e.get_state_name(IDX_STATE1));
-                //println!("{}:+", "state1");
 
                 self.state += 1;
 
+                println!("{}:-", e.get_state_name(IDX_STATE1));
                 (Handled::Yes, None)
-                //(Handled::Yes, None)
             }
         }
 
