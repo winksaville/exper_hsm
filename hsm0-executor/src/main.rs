@@ -21,9 +21,9 @@ const IDX_STATE2: usize = 1;
 
 impl StateMachine {
     fn new() -> Executor<Self, Messages> {
-        let sm = Rc::new(RefCell::new(StateMachine { state: 0 }));
+        let sm = RefCell::new(StateMachine { state: 0 });
 
-        let mut sme = Executor::new(Rc::clone(&sm), MAX_STATES);
+        let mut sme = Executor::new(sm, MAX_STATES);
 
         sme.state(StateInfo::new("state1", None, Self::state1, None, None))
             .state(StateInfo::new("state2", None, Self::state2, None, None))
@@ -34,7 +34,7 @@ impl StateMachine {
     }
 
     fn state1(&mut self, e: &Executor<Self, Messages>, msg: &Messages) -> StateResult {
-        println!("{}:+ self={self:p}", e.get_state_name(IDX_STATE1));
+        println!("{}:+ &self={self:p}", e.get_state_name(IDX_STATE1));
 
         // Defer messages
         e.defer_send(msg.clone());
@@ -44,7 +44,7 @@ impl StateMachine {
     }
 
     fn state2(&mut self, e: &Executor<Self, Messages>, msg: &Messages) -> StateResult {
-        println!("{}:+ self={self:p}", e.get_state_name(IDX_STATE1));
+        println!("{}:+ &self={self:p}", e.get_state_name(IDX_STATE1));
 
         match msg {
             Messages::Val { val } => {
@@ -68,7 +68,7 @@ fn main() {
     assert_eq!(std::mem::size_of::<StateMachine>(), 4);
     assert_eq!(std::mem::size_of::<RefCell<StateMachine>>(), 16);
     assert_eq!(std::mem::size_of::<Rc<RefCell<StateMachine>>>(), 8);
-    assert_eq!(std::mem::size_of_val(sme.get_sm()), 8);
+    assert_eq!(std::mem::size_of_val(sme.get_sm()), 16);
     assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
     assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 0);
     assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);

@@ -4,7 +4,6 @@ use std::{
     cell::RefCell,
     collections::VecDeque,
     fmt::Debug,
-    rc::Rc,
     sync::mpsc::{Receiver, RecvError, SendError, Sender, TryRecvError},
 };
 
@@ -60,7 +59,17 @@ impl<SM, P> StateInfo<SM, P> {
 
 pub struct Executor<SM, P> {
     //pub name: String, // TODO: add StateMachineInfo::name
-    pub sm: Rc<RefCell<SM>>,
+
+    // Field `sm` needs "interior mutability" because we pass &mut sm and &Self
+    // to process in dispatch_idx. If we don't have `sm` as a RefCell
+    // we get the following error at the call site in dispatch_idx:
+    //     (self.states[idx].process)(&mut self.sm, self, msg);
+    //     -------------------------- ------------  ^^^^ immutable borrow occurs here
+    //     |                          |
+    //     |                          mutable borrow occurs here
+    //     mutable borrow later used by call
+    pub sm: RefCell<SM>,
+
     pub states: Vec<StateInfo<SM, P>>,
     pub current_state_changed: bool,
     pub idx_transition_dest: Option<usize>,
@@ -91,7 +100,7 @@ where
     // Begin building an executor.
     //
     // You must call add_state to add one or more states
-    pub fn new(sm: Rc<RefCell<SM>>, max_states: usize) -> Self {
+    pub fn new(sm: RefCell<SM>, max_states: usize) -> Self {
         let (primary_tx, primary_rx) = std::sync::mpsc::channel::<P>();
         let (defer0_tx, defer0_rx) = std::sync::mpsc::channel::<P>();
         let (defer1_tx, defer1_rx) = std::sync::mpsc::channel::<P>();
@@ -251,7 +260,7 @@ where
         self.get_state_name(self.idx_current_state)
     }
 
-    pub fn get_sm(&self) -> &Rc<RefCell<SM>> {
+    pub fn get_sm(&self) -> &RefCell<SM> {
         &self.sm
     }
 
@@ -481,11 +490,9 @@ where
 
 #[cfg(test)]
 mod test {
-    use std::{cell::RefCell, rc::Rc};
-
     use super::*;
 
-    // Test SM with one state with one field
+    // Test SM with one state with one field and no enter or exit
     #[test]
     #[no_coverage]
     fn test_sm_1s_no_enter_no_exit() {
@@ -504,8 +511,8 @@ mod test {
         impl StateMachine {
             #[no_coverage]
             fn new() -> Executor<Self, NoMessages> {
-                let sm = Rc::new(RefCell::new(StateMachine { state: 0 }));
-                let mut sme = Executor::new(Rc::clone(&sm), MAX_STATES);
+                let sm = RefCell::new(StateMachine { state: 0 });
+                let mut sme = Executor::new(sm, MAX_STATES);
 
                 sme.state(StateInfo::new("state1", None, Self::state1, None, None))
                     .initialize(IDX_STATE1)
@@ -527,7 +534,7 @@ mod test {
 
         // Create a sme and validate it's in the expected state
         let mut sme = StateMachine::new();
-        assert_eq!(std::mem::size_of_val(sme.get_sm()), 8);
+        assert_eq!(std::mem::size_of_val(sme.get_sm()), 16);
         assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
         assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 0);
         assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
