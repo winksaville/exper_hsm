@@ -1,168 +1,112 @@
+#![allow(unused)]
+use std::{cell::RefCell, rc::Rc};
+
 use custom_logger::env_logger_init;
+use hsm0_executor::{Executor, Handled, StateInfo, StateResult};
 
-use hsm0_executor::{DynError, Executor, Handled, StateInfo, StateResult};
+#[derive(Debug)]
+pub struct StateMachine {
+    state: i32,
+}
 
-// StateMachine simply transitions back and forth
-// between initial and other.
-//
-//                base=0
-//        --------^  ^-------
-//       /                   \
-//      /                     \
-//    other=2   <======>   initial=1
+// Create a Protocol
+#[derive(Clone, Debug)]
+pub enum Messages {
+    Val { val: i32 },
+}
 
-#[derive(Default)]
-pub struct StateMachine;
-
-// Create a Protocol with no messages
-pub struct NoMessages;
-
-const MAX_STATES: usize = 3;
-const IDX_BASE: usize = 0;
-const IDX_INITIAL: usize = 1;
-const IDX_OTHER: usize = 2;
+const MAX_STATES: usize = 2;
+const IDX_STATE1: usize = 0;
+const IDX_STATE2: usize = 1;
 
 impl StateMachine {
-    pub fn new() -> Result<Executor<Self, NoMessages>, DynError> {
-        let sm = StateMachine::default();
+    fn new() -> Executor<Self, Messages> {
+        let sm = RefCell::new(StateMachine { state: 0 });
+
         let mut sme = Executor::new(sm, MAX_STATES);
 
-        sme.state(StateInfo::new(
-            "base",
-            Some(Self::base_enter),
-            Self::base,
-            Some(Self::base_exit),
-            None,
-        ))
-        .state(StateInfo::new(
-            "initial",
-            Some(Self::initial_enter),
-            Self::initial,
-            Some(Self::initial_exit),
-            Some(IDX_BASE),
-        ))
-        .state(StateInfo::new(
-            "other",
-            Some(Self::other_enter),
-            Self::other,
-            Some(Self::other_exit),
-            Some(IDX_BASE),
-        ))
-        .initialize(IDX_INITIAL)?;
+        sme.state(StateInfo::new("state1", None, Self::state1, None, None))
+            .state(StateInfo::new("state2", None, Self::state2, None, None))
+            .initialize(IDX_STATE1)
+            .expect("Unexpected error initializing");
 
-        log::trace!(
-            "new: inital state={} enter_fnss_hdls={:?}",
-            sme.get_current_state_name(),
-            sme.idxs_enter_fns
-        );
-
-        Ok(sme)
+        sme
     }
 
-    fn base_enter(&mut self, _msg: &NoMessages) {}
+    fn state1(&mut self, e: &Executor<Self, Messages>, msg: &Messages) -> StateResult {
+        println!("{}:+ &self={self:p}", e.get_state_name(IDX_STATE1));
 
-    // This state has hdl 0
-    fn base(&mut self, _msg: &NoMessages) -> StateResult {
-        (Handled::Yes, None)
+        // Defer messages
+        e.defer_send(msg.clone());
+
+        println!("{}:-", e.get_state_name(IDX_STATE1));
+        (Handled::Yes, Some(IDX_STATE2))
     }
 
-    fn base_exit(&mut self, _msg: &NoMessages) {}
+    fn state2(&mut self, e: &Executor<Self, Messages>, msg: &Messages) -> StateResult {
+        println!("{}:+ &self={self:p}", e.get_state_name(IDX_STATE1));
 
-    fn initial_enter(&mut self, _msg: &NoMessages) {}
+        match msg {
+            Messages::Val { val } => {
+                self.state -= val;
+            }
+        }
 
-    // This state has hdl 0
-    fn initial(&mut self, _msg: &NoMessages) -> StateResult {
-        (Handled::Yes, Some(IDX_OTHER))
+        println!("{}:-", e.get_state_name(IDX_STATE2));
+        (Handled::Yes, Some(IDX_STATE1))
     }
-
-    fn initial_exit(&mut self, _msg: &NoMessages) {}
-
-    fn other_enter(&mut self, _msg: &NoMessages) {}
-
-    // This state has hdl 0
-    fn other(&mut self, _msg: &NoMessages) -> StateResult {
-        (Handled::Yes, Some(IDX_INITIAL))
-    }
-
-    fn other_exit(&mut self, _msg: &NoMessages) {}
 }
 
-fn test_transition_between_leafs_in_a_tree() {
-    // Create a sme and validate it's in the expected state
-    let mut sme = StateMachine::new().unwrap();
-    assert_eq!(std::mem::size_of_val(sme.get_sm()), 0);
-    assert_eq!(sme.get_state_enter_cnt(IDX_BASE), 0);
-    assert_eq!(sme.get_state_process_cnt(IDX_BASE), 0);
-    assert_eq!(sme.get_state_exit_cnt(IDX_BASE), 0);
-    assert_eq!(sme.get_state_enter_cnt(IDX_INITIAL), 0);
-    assert_eq!(sme.get_state_process_cnt(IDX_INITIAL), 0);
-    assert_eq!(sme.get_state_exit_cnt(IDX_INITIAL), 0);
-    assert_eq!(sme.get_state_enter_cnt(IDX_OTHER), 0);
-    assert_eq!(sme.get_state_process_cnt(IDX_OTHER), 0);
-    assert_eq!(sme.get_state_exit_cnt(IDX_OTHER), 0);
-
-    sme.dispatch(&NoMessages);
-    assert_eq!(sme.get_state_enter_cnt(IDX_BASE), 1);
-    assert_eq!(sme.get_state_process_cnt(IDX_BASE), 0);
-    assert_eq!(sme.get_state_exit_cnt(IDX_BASE), 0);
-    assert_eq!(sme.get_state_enter_cnt(IDX_INITIAL), 1);
-    assert_eq!(sme.get_state_process_cnt(IDX_INITIAL), 1);
-    assert_eq!(sme.get_state_exit_cnt(IDX_INITIAL), 1);
-    assert_eq!(sme.get_state_enter_cnt(IDX_OTHER), 0);
-    assert_eq!(sme.get_state_process_cnt(IDX_OTHER), 0);
-    assert_eq!(sme.get_state_exit_cnt(IDX_OTHER), 0);
-
-    sme.dispatch(&NoMessages);
-    assert_eq!(sme.get_state_enter_cnt(IDX_BASE), 1);
-    assert_eq!(sme.get_state_process_cnt(IDX_BASE), 0);
-    assert_eq!(sme.get_state_exit_cnt(IDX_BASE), 0);
-    assert_eq!(sme.get_state_enter_cnt(IDX_INITIAL), 1);
-    assert_eq!(sme.get_state_process_cnt(IDX_INITIAL), 1);
-    assert_eq!(sme.get_state_exit_cnt(IDX_INITIAL), 1);
-    assert_eq!(sme.get_state_enter_cnt(IDX_OTHER), 1);
-    assert_eq!(sme.get_state_process_cnt(IDX_OTHER), 1);
-    assert_eq!(sme.get_state_exit_cnt(IDX_OTHER), 1);
-
-    sme.dispatch(&NoMessages);
-    assert_eq!(sme.get_state_enter_cnt(IDX_BASE), 1);
-    assert_eq!(sme.get_state_process_cnt(IDX_BASE), 0);
-    assert_eq!(sme.get_state_exit_cnt(IDX_BASE), 0);
-    assert_eq!(sme.get_state_enter_cnt(IDX_INITIAL), 2);
-    assert_eq!(sme.get_state_process_cnt(IDX_INITIAL), 2);
-    assert_eq!(sme.get_state_exit_cnt(IDX_INITIAL), 2);
-    assert_eq!(sme.get_state_enter_cnt(IDX_OTHER), 1);
-    assert_eq!(sme.get_state_process_cnt(IDX_OTHER), 1);
-    assert_eq!(sme.get_state_exit_cnt(IDX_OTHER), 1);
-
-    sme.dispatch(&NoMessages);
-    assert_eq!(sme.get_state_enter_cnt(IDX_BASE), 1);
-    assert_eq!(sme.get_state_process_cnt(IDX_BASE), 0);
-    assert_eq!(sme.get_state_exit_cnt(IDX_BASE), 0);
-    assert_eq!(sme.get_state_enter_cnt(IDX_INITIAL), 2);
-    assert_eq!(sme.get_state_process_cnt(IDX_INITIAL), 2);
-    assert_eq!(sme.get_state_exit_cnt(IDX_INITIAL), 2);
-    assert_eq!(sme.get_state_enter_cnt(IDX_OTHER), 2);
-    assert_eq!(sme.get_state_process_cnt(IDX_OTHER), 2);
-    assert_eq!(sme.get_state_exit_cnt(IDX_OTHER), 2);
-
-    sme.dispatch(&NoMessages);
-    assert_eq!(sme.get_state_enter_cnt(IDX_BASE), 1);
-    assert_eq!(sme.get_state_process_cnt(IDX_BASE), 0);
-    assert_eq!(sme.get_state_exit_cnt(IDX_BASE), 0);
-    assert_eq!(sme.get_state_enter_cnt(IDX_INITIAL), 3);
-    assert_eq!(sme.get_state_process_cnt(IDX_INITIAL), 3);
-    assert_eq!(sme.get_state_exit_cnt(IDX_INITIAL), 3);
-    assert_eq!(sme.get_state_enter_cnt(IDX_OTHER), 2);
-    assert_eq!(sme.get_state_process_cnt(IDX_OTHER), 2);
-    assert_eq!(sme.get_state_exit_cnt(IDX_OTHER), 2);
-}
-
+#[allow(unused)]
 fn main() {
-    println!("main");
     env_logger_init("info");
-    log::info!("main:+");
+    println!("main:+");
 
-    test_transition_between_leafs_in_a_tree();
+    // Create a sme and validate it's in the expected state
+    let mut sme = StateMachine::new();
+    println!("main:  &sme={:p}", &sme);
+    assert_eq!(std::mem::size_of::<StateMachine>(), 4);
+    assert_eq!(std::mem::size_of::<RefCell<StateMachine>>(), 16);
+    assert_eq!(std::mem::size_of::<Rc<RefCell<StateMachine>>>(), 8);
+    assert_eq!(std::mem::size_of_val(sme.get_sm()), 16);
+    assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
+    assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 0);
+    assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
+    assert_eq!(sme.get_state_enter_cnt(IDX_STATE2), 0);
+    assert_eq!(sme.get_state_process_cnt(IDX_STATE2), 0);
+    assert_eq!(sme.get_state_exit_cnt(IDX_STATE2), 0);
+    assert_eq!(sme.get_sm().borrow().state, 0);
 
-    log::info!("main:-");
+    // msg.val == 1 will be deferred and processed in state2
+    let msg = Messages::Val { val: 1 };
+    sme.dispatcher(&msg);
+    assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
+    assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 1);
+    assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
+    assert_eq!(sme.get_state_enter_cnt(IDX_STATE2), 0);
+    assert_eq!(sme.get_state_process_cnt(IDX_STATE2), 1);
+    assert_eq!(sme.get_state_exit_cnt(IDX_STATE2), 0);
+
+    // msg.val == 1 was deferred and processed in state2
+    assert_eq!(sme.get_sm().borrow().state, -1);
+    // which transitioned to "state2" and which transitioned back to "state1"
+    assert_eq!(sme.get_current_state_name(), "state1");
+
+    // msg.val == 2 will be deferred and processed in state2
+    let msg = Messages::Val { val: 2 };
+    sme.dispatcher(&msg);
+    assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
+    assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 2);
+    assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
+    assert_eq!(sme.get_state_enter_cnt(IDX_STATE2), 0);
+    assert_eq!(sme.get_state_process_cnt(IDX_STATE2), 2);
+    assert_eq!(sme.get_state_exit_cnt(IDX_STATE2), 0);
+
+    // msg.val == 2 was deferred and processed in state2
+    assert_eq!(sme.get_sm().borrow().state, -3);
+
+    // which transitioned to "state2" and which transitioned back to "state1"
+    assert_eq!(sme.get_current_state_name(), "state1");
+
+    println!("main:-");
 }

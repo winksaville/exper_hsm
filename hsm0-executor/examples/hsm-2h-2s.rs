@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+
 use custom_logger::env_logger_init;
 
 use hsm0_executor::{DynError, Executor, Handled, StateInfo, StateResult};
@@ -10,10 +12,11 @@ use hsm0_executor::{DynError, Executor, Handled, StateInfo, StateResult};
 //       |                     |
 //     other=3              initial=1
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct StateMachine;
 
 // Create a Protocol with no messages
+#[derive(Debug)]
 pub struct NoMessages;
 
 const MAX_STATES: usize = 4;
@@ -24,7 +27,7 @@ const IDX_OTHER: usize = 3;
 
 impl StateMachine {
     pub fn new() -> Result<Executor<Self, NoMessages>, DynError> {
-        let sm = StateMachine::default();
+        let sm = RefCell::new(StateMachine::default());
         let mut sme = Executor::new(sm, MAX_STATES);
 
         sme.state(StateInfo::new(
@@ -69,7 +72,7 @@ impl StateMachine {
     fn initial_base_enter(&mut self, _msg: &NoMessages) {}
 
     // This state has hdl 0
-    fn initial_base(&mut self, _msg: &NoMessages) -> StateResult {
+    fn initial_base(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
         (Handled::Yes, None)
     }
 
@@ -78,7 +81,7 @@ impl StateMachine {
     fn initial_enter(&mut self, _msg: &NoMessages) {}
 
     // This state has hdl 0
-    fn initial(&mut self, _msg: &NoMessages) -> StateResult {
+    fn initial(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
         (Handled::Yes, Some(IDX_OTHER))
     }
 
@@ -87,7 +90,7 @@ impl StateMachine {
     fn other_base_enter(&mut self, _msg: &NoMessages) {}
 
     // This state has hdl 0
-    fn other_base(&mut self, _msg: &NoMessages) -> StateResult {
+    fn other_base(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
         (Handled::Yes, None)
     }
 
@@ -96,7 +99,7 @@ impl StateMachine {
     fn other_enter(&mut self, _msg: &NoMessages) {}
 
     // This state has hdl 0
-    fn other(&mut self, _msg: &NoMessages) -> StateResult {
+    fn other(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
         (Handled::Yes, Some(IDX_INITIAL))
     }
 
@@ -106,7 +109,6 @@ impl StateMachine {
 fn test_transition_between_leafs_across_trees() {
     // Create a sme and validate it's in the expected state
     let mut sme = StateMachine::new().unwrap();
-    assert_eq!(std::mem::size_of_val(sme.get_sm()), 0);
     assert_eq!(sme.get_state_enter_cnt(IDX_INITIAL_BASE), 0);
     assert_eq!(sme.get_state_process_cnt(IDX_INITIAL_BASE), 0);
     assert_eq!(sme.get_state_exit_cnt(IDX_INITIAL_BASE), 0);

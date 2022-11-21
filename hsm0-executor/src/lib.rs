@@ -1,9 +1,14 @@
 #![feature(no_coverage)]
 
-use std::collections::VecDeque;
+use std::{
+    cell::RefCell,
+    collections::VecDeque,
+    fmt::Debug,
+    sync::mpsc::{Receiver, RecvError, SendError, Sender, TryRecvError},
+};
 
 pub type DynError = Box<dyn std::error::Error>;
-type ProcessFn<SM, P> = fn(&mut SM, &P) -> StateResult;
+type ProcessFn<SM, P> = fn(&mut SM, &Executor<SM, P>, &P) -> StateResult;
 type EnterFn<SM, P> = fn(&mut SM, &P);
 type ExitFn<SM, P> = fn(&mut SM, &P);
 
@@ -54,7 +59,17 @@ impl<SM, P> StateInfo<SM, P> {
 
 pub struct Executor<SM, P> {
     //pub name: String, // TODO: add StateMachineInfo::name
-    pub sm: SM,
+
+    // Field `sm` needs "interior mutability" because we pass &mut sm and &Self
+    // to process in dispatch_idx. If we don't have `sm` as a RefCell
+    // we get the following error at the call site in dispatch_idx:
+    //     (self.states[idx].process)(&mut self.sm, self, msg);
+    //     -------------------------- ------------  ^^^^ immutable borrow occurs here
+    //     |                          |
+    //     |                          mutable borrow occurs here
+    //     mutable borrow later used by call
+    pub sm: RefCell<SM>,
+
     pub states: Vec<StateInfo<SM, P>>,
     pub current_state_changed: bool,
     pub idx_transition_dest: Option<usize>,
@@ -68,13 +83,28 @@ pub struct Executor<SM, P> {
 
     // Returns `true` if array idx is in transition_targets
     pub transition_targets_set: Vec<bool>,
+
+    // Defer support
+    primary_tx: Sender<P>,
+    primary_rx: Receiver<P>,
+    defer_tx: [Sender<P>; 2],
+    defer_rx: [Receiver<P>; 2],
+    current_defer_idx: usize,
 }
 
-impl<SM, P> Executor<SM, P> {
+impl<SM, P> Executor<SM, P>
+where
+    SM: Debug,
+    P: Debug,
+{
     // Begin building an executor.
     //
     // You must call add_state to add one or more states
-    pub fn new(sm: SM, max_states: usize) -> Self {
+    pub fn new(sm: RefCell<SM>, max_states: usize) -> Self {
+        let (primary_tx, primary_rx) = std::sync::mpsc::channel::<P>();
+        let (defer0_tx, defer0_rx) = std::sync::mpsc::channel::<P>();
+        let (defer1_tx, defer1_rx) = std::sync::mpsc::channel::<P>();
+
         Executor {
             sm,
             states: Vec::<StateInfo<SM, P>>::with_capacity(max_states),
@@ -86,6 +116,11 @@ impl<SM, P> Executor<SM, P> {
             idxs_exit_fns: VecDeque::<usize>::with_capacity(max_states),
             transition_targets: Vec::<usize>::with_capacity(max_states),
             transition_targets_set: Vec::<bool>::with_capacity(max_states),
+            primary_tx,
+            primary_rx,
+            defer_tx: [defer0_tx, defer1_tx],
+            defer_rx: [defer0_rx, defer1_rx],
+            current_defer_idx: 0,
         }
     }
 
@@ -225,7 +260,7 @@ impl<SM, P> Executor<SM, P> {
         self.get_state_name(self.idx_current_state)
     }
 
-    pub fn get_sm(&mut self) -> &SM {
+    pub fn get_sm(&self) -> &RefCell<SM> {
         &self.sm
     }
 
@@ -299,7 +334,7 @@ impl<SM, P> Executor<SM, P> {
                 if let Some(state_enter) = self.states[idx_enter].enter {
                     //log::trace!("dispatch_idx: entering idx={} {}", idx_enter, self.state_name(idx_enter));
                     self.states[idx_enter].enter_cnt += 1;
-                    (state_enter)(&mut self.sm, msg);
+                    (state_enter)(&mut self.sm.borrow_mut(), msg);
                     self.states[idx_enter].active = true;
                 }
             }
@@ -310,7 +345,8 @@ impl<SM, P> Executor<SM, P> {
         //log::trace!("dispatch_idx: processing idx={} {}", idx, self.state_name(idx));
 
         self.states[idx].process_cnt += 1;
-        let (handled, transition) = (self.states[idx].process)(&mut self.sm, msg);
+        let (handled, transition) =
+            (self.states[idx].process)(&mut self.sm.borrow_mut(), self, msg);
         if let Some(idx_next_state) = transition {
             if self.idx_transition_dest.is_none() {
                 // First Transition it will be the idx_transition_dest
@@ -355,7 +391,7 @@ impl<SM, P> Executor<SM, P> {
                 if let Some(state_exit) = self.states[idx_exit].exit {
                     //log::trace!("dispatch_idx: exiting idx={} {}", idx_exit, self.state_name(idx_exit));
                     self.states[idx_exit].exit_cnt += 1;
-                    (state_exit)(&mut self.sm, msg);
+                    (state_exit)(&mut self.sm.borrow_mut(), msg);
                     self.states[idx_exit].active = false;
                 }
             }
@@ -371,21 +407,101 @@ impl<SM, P> Executor<SM, P> {
 
         self.current_state_changed
     }
+
+    // TODO: More testing at warnings are needed that defering messages
+    // is "dangerous" and processing time increases for new messages. There
+    // maybe other dangers too!
+    pub fn dispatcher(self: &mut Executor<SM, P>, msg: &P) {
+        //log::trace!("dispatcher:+ msg={msg:?} sm={:?}", self.get_sm());
+        let mut transitioned = self.dispatch(msg);
+        //log::trace!("dispatcher:  msg={msg:?} sm={:?} ret={transitioned}", self.get_sm());
+
+        // Process all deferred messages we if we've transitioned
+        // above or within the loop below.
+        while transitioned {
+            //log::trace!("dispatcher:  TOL transitioned");
+            transitioned = false;
+
+            // Switch to next set of deferred messages
+            self.next_defer();
+
+            // And process all of them before we do another next_defer().
+            // If we didn't do this we could process newly deferred message
+            // before we process previously deferred messages. In other words,
+            // we guarantee that previously sent messages are always processed
+            // before newly sent messages! TODO: add a messge counter or
+            // timestamp so we can guarantee this when testing!
+            while let Ok(m) = self.defer_try_recv() {
+                //log::trace!("dispatcher:  deferred msg={m:?} sm={:?}", self.get_sm());
+                transitioned |= self.dispatch(&m);
+                //log::trace!("dispatcher:  deferred msg={m:?} sm={:?} ret={transitioned}", self.get_sm());
+            }
+        }
+
+        // At this point we've processed the incoming message and let
+        // the SM reprocessed all deferred messages at least one more
+        // time after each subsequent transition.
+        //
+        // There may still have deferred messages but the SM didn't
+        // transition so those will be processed after this fn is
+        // called with a new message which causes a transition.
+
+        //log::trace!("dispatcher:- msg={msg:?} sm={:?}", self.get_sm());
+    }
+
+    // Defer support
+    pub fn recv(&self) -> Result<P, RecvError> {
+        self.primary_rx.recv()
+    }
+
+    pub fn try_recv(&self) -> Result<P, TryRecvError> {
+        self.primary_rx.try_recv()
+    }
+
+    pub fn send(&self, m: P) -> Result<(), SendError<P>> {
+        self.primary_tx.send(m)
+    }
+
+    //fn clone_sender(&self) -> Sender<M> {
+    //    self.primary_tx.clone()
+    //}
+
+    pub fn defer_try_recv(&self) -> Result<P, TryRecvError> {
+        self.defer_rx[self.other_defer()].try_recv()
+    }
+
+    pub fn defer_send(&self, m: P) -> Result<(), SendError<P>> {
+        self.defer_tx[self.current_defer()].send(m)
+    }
+
+    pub fn next_defer(&mut self) {
+        self.current_defer_idx = (self.current_defer_idx + 1) % self.defer_tx.len();
+    }
+
+    pub fn current_defer(&self) -> usize {
+        self.current_defer_idx
+    }
+
+    pub fn other_defer(&self) -> usize {
+        (self.current_defer_idx + 1) % self.defer_tx.len()
+    }
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
 
-    // Test SM with one state with one field
+    // Test SM with one state with one field and no enter or exit
     #[test]
     #[no_coverage]
     fn test_sm_1s_no_enter_no_exit() {
+        #[derive(Debug)]
         pub struct StateMachine {
             state: i32,
         }
 
         // Create a Protocol
+        #[derive(Debug)]
         pub struct NoMessages;
 
         const MAX_STATES: usize = 1;
@@ -394,7 +510,7 @@ mod test {
         impl StateMachine {
             #[no_coverage]
             fn new() -> Executor<Self, NoMessages> {
-                let sm = StateMachine { state: 0 };
+                let sm = RefCell::new(StateMachine { state: 0 });
                 let mut sme = Executor::new(sm, MAX_STATES);
 
                 sme.state(StateInfo::new("state1", None, Self::state1, None, None))
@@ -405,44 +521,48 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, _msg: &NoMessages) -> StateResult {
+            fn state1(&mut self, e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+                println!("{}:+", e.get_state_name(IDX_STATE1));
+
                 self.state += 1;
 
+                println!("{}:-", e.get_state_name(IDX_STATE1));
                 (Handled::Yes, None)
-                //(Handled::Yes, None)
             }
         }
 
         // Create a sme and validate it's in the expected state
         let mut sme = StateMachine::new();
-        assert_eq!(std::mem::size_of_val(sme.get_sm()), 4);
+        assert_eq!(std::mem::size_of_val(sme.get_sm()), 16);
         assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
         assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 0);
         assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
-        assert_eq!(sme.get_sm().state, 0);
+        assert_eq!(sme.get_sm().borrow().state, 0);
 
-        sme.dispatch(&NoMessages);
+        sme.dispatcher(&NoMessages);
         assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
         assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 1);
         assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
-        assert_eq!(sme.get_sm().state, 1);
+        assert_eq!(sme.get_sm().borrow().state, 1);
 
-        sme.dispatch(&NoMessages);
+        sme.dispatcher(&NoMessages);
         assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
         assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 2);
         assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
-        assert_eq!(sme.get_sm().state, 2);
+        assert_eq!(sme.get_sm().borrow().state, 2);
     }
 
     // Test SM with one state getting names
     #[test]
     #[no_coverage]
     fn test_sm_1s_get_names() {
+        #[derive(Debug)]
         pub struct StateMachine {
             state: i32,
         }
 
         // Create a Protocol
+        #[derive(Debug)]
         pub struct NoMessages;
 
         const MAX_STATES: usize = 1;
@@ -451,7 +571,7 @@ mod test {
         impl StateMachine {
             #[no_coverage]
             fn new() -> Executor<Self, NoMessages> {
-                let sm = StateMachine { state: 0 };
+                let sm = RefCell::new(StateMachine { state: 0 });
                 let mut sme = Executor::new(sm, MAX_STATES);
 
                 sme.state(StateInfo::new("state1", None, Self::state1, None, None))
@@ -462,7 +582,11 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, _msg: &NoMessages) -> StateResult {
+            fn state1(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 self.state += 1;
 
                 (Handled::Yes, None)
@@ -471,17 +595,17 @@ mod test {
 
         // Create a sme and validate it's in the expected state
         let mut sme = StateMachine::new();
-        assert_eq!(sme.get_sm().state, 0);
+        assert_eq!(sme.get_sm().borrow().state, 0);
         assert_eq!(sme.get_state_name(IDX_STATE1), "state1");
         assert_eq!(sme.get_current_state_name(), "state1");
 
         sme.dispatch(&NoMessages);
-        assert_eq!(sme.get_sm().state, 1);
+        assert_eq!(sme.get_sm().borrow().state, 1);
         assert_eq!(sme.get_state_name(IDX_STATE1), "state1");
         assert_eq!(sme.get_current_state_name(), "state1");
 
         sme.dispatch(&NoMessages);
-        assert_eq!(sme.get_sm().state, 2);
+        assert_eq!(sme.get_sm().borrow().state, 2);
         assert_eq!(sme.get_state_name(IDX_STATE1), "state1");
         assert_eq!(sme.get_current_state_name(), "state1");
     }
@@ -490,11 +614,13 @@ mod test {
     #[test]
     #[no_coverage]
     fn test_sm_2s_get_names() {
+        #[derive(Debug)]
         pub struct StateMachine {
             state: i32,
         }
 
         // Create a Protocol
+        #[derive(Debug)]
         pub struct NoMessages;
 
         const MAX_STATES: usize = 2;
@@ -504,7 +630,7 @@ mod test {
         impl StateMachine {
             #[no_coverage]
             fn new() -> Executor<Self, NoMessages> {
-                let sm = StateMachine { state: 0 };
+                let sm = RefCell::new(StateMachine { state: 0 });
                 let mut sme = Executor::new(sm, MAX_STATES);
 
                 sme.state(StateInfo::new("state1", None, Self::state1, None, None))
@@ -516,14 +642,22 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, _msg: &NoMessages) -> StateResult {
+            fn state1(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 self.state += 1;
 
                 (Handled::Yes, Some(IDX_STATE2))
             }
 
             #[no_coverage]
-            fn state2(&mut self, _msg: &NoMessages) -> StateResult {
+            fn state2(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 self.state -= 1;
 
                 (Handled::Yes, Some(IDX_STATE1))
@@ -532,17 +666,17 @@ mod test {
 
         // Create a sme and validate it's in the expected state
         let mut sme = StateMachine::new();
-        assert_eq!(sme.get_sm().state, 0);
+        assert_eq!(sme.get_sm().borrow().state, 0);
         assert_eq!(sme.get_state_name(IDX_STATE1), "state1");
         assert_eq!(sme.get_current_state_name(), "state1");
 
         sme.dispatch(&NoMessages);
-        assert_eq!(sme.get_sm().state, 1);
+        assert_eq!(sme.get_sm().borrow().state, 1);
         assert_eq!(sme.get_state_name(IDX_STATE2), "state2");
         assert_eq!(sme.get_current_state_name(), "state2");
 
         sme.dispatch(&NoMessages);
-        assert_eq!(sme.get_sm().state, 0);
+        assert_eq!(sme.get_sm().borrow().state, 0);
         assert_eq!(sme.get_state_name(IDX_STATE1), "state1");
         assert_eq!(sme.get_current_state_name(), "state1");
     }
@@ -551,9 +685,11 @@ mod test {
     #[no_coverage]
     #[should_panic]
     fn test_sm_out_of_bounds_initial_transition() {
+        #[derive(Debug)]
         pub struct StateMachine;
 
         // Create a Protocol
+        #[derive(Debug)]
         pub struct NoMessages;
 
         const MAX_STATES: usize = 1;
@@ -563,7 +699,7 @@ mod test {
         impl StateMachine {
             #[no_coverage]
             fn new() -> Executor<Self, NoMessages> {
-                let sm = StateMachine;
+                let sm = RefCell::new(StateMachine);
                 let mut sme = Executor::new(sm, MAX_STATES);
 
                 sme.state(StateInfo::new("state1", None, Self::state1, None, None))
@@ -574,7 +710,11 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, _: &NoMessages) -> StateResult {
+            fn state1(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 // Invalid transition that is not less than MAX_STATES
                 (Handled::Yes, Some(1))
             }
@@ -595,9 +735,11 @@ mod test {
     #[no_coverage]
     #[should_panic]
     fn test_sm_invalid_initial_state() {
+        #[derive(Debug)]
         pub struct StateMachine;
 
         // Create a Protocol
+        #[derive(Debug)]
         pub struct NoMessages;
 
         const MAX_STATES: usize = 1;
@@ -607,7 +749,7 @@ mod test {
         impl StateMachine {
             #[no_coverage]
             fn new() -> Executor<Self, NoMessages> {
-                let sm = StateMachine;
+                let sm = RefCell::new(StateMachine);
                 let mut sme = Executor::new(sm, MAX_STATES);
 
                 sme.state(StateInfo::new("state1", None, Self::state1, None, None))
@@ -625,12 +767,20 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, _: &NoMessages) -> StateResult {
+            fn state1(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
 
             #[no_coverage]
-            fn state2(&mut self, _: &NoMessages) -> StateResult {
+            fn state2(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 // Invalid transition IDX_STATE1 isn't a leaf
                 (Handled::Yes, Some(IDX_STATE1))
             }
@@ -644,9 +794,11 @@ mod test {
     #[no_coverage]
     #[should_panic]
     fn test_sm_2s_invalid_transition() {
+        #[derive(Debug)]
         pub struct StateMachine;
 
         // Create a Protocol
+        #[derive(Debug)]
         pub struct NoMessages;
 
         const MAX_STATES: usize = 1;
@@ -656,7 +808,7 @@ mod test {
         impl StateMachine {
             #[no_coverage]
             fn new() -> Executor<Self, NoMessages> {
-                let sm = StateMachine;
+                let sm = RefCell::new(StateMachine);
                 let mut sme = Executor::new(sm, MAX_STATES);
 
                 sme.state(StateInfo::new("state1", None, Self::state1, None, None))
@@ -674,12 +826,20 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, _: &NoMessages) -> StateResult {
+            fn state1(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
 
             #[no_coverage]
-            fn state2(&mut self, _: &NoMessages) -> StateResult {
+            fn state2(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 // Invalid transition IDX_STATE1 isn't a leaf
                 (Handled::Yes, Some(IDX_STATE1))
             }
@@ -687,7 +847,7 @@ mod test {
 
         // Create a sme and validate it's in the expected state
         let mut sme = StateMachine::new();
-        assert_eq!(std::mem::size_of_val(sme.get_sm()), 0);
+        assert_eq!(std::mem::size_of_val(sme.get_sm()), 4);
         assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
         assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 0);
         assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
@@ -701,9 +861,11 @@ mod test {
     #[no_coverage]
     #[should_panic]
     fn test_sm_out_of_bounds_invalid_transition() {
+        #[derive(Debug)]
         pub struct StateMachine;
 
         // Create a Protocol
+        #[derive(Debug)]
         pub struct NoMessages;
 
         const MAX_STATES: usize = 1;
@@ -712,7 +874,7 @@ mod test {
         impl StateMachine {
             #[no_coverage]
             fn new() -> Executor<Self, NoMessages> {
-                let sm = StateMachine;
+                let sm = RefCell::new(StateMachine);
                 let mut sme = Executor::new(sm, MAX_STATES);
 
                 sme.state(StateInfo::new("state1", None, Self::state1, None, None))
@@ -723,7 +885,11 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, _: &NoMessages) -> StateResult {
+            fn state1(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 // Invalid transition that is not less than MAX_STATES
                 (Handled::Yes, Some(1))
             }
@@ -744,12 +910,14 @@ mod test {
     #[test]
     #[no_coverage]
     fn test_sm_1s_enter_no_exit() {
+        #[derive(Debug)]
         pub struct StateMachine {
             state: i32,
         }
 
         // Create a Protocol
-        pub enum Message {
+        #[derive(Debug)]
+        pub enum Messages {
             Add { val: i32 },
             Sub { val: i32 },
         }
@@ -759,8 +927,8 @@ mod test {
 
         impl StateMachine {
             #[no_coverage]
-            fn new() -> Executor<Self, Message> {
-                let sm = StateMachine { state: 0 };
+            fn new() -> Executor<Self, Messages> {
+                let sm = RefCell::new(StateMachine { state: 0 });
                 let mut sme = Executor::new(sm, MAX_STATES);
 
                 sme.state(StateInfo::new(
@@ -777,15 +945,15 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1_enter(&mut self, _msg: &Message) {
+            fn state1_enter(&mut self, _msg: &Messages) {
                 self.state = 100;
             }
 
             #[no_coverage]
-            fn state1(&mut self, msg: &Message) -> StateResult {
+            fn state1(&mut self, _e: &Executor<Self, Messages>, msg: &Messages) -> StateResult {
                 match msg {
-                    Message::Add { val } => self.state += val,
-                    Message::Sub { val } => self.state -= val,
+                    Messages::Add { val } => self.state += val,
+                    Messages::Sub { val } => self.state -= val,
                 }
                 (Handled::Yes, None)
             }
@@ -793,34 +961,36 @@ mod test {
 
         // Create a sme and validate it's in the expected state
         let mut sme = StateMachine::new();
-        assert_eq!(std::mem::size_of_val(sme.get_sm()), 4);
+        assert_eq!(std::mem::size_of_val(sme.get_sm()), 16);
         assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
         assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 0);
         assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
-        assert_eq!(sme.get_sm().state, 0);
+        assert_eq!(sme.get_sm().borrow().state, 0);
 
-        sme.dispatch(&Message::Add { val: 2 });
+        sme.dispatch(&Messages::Add { val: 2 });
         assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 1);
         assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 1);
         assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
-        assert_eq!(sme.get_sm().state, 102);
+        assert_eq!(sme.get_sm().borrow().state, 102);
 
-        sme.dispatch(&Message::Sub { val: 1 });
+        sme.dispatch(&Messages::Sub { val: 1 });
         assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 1);
         assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 2);
         assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
-        assert_eq!(sme.get_sm().state, 101);
+        assert_eq!(sme.get_sm().borrow().state, 101);
     }
 
     // Test SM with twos state with one field
     #[test]
     #[no_coverage]
     fn test_sm_2s_no_enter_no_exit() {
+        #[derive(Debug)]
         pub struct StateMachine {
             state: i32,
         }
 
         // Create a Protocol
+        #[derive(Debug)]
         pub enum Message {
             Add { val: i32 },
         }
@@ -832,7 +1002,7 @@ mod test {
         impl StateMachine {
             #[no_coverage]
             fn new() -> Executor<Self, Message> {
-                let sm = StateMachine { state: 0 };
+                let sm = RefCell::new(StateMachine { state: 0 });
                 let mut sme = Executor::new(sm, MAX_STATES);
 
                 sme.state(StateInfo::new("state1", None, Self::state1, None, None))
@@ -844,7 +1014,7 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, msg: &Message) -> StateResult {
+            fn state1(&mut self, _e: &Executor<Self, Message>, msg: &Message) -> StateResult {
                 match msg {
                     Message::Add { val } => self.state += val,
                 }
@@ -852,7 +1022,7 @@ mod test {
             }
 
             #[no_coverage]
-            fn state2(&mut self, msg: &Message) -> StateResult {
+            fn state2(&mut self, _e: &Executor<Self, Message>, msg: &Message) -> StateResult {
                 match msg {
                     Message::Add { val } => self.state += 2 * val,
                 }
@@ -862,14 +1032,14 @@ mod test {
 
         // Create a sme and validate it's in the expected state
         let mut sme = StateMachine::new();
-        assert_eq!(std::mem::size_of_val(sme.get_sm()), 4);
+        assert_eq!(std::mem::size_of_val(sme.get_sm()), 16);
         assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
         assert_eq!(sme.get_state_process_cnt(IDX_STATE1), 0);
         assert_eq!(sme.get_state_exit_cnt(IDX_STATE1), 0);
         assert_eq!(sme.get_state_enter_cnt(IDX_STATE2), 0);
         assert_eq!(sme.get_state_process_cnt(IDX_STATE2), 0);
         assert_eq!(sme.get_state_exit_cnt(IDX_STATE2), 0);
-        assert_eq!(sme.get_sm().state, 0);
+        assert_eq!(sme.get_sm().borrow().state, 0);
 
         sme.dispatch(&Message::Add { val: 2 });
         assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
@@ -878,7 +1048,7 @@ mod test {
         assert_eq!(sme.get_state_enter_cnt(IDX_STATE2), 0);
         assert_eq!(sme.get_state_process_cnt(IDX_STATE2), 0);
         assert_eq!(sme.get_state_exit_cnt(IDX_STATE2), 0);
-        assert_eq!(sme.get_sm().state, 2);
+        assert_eq!(sme.get_sm().borrow().state, 2);
 
         sme.dispatch(&Message::Add { val: -1 });
         assert_eq!(sme.get_state_enter_cnt(IDX_STATE1), 0);
@@ -887,18 +1057,20 @@ mod test {
         assert_eq!(sme.get_state_enter_cnt(IDX_STATE2), 0);
         assert_eq!(sme.get_state_process_cnt(IDX_STATE2), 1);
         assert_eq!(sme.get_state_exit_cnt(IDX_STATE2), 0);
-        assert_eq!(sme.get_sm().state, 0);
+        assert_eq!(sme.get_sm().borrow().state, 0);
     }
 
     // Test SM with twos state with one field
     #[test]
     #[no_coverage]
     fn test_sm_1h_2s_not_handled_no_enter_no_exit() {
+        #[derive(Debug)]
         pub struct StateMachine {
             state: i32,
         }
 
         // Create a Protocol
+        #[derive(Debug)]
         pub enum Message {
             Add { val: i32 },
             Sub { val: i32 },
@@ -911,7 +1083,7 @@ mod test {
         impl StateMachine {
             #[no_coverage]
             fn new() -> Executor<Self, Message> {
-                let sm = StateMachine { state: 0 };
+                let sm = RefCell::new(StateMachine { state: 0 });
                 let mut sme = Executor::new(sm, MAX_STATES);
 
                 sme.state(StateInfo::new("parent", None, Self::parent, None, None))
@@ -929,7 +1101,7 @@ mod test {
             }
 
             #[no_coverage]
-            fn parent(&mut self, msg: &Message) -> StateResult {
+            fn parent(&mut self, _e: &Executor<Self, Message>, msg: &Message) -> StateResult {
                 match msg {
                     Message::Add { val } => self.state += val,
                     Message::Sub { val } => self.state -= val,
@@ -938,21 +1110,21 @@ mod test {
             }
 
             #[no_coverage]
-            fn child(&mut self, _msg: &Message) -> StateResult {
+            fn child(&mut self, _e: &Executor<Self, Message>, _msg: &Message) -> StateResult {
                 (Handled::No, None)
             }
         }
 
         // Create a sme and validate it's in the expected state
         let mut sme = StateMachine::new();
-        assert_eq!(std::mem::size_of_val(sme.get_sm()), 4);
+        assert_eq!(std::mem::size_of_val(sme.get_sm()), 16);
         assert_eq!(sme.get_state_enter_cnt(IDX_PARENT), 0);
         assert_eq!(sme.get_state_process_cnt(IDX_PARENT), 0);
         assert_eq!(sme.get_state_exit_cnt(IDX_PARENT), 0);
         assert_eq!(sme.get_state_enter_cnt(IDX_CHILD), 0);
         assert_eq!(sme.get_state_process_cnt(IDX_CHILD), 0);
         assert_eq!(sme.get_state_exit_cnt(IDX_CHILD), 0);
-        assert_eq!(sme.get_sm().state, 0);
+        assert_eq!(sme.get_sm().borrow().state, 0);
 
         sme.dispatch(&Message::Add { val: 2 });
         assert_eq!(sme.get_state_enter_cnt(IDX_PARENT), 0);
@@ -961,7 +1133,7 @@ mod test {
         assert_eq!(sme.get_state_enter_cnt(IDX_CHILD), 0);
         assert_eq!(sme.get_state_process_cnt(IDX_CHILD), 1);
         assert_eq!(sme.get_state_exit_cnt(IDX_CHILD), 0);
-        assert_eq!(sme.get_sm().state, 2);
+        assert_eq!(sme.get_sm().borrow().state, 2);
 
         sme.dispatch(&Message::Sub { val: 1 });
         assert_eq!(sme.get_state_enter_cnt(IDX_PARENT), 0);
@@ -970,7 +1142,7 @@ mod test {
         assert_eq!(sme.get_state_enter_cnt(IDX_CHILD), 0);
         assert_eq!(sme.get_state_process_cnt(IDX_CHILD), 2);
         assert_eq!(sme.get_state_exit_cnt(IDX_CHILD), 0);
-        assert_eq!(sme.get_sm().state, 1);
+        assert_eq!(sme.get_sm().borrow().state, 1);
     }
 
     #[test]
@@ -985,9 +1157,11 @@ mod test {
         //      /                     \
         //    other=2   <======>   initial=1
 
+        #[derive(Debug)]
         struct StateMachine;
 
         // Create a Protocol with no messages
+        #[derive(Debug)]
         struct NoMessages;
 
         const MAX_STATES: usize = 3;
@@ -998,7 +1172,7 @@ mod test {
         impl StateMachine {
             #[no_coverage]
             fn new() -> Executor<Self, NoMessages> {
-                let sm = StateMachine;
+                let sm = RefCell::new(StateMachine);
                 let mut sme = Executor::new(sm, MAX_STATES);
 
                 sme.state(StateInfo::new(
@@ -1032,7 +1206,7 @@ mod test {
 
             // This state has idx 0
             #[no_coverage]
-            fn base(&mut self, _msg: &NoMessages) -> StateResult {
+            fn base(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
                 (Handled::Yes, None)
             }
 
@@ -1041,7 +1215,11 @@ mod test {
 
             // This state has idx 0
             #[no_coverage]
-            fn initial(&mut self, _msg: &NoMessages) -> StateResult {
+            fn initial(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, Some(IDX_OTHER))
             }
 
@@ -1053,7 +1231,7 @@ mod test {
 
             // This state has idx 0
             #[no_coverage]
-            fn other(&mut self, _msg: &NoMessages) -> StateResult {
+            fn other(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
                 (Handled::Yes, Some(IDX_INITIAL))
             }
 
@@ -1063,7 +1241,7 @@ mod test {
 
         // Create a sme and validate it's in the expected state
         let mut sme = StateMachine::new();
-        assert_eq!(std::mem::size_of_val(sme.get_sm()), 0);
+        assert_eq!(std::mem::size_of_val(sme.get_sm()), 8);
         assert_eq!(sme.get_state_enter_cnt(IDX_BASE), 0);
         assert_eq!(sme.get_state_process_cnt(IDX_BASE), 0);
         assert_eq!(sme.get_state_exit_cnt(IDX_BASE), 0);
@@ -1142,9 +1320,11 @@ mod test {
         //       |                     |
         //     other=3              initial=1
 
+        #[derive(Debug)]
         pub struct StateMachine;
 
         // Create a Protocol with no messages
+        #[derive(Debug)]
         pub struct NoMessages;
 
         const MAX_STATES: usize = 4;
@@ -1156,7 +1336,7 @@ mod test {
         impl StateMachine {
             #[no_coverage]
             fn new() -> Executor<Self, NoMessages> {
-                let sm = StateMachine;
+                let sm = RefCell::new(StateMachine);
                 let mut sme = Executor::new(sm, MAX_STATES);
 
                 sme.state(StateInfo::new(
@@ -1198,7 +1378,11 @@ mod test {
 
             // This state has hdl 0
             #[no_coverage]
-            fn initial_base(&mut self, _msg: &NoMessages) -> StateResult {
+            fn initial_base(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
 
@@ -1210,7 +1394,11 @@ mod test {
 
             // This state has hdl 0
             #[no_coverage]
-            fn initial(&mut self, _msg: &NoMessages) -> StateResult {
+            fn initial(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, Some(IDX_OTHER))
             }
 
@@ -1222,7 +1410,11 @@ mod test {
 
             // This state has hdl 0
             #[no_coverage]
-            fn other_base(&mut self, _msg: &NoMessages) -> StateResult {
+            fn other_base(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
 
@@ -1234,7 +1426,7 @@ mod test {
 
             // This state has hdl 0
             #[no_coverage]
-            fn other(&mut self, _msg: &NoMessages) -> StateResult {
+            fn other(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
                 (Handled::Yes, Some(IDX_INITIAL))
             }
 
@@ -1244,7 +1436,7 @@ mod test {
 
         // Create a sme and validate it's in the expected state
         let mut sme = StateMachine::new();
-        assert_eq!(std::mem::size_of_val(sme.get_sm()), 0);
+        assert_eq!(std::mem::size_of_val(sme.get_sm()), 8);
         assert_eq!(sme.get_state_enter_cnt(IDX_INITIAL_BASE), 0);
         assert_eq!(sme.get_state_process_cnt(IDX_INITIAL_BASE), 0);
         assert_eq!(sme.get_state_exit_cnt(IDX_INITIAL_BASE), 0);
@@ -1340,9 +1532,11 @@ mod test {
         //     v    |
         //  state1 --
 
+        #[derive(Debug)]
         pub struct StateMachine;
 
         // Create a Protocol
+        #[derive(Debug)]
         pub struct NoMessages;
 
         const MAX_STATES: usize = 1;
@@ -1351,7 +1545,7 @@ mod test {
         impl StateMachine {
             #[no_coverage]
             fn new() {
-                let sm = StateMachine;
+                let sm = RefCell::new(StateMachine);
                 let mut sme = Executor::new(sm, MAX_STATES);
 
                 // Add state that has itself as it's parent
@@ -1371,7 +1565,11 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, _msg: &NoMessages) -> StateResult {
+            fn state1(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
         }
@@ -1390,9 +1588,11 @@ mod test {
         //     v    |
         //  state1 --     state2
 
+        #[derive(Debug)]
         pub struct StateMachine;
 
         // Create a Protocol
+        #[derive(Debug)]
         pub struct NoMessages;
 
         const MAX_STATES: usize = 1;
@@ -1402,7 +1602,7 @@ mod test {
         impl StateMachine {
             #[no_coverage]
             fn new() {
-                let sm = StateMachine;
+                let sm = RefCell::new(StateMachine);
                 let mut sme = Executor::new(sm, MAX_STATES);
 
                 // Add state that has itself as it's parent
@@ -1423,12 +1623,20 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, _msg: &NoMessages) -> StateResult {
+            fn state1(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
 
             #[no_coverage]
-            fn state2(&mut self, _msg: &NoMessages) -> StateResult {
+            fn state2(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
         }
@@ -1447,9 +1655,11 @@ mod test {
         //   v  |
         //  state1
 
+        #[derive(Debug)]
         pub struct StateMachine;
 
         // Create a Protocol
+        #[derive(Debug)]
         pub struct NoMessages;
 
         const MAX_STATES: usize = 2;
@@ -1460,7 +1670,7 @@ mod test {
         impl StateMachine {
             #[no_coverage]
             fn new() {
-                let sm = StateMachine;
+                let sm = RefCell::new(StateMachine);
                 let mut sme = Executor::new(sm, MAX_STATES);
 
                 // Add state that has itself as it's parent
@@ -1487,12 +1697,20 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, _msg: &NoMessages) -> StateResult {
+            fn state1(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
 
             #[no_coverage]
-            fn state2(&mut self, _msg: &NoMessages) -> StateResult {
+            fn state2(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
         }
@@ -1511,9 +1729,11 @@ mod test {
         //   v  |
         //  state1
 
+        #[derive(Debug)]
         pub struct StateMachine;
 
         // Create a Protocol
+        #[derive(Debug)]
         pub struct NoMessages;
 
         const MAX_STATES: usize = 2;
@@ -1523,7 +1743,7 @@ mod test {
         impl StateMachine {
             #[no_coverage]
             fn new() {
-                let sm = StateMachine;
+                let sm = RefCell::new(StateMachine);
                 let mut sme = Executor::new(sm, MAX_STATES);
 
                 // Add state that has itself as it's parent
@@ -1551,17 +1771,29 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, _msg: &NoMessages) -> StateResult {
+            fn state1(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
 
             #[no_coverage]
-            fn state2(&mut self, _msg: &NoMessages) -> StateResult {
+            fn state2(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
 
             #[no_coverage]
-            fn state3(&mut self, _msg: &NoMessages) -> StateResult {
+            fn state3(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
         }
@@ -1587,9 +1819,11 @@ mod test {
         //      state4     state5
         //
 
+        #[derive(Debug)]
         pub struct StateMachine;
 
         // Create a Protocol
+        #[derive(Debug)]
         pub struct NoMessages;
 
         const MAX_STATES: usize = 5;
@@ -1602,7 +1836,7 @@ mod test {
         impl StateMachine {
             #[no_coverage]
             fn new() {
-                let sm = StateMachine;
+                let sm = RefCell::new(StateMachine);
                 let mut sme = Executor::new(sm, MAX_STATES);
 
                 // Add state that has itself as it's parent
@@ -1650,27 +1884,47 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, _msg: &NoMessages) -> StateResult {
+            fn state1(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
 
             #[no_coverage]
-            fn state2(&mut self, _msg: &NoMessages) -> StateResult {
+            fn state2(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
 
             #[no_coverage]
-            fn state3(&mut self, _msg: &NoMessages) -> StateResult {
+            fn state3(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
 
             #[no_coverage]
-            fn state4(&mut self, _msg: &NoMessages) -> StateResult {
+            fn state4(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
 
             #[no_coverage]
-            fn state5(&mut self, _msg: &NoMessages) -> StateResult {
+            fn state5(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
         }
