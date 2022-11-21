@@ -583,7 +583,11 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn state1(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 self.state += 1;
 
                 (Handled::Yes, None)
@@ -639,14 +643,22 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn state1(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 self.state += 1;
 
                 (Handled::Yes, Some(IDX_STATE2))
             }
 
             #[no_coverage]
-            fn state2(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn state2(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 self.state -= 1;
 
                 (Handled::Yes, Some(IDX_STATE1))
@@ -699,7 +711,11 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn state1(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 // Invalid transition that is not less than MAX_STATES
                 (Handled::Yes, Some(1))
             }
@@ -752,12 +768,20 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn state1(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
 
             #[no_coverage]
-            fn state2(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn state2(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 // Invalid transition IDX_STATE1 isn't a leaf
                 (Handled::Yes, Some(IDX_STATE1))
             }
@@ -803,12 +827,20 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn state1(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
 
             #[no_coverage]
-            fn state2(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn state2(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 // Invalid transition IDX_STATE1 isn't a leaf
                 (Handled::Yes, Some(IDX_STATE1))
             }
@@ -854,7 +886,11 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn state1(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 // Invalid transition that is not less than MAX_STATES
                 (Handled::Yes, Some(1))
             }
@@ -1048,7 +1084,7 @@ mod test {
         impl StateMachine {
             #[no_coverage]
             fn new() -> Executor<Self, Message> {
-                let sm = RefCell::new(StateMachine{ state: 0 });
+                let sm = RefCell::new(StateMachine { state: 0 });
                 let mut sme = Executor::new(sm, MAX_STATES);
 
                 sme.state(StateInfo::new("parent", None, Self::parent, None, None))
@@ -1180,7 +1216,11 @@ mod test {
 
             // This state has idx 0
             #[no_coverage]
-            fn initial(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn initial(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, Some(IDX_OTHER))
             }
 
@@ -1339,7 +1379,11 @@ mod test {
 
             // This state has hdl 0
             #[no_coverage]
-            fn initial_base(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn initial_base(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
 
@@ -1351,7 +1395,11 @@ mod test {
 
             // This state has hdl 0
             #[no_coverage]
-            fn initial(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn initial(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, Some(IDX_OTHER))
             }
 
@@ -1363,7 +1411,11 @@ mod test {
 
             // This state has hdl 0
             #[no_coverage]
-            fn other_base(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn other_base(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
 
@@ -1514,7 +1566,11 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn state1(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
         }
@@ -1568,12 +1624,20 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn state1(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
 
             #[no_coverage]
-            fn state2(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn state2(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
         }
@@ -1634,12 +1698,20 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn state1(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
 
             #[no_coverage]
-            fn state2(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn state2(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
         }
@@ -1700,17 +1772,29 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn state1(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
 
             #[no_coverage]
-            fn state2(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn state2(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
 
             #[no_coverage]
-            fn state3(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn state3(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
         }
@@ -1801,27 +1885,47 @@ mod test {
             }
 
             #[no_coverage]
-            fn state1(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn state1(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
 
             #[no_coverage]
-            fn state2(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn state2(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
 
             #[no_coverage]
-            fn state3(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn state3(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
 
             #[no_coverage]
-            fn state4(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn state4(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
 
             #[no_coverage]
-            fn state5(&mut self, _e: &Executor<Self, NoMessages>, _msg: &NoMessages) -> StateResult {
+            fn state5(
+                &mut self,
+                _e: &Executor<Self, NoMessages>,
+                _msg: &NoMessages,
+            ) -> StateResult {
                 (Handled::Yes, None)
             }
         }
