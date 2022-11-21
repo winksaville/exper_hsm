@@ -15,7 +15,7 @@ enum Messages {
 }
 
 #[derive(Debug)]
-struct SendMsgToSelfSm {
+struct DeferMsgsSm {
     val: i32,
 }
 
@@ -23,9 +23,9 @@ const MAX_STATES: usize = 2;
 const IDX_DEFERRING: usize = 0;
 const IDX_DO_DEFERRED_WORK: usize = 1;
 
-impl SendMsgToSelfSm {
+impl DeferMsgsSm {
     pub fn new() -> Result<Executor<Self, Messages>, DynError> {
-        let sm = RefCell::new(SendMsgToSelfSm { val: 0 });
+        let sm = RefCell::new(DeferMsgsSm { val: 0 });
         let mut sme = Executor::new(sm, MAX_STATES);
 
         sme.state(StateInfo::new(
@@ -103,7 +103,7 @@ fn main() {
     env_logger_init("info");
     log::info!("main:+");
 
-    let mut sme = SendMsgToSelfSm::new().unwrap();
+    let mut sme = DeferMsgsSm::new().unwrap();
 
     // Dispatch DeferredValue messages
     for _ in 0..10 {
