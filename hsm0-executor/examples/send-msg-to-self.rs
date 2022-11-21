@@ -1,4 +1,4 @@
-use std::sync::mpsc::Sender;
+use std::{cell::RefCell, sync::mpsc::Sender};
 
 use custom_logger::env_logger_init;
 
@@ -22,10 +22,10 @@ const IDX_DONE: usize = 0;
 
 impl SendMsgToSelfSm {
     pub fn new(sender: Sender<Messages>) -> Result<Executor<Self, Messages>, DynError> {
-        let sm = SendMsgToSelfSm {
+        let sm = RefCell::new(SendMsgToSelfSm {
             self_tx: sender,
             val: 0,
-        };
+        });
         let mut sme = Executor::new(sm, MAX_STATES);
 
         sme.state(StateInfo::new("base", None, Self::base, None, None))
@@ -42,7 +42,7 @@ impl SendMsgToSelfSm {
         Ok(sme)
     }
 
-    fn base(&mut self, msg: &Messages) -> StateResult {
+    fn base(&mut self, _e: &Executor<Self, Messages>, msg: &Messages) -> StateResult {
         match msg {
             Messages::Value { val } => {
                 log::info!("base Messages::Value:+ val={}", val);
@@ -71,7 +71,7 @@ impl SendMsgToSelfSm {
         }
     }
 
-    fn done(&mut self, _msg: &Messages) -> StateResult {
+    fn done(&mut self, _e: &Executor<Self, Messages>, _msg: &Messages) -> StateResult {
         // Responsed with Done for any messages
         self.send_done();
         log::info!("base:+- self.val={}", self.val);
