@@ -411,7 +411,7 @@ where
     // TODO: More testing at warnings are needed that defering messages
     // is "dangerous" and processing time increases for new messages. There
     // maybe other dangers too!
-    pub fn dispatcher(self: &mut Executor<SM, P>, msg: &P) -> bool {
+    pub fn dispatcher(self: &mut Executor<SM, P>, msg: &P) {
         //log::trace!("dispatcher:+ msg={msg:?} sm={:?}", self.get_sm());
         let mut transitioned = self.dispatch(msg);
         //log::trace!("dispatcher:  msg={msg:?} sm={:?} ret={transitioned}", self.get_sm());
@@ -447,7 +447,6 @@ where
         // called with a new message which causes a transition.
 
         //log::trace!("dispatcher:- msg={msg:?} sm={:?}", self.get_sm());
-        true
     }
 
     // Defer support
