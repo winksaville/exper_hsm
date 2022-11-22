@@ -23,11 +23,10 @@ impl StateMachine {
     fn new() -> Executor<Self, Messages> {
         let sm = RefCell::new(StateMachine { state: 0 });
 
-        let mut sme = Executor::new(sm, MAX_STATES);
-
-        sme.state(StateInfo::new("state1", None, Self::state1, None, None))
-            .state(StateInfo::new("state2", None, Self::state2, None, None))
-            .initialize(IDX_STATE1)
+        let sme = Executor::new(sm, MAX_STATES)
+            .state(StateInfo::new("state1", Self::state1))
+            .state(StateInfo::new("state2", Self::state2))
+            .build(IDX_STATE1)
             .expect("Unexpected error initializing");
 
         sme

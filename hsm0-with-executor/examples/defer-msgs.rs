@@ -26,24 +26,11 @@ const IDX_DO_DEFERRED_WORK: usize = 1;
 impl DeferMsgsSm {
     pub fn new() -> Result<Executor<Self, Messages>, DynError> {
         let sm = RefCell::new(DeferMsgsSm { val: 0 });
-        let mut sme = Executor::new(sm, MAX_STATES);
-
-        sme.state(StateInfo::new(
-            "starting",
-            None,
-            Self::deferring,
-            None,
-            None,
-        ))
-        .state(StateInfo::new(
-            "deferring",
-            None,
-            Self::do_deferred_work,
-            None,
-            None,
-        ))
-        .initialize(IDX_DEFERRING)
-        .expect("Unexpected error initializing");
+        let sme = Executor::new(sm, MAX_STATES)
+            .state(StateInfo::new("starting", Self::deferring))
+            .state(StateInfo::new("deferring", Self::do_deferred_work))
+            .build(IDX_DEFERRING)
+            .expect("Unexpected error initializing");
 
         log::info!(
             "new: inital state={} idxs_enter_fns={:?}",

@@ -3,19 +3,33 @@
 # Separate StateMachine from the code that executes it
 
 In this model there is an `Executor` and the `StateMachine`. The user
-creates the state machine and then passes it to `Executor::new()` which
-builds the Executor.
+creates the state machine and builds by giving it to `Executor::new()`
+then add all of the states one at a time using `with_state()` and
+finally `build()` passing the initial state.
 
 ## Run
 
 Debug:
 ```
 $ cargo run
-    Finished dev [unoptimized + debuginfo] target(s) in 0.01s
-     Running `/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/hsm0-executor`
-main
-[2022-10-27T21:59:10.109484354Z INFO  hsm0_executor  163  1] main:+
-[2022-10-27T21:59:10.109526463Z INFO  hsm0_executor  167  1] main:-
+   Compiling libc v0.2.126
+   Compiling atty v0.2.14
+   Compiling env_logger v0.9.3
+   Compiling custom-logger v0.1.0 (https://github.com/winksaville/custom-logger#4d828a35)
+   Compiling hsm0-with-executor v0.7.0 (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/hsm0-with-executor)
+    Finished dev [unoptimized + debuginfo] target(s) in 1.27s
+     Running `/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/hsm0-with-executor`
+main:+
+main:  &sme=0x7fff45dbe968
+state1:+ &self=0x7fff45dbe970
+state1:-
+state1:+ &self=0x7fff45dbe970
+state2:-
+state1:+ &self=0x7fff45dbe970
+state1:-
+state1:+ &self=0x7fff45dbe970
+state2:-
+main:-
 ```
 
 Release:

@@ -28,37 +28,30 @@ const IDX_OTHER: usize = 3;
 impl StateMachine {
     pub fn new() -> Result<Executor<Self, NoMessages>, DynError> {
         let sm = RefCell::new(StateMachine::default());
-        let mut sme = Executor::new(sm, MAX_STATES);
-
-        sme.state(StateInfo::new(
-            "initial_base",
-            Some(Self::initial_base_enter),
-            Self::initial_base,
-            Some(Self::initial_base_exit),
-            None,
-        ))
-        .state(StateInfo::new(
-            "initial",
-            Some(Self::initial_enter),
-            Self::initial,
-            Some(Self::initial_exit),
-            Some(IDX_INITIAL_BASE),
-        ))
-        .state(StateInfo::new(
-            "other_base",
-            Some(Self::other_base_enter),
-            Self::other_base,
-            Some(Self::other_base_exit),
-            None,
-        ))
-        .state(StateInfo::new(
-            "other",
-            Some(Self::other_enter),
-            Self::other,
-            Some(Self::other_exit),
-            Some(IDX_OTHER_BASE),
-        ))
-        .initialize(IDX_INITIAL)?;
+        let sme = Executor::new(sm, MAX_STATES)
+            .state(
+                StateInfo::new("initial_base", Self::initial_base)
+                    .enter_fn(Self::initial_base_enter)
+                    .exit_fn(Self::initial_base_exit),
+            )
+            .state(
+                StateInfo::new("initial", Self::initial)
+                    .enter_fn(Self::initial_enter)
+                    .exit_fn(Self::initial_exit)
+                    .parent_idx(IDX_INITIAL_BASE),
+            )
+            .state(
+                StateInfo::new("other_base", Self::other_base)
+                    .enter_fn(Self::other_base_enter)
+                    .exit_fn(Self::other_base_exit),
+            )
+            .state(
+                StateInfo::new("other", Self::other)
+                    .enter_fn(Self::other_enter)
+                    .exit_fn(Self::other_exit)
+                    .parent_idx(IDX_OTHER_BASE),
+            )
+            .build(IDX_INITIAL)?;
 
         log::trace!(
             "new: inital state={} idxs_enter_fns={:?}",

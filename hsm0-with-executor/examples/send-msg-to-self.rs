@@ -26,11 +26,10 @@ impl SendMsgToSelfSm {
             self_tx: sender,
             val: 0,
         });
-        let mut sme = Executor::new(sm, MAX_STATES);
-
-        sme.state(StateInfo::new("base", None, Self::base, None, None))
-            .state(StateInfo::new("done", None, Self::done, None, None))
-            .initialize(IDX_BASE)
+        let sme = Executor::new(sm, MAX_STATES)
+            .state(StateInfo::new("base", Self::base))
+            .state(StateInfo::new("done", Self::done))
+            .build(IDX_BASE)
             .expect("Unexpected error initializing");
 
         log::info!(

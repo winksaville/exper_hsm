@@ -28,31 +28,26 @@ const IDX_OTHER: usize = 2;
 impl StateMachine {
     pub fn new() -> Result<Executor<Self, NoMessages>, DynError> {
         let sm = RefCell::new(StateMachine::default());
-        let mut sme = Executor::new(sm, MAX_STATES);
-
-        sme.state(StateInfo::new(
-            "base",
-            Some(Self::base_enter),
-            Self::base,
-            Some(Self::base_exit),
-            None,
-        ))
-        .state(StateInfo::new(
-            "initial",
-            Some(Self::initial_enter),
-            Self::initial,
-            Some(Self::initial_exit),
-            Some(IDX_BASE),
-        ))
-        .state(StateInfo::new(
-            "other",
-            Some(Self::other_enter),
-            Self::other,
-            Some(Self::other_exit),
-            Some(IDX_BASE),
-        ))
-        .initialize(IDX_INITIAL)
-        .expect("Unexpected error initializing");
+        let sme = Executor::new(sm, MAX_STATES)
+            .state(
+                StateInfo::new("base", Self::base)
+                    .enter_fn(Self::base_enter)
+                    .exit_fn(Self::base_exit),
+            )
+            .state(
+                StateInfo::new("initial", Self::initial)
+                    .enter_fn(Self::initial_enter)
+                    .exit_fn(Self::initial_exit)
+                    .parent_idx(IDX_BASE),
+            )
+            .state(
+                StateInfo::new("other", Self::other)
+                    .enter_fn(Self::other_enter)
+                    .exit_fn(Self::other_exit)
+                    .parent_idx(IDX_BASE),
+            )
+            .build(IDX_INITIAL)
+            .expect("Unexpected error initializing");
 
         log::trace!(
             "new: inital state={} idxs_enter_fns={:?}",

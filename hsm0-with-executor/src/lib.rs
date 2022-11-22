@@ -21,6 +21,7 @@ pub type Transition = usize;
 
 pub type StateResult = (Handled, Option<Transition>);
 
+#[derive(Clone)]
 pub struct StateInfo<SM, P> {
     pub name: String,
     pub parent: Option<usize>,
@@ -35,25 +36,37 @@ pub struct StateInfo<SM, P> {
 }
 
 impl<SM, P> StateInfo<SM, P> {
-    pub fn new(
-        name: &str,
-        enter_fn: Option<EnterFn<SM, P>>,
-        process_fn: ProcessFn<SM, P>,
-        exit_fn: Option<ExitFn<SM, P>>,
-        idx_parent: Option<usize>,
-    ) -> Self {
+    pub fn new(name: &str, process_fn: ProcessFn<SM, P>) -> Self {
         StateInfo {
             name: name.to_owned(),
-            parent: idx_parent,
-            enter: enter_fn,
+            parent: None,
+            enter: None,
             process: process_fn,
-            exit: exit_fn,
+            exit: None,
             active: false,
             children_for_cycle_detector: Vec::<usize>::new(),
             enter_cnt: 0,
             process_cnt: 0,
             exit_cnt: 0,
         }
+    }
+
+    pub fn enter_fn(mut self, enter_fn: EnterFn<SM, P>) -> Self {
+        self.enter = Some(enter_fn);
+
+        self
+    }
+
+    pub fn exit_fn(mut self, exit_fn: EnterFn<SM, P>) -> Self {
+        self.exit = Some(exit_fn);
+
+        self
+    }
+
+    pub fn parent_idx(mut self, idx_parent: usize) -> Self {
+        self.parent = Some(idx_parent);
+
+        self
     }
 }
 
@@ -125,7 +138,7 @@ where
     }
 
     // Add a state to the the executor
-    pub fn state(&mut self, state_info: StateInfo<SM, P>) -> &mut Self {
+    pub fn state(mut self, state_info: StateInfo<SM, P>) -> Self {
         self.states.push(state_info);
 
         self
@@ -134,7 +147,7 @@ where
     // Initialize and make the executor ready to dispatch messages.
     //
     // The first state will be the state at idx_initial_state
-    pub fn initialize(&mut self, idx_initial_state: usize) -> Result<(), DynError> {
+    pub fn build(mut self, idx_initial_state: usize) -> Result<Self, DynError> {
         // Initialize StateInfo.children_for_cycle_dector for each state
         self.initialize_children();
 
@@ -186,7 +199,7 @@ where
             self.idxs_enter_fns.push(idx_enter);
         }
 
-        Ok(())
+        Ok(self)
     }
 
     // Kahns algorithm for detecting cycles using a Breath First Search
@@ -511,10 +524,9 @@ mod test {
             #[no_coverage]
             fn new() -> Executor<Self, NoMessages> {
                 let sm = RefCell::new(StateMachine { state: 0 });
-                let mut sme = Executor::new(sm, MAX_STATES);
-
-                sme.state(StateInfo::new("state1", None, Self::state1, None, None))
-                    .initialize(IDX_STATE1)
+                let sme = Executor::new(sm, MAX_STATES)
+                    .state(StateInfo::new("state1", Self::state1))
+                    .build(IDX_STATE1)
                     .expect("Unexpected error initializing");
 
                 sme
@@ -572,10 +584,9 @@ mod test {
             #[no_coverage]
             fn new() -> Executor<Self, NoMessages> {
                 let sm = RefCell::new(StateMachine { state: 0 });
-                let mut sme = Executor::new(sm, MAX_STATES);
-
-                sme.state(StateInfo::new("state1", None, Self::state1, None, None))
-                    .initialize(IDX_STATE1)
+                let sme = Executor::new(sm, MAX_STATES)
+                    .state(StateInfo::new("state1", Self::state1))
+                    .build(IDX_STATE1)
                     .expect("Unexpected error initializing");
 
                 sme
@@ -631,11 +642,10 @@ mod test {
             #[no_coverage]
             fn new() -> Executor<Self, NoMessages> {
                 let sm = RefCell::new(StateMachine { state: 0 });
-                let mut sme = Executor::new(sm, MAX_STATES);
-
-                sme.state(StateInfo::new("state1", None, Self::state1, None, None))
-                    .state(StateInfo::new("state2", None, Self::state2, None, None))
-                    .initialize(IDX_STATE1)
+                let sme = Executor::new(sm, MAX_STATES)
+                    .state(StateInfo::new("state1", Self::state1))
+                    .state(StateInfo::new("state2", Self::state2))
+                    .build(IDX_STATE1)
                     .expect("Unexpected error initializing");
 
                 sme
@@ -700,10 +710,9 @@ mod test {
             #[no_coverage]
             fn new() -> Executor<Self, NoMessages> {
                 let sm = RefCell::new(StateMachine);
-                let mut sme = Executor::new(sm, MAX_STATES);
-
-                sme.state(StateInfo::new("state1", None, Self::state1, None, None))
-                    .initialize(INVALID_STATE)
+                let sme = Executor::new(sm, MAX_STATES)
+                    .state(StateInfo::new("state1", Self::state1))
+                    .build(INVALID_STATE)
                     .expect("Unexpected error initializing");
 
                 sme
@@ -750,17 +759,10 @@ mod test {
             #[no_coverage]
             fn new() -> Executor<Self, NoMessages> {
                 let sm = RefCell::new(StateMachine);
-                let mut sme = Executor::new(sm, MAX_STATES);
-
-                sme.state(StateInfo::new("state1", None, Self::state1, None, None))
-                    .state(StateInfo::new(
-                        "state1",
-                        None,
-                        Self::state2,
-                        None,
-                        Some(IDX_STATE1),
-                    ))
-                    .initialize(IDX_STATE1)
+                let sme = Executor::new(sm, MAX_STATES)
+                    .state(StateInfo::new("state1", Self::state1).parent_idx(IDX_STATE1))
+                    .state(StateInfo::new("state2", Self::state2).parent_idx(IDX_STATE1))
+                    .build(IDX_STATE1)
                     .expect("Unexpected error initializing");
 
                 sme
@@ -809,17 +811,10 @@ mod test {
             #[no_coverage]
             fn new() -> Executor<Self, NoMessages> {
                 let sm = RefCell::new(StateMachine);
-                let mut sme = Executor::new(sm, MAX_STATES);
-
-                sme.state(StateInfo::new("state1", None, Self::state1, None, None))
-                    .state(StateInfo::new(
-                        "state1",
-                        None,
-                        Self::state2,
-                        None,
-                        Some(IDX_STATE1),
-                    ))
-                    .initialize(IDX_STATE2)
+                let sme = Executor::new(sm, MAX_STATES)
+                    .state(StateInfo::new("state1", Self::state1))
+                    .state(StateInfo::new("state1", Self::state2).parent_idx(IDX_STATE1))
+                    .build(IDX_STATE2)
                     .expect("Unexpected error initializing");
 
                 sme
@@ -875,10 +870,9 @@ mod test {
             #[no_coverage]
             fn new() -> Executor<Self, NoMessages> {
                 let sm = RefCell::new(StateMachine);
-                let mut sme = Executor::new(sm, MAX_STATES);
-
-                sme.state(StateInfo::new("state1", None, Self::state1, None, None))
-                    .initialize(IDX_STATE1)
+                let sme = Executor::new(sm, MAX_STATES)
+                    .state(StateInfo::new("state1", Self::state1))
+                    .build(IDX_STATE1)
                     .expect("Unexpected error initializing");
 
                 sme
@@ -929,17 +923,10 @@ mod test {
             #[no_coverage]
             fn new() -> Executor<Self, Messages> {
                 let sm = RefCell::new(StateMachine { state: 0 });
-                let mut sme = Executor::new(sm, MAX_STATES);
-
-                sme.state(StateInfo::new(
-                    "state1",
-                    Some(Self::state1_enter),
-                    Self::state1,
-                    None,
-                    None,
-                ))
-                .initialize(IDX_STATE1)
-                .expect("Unexpected error initializing");
+                let sme = Executor::new(sm, MAX_STATES)
+                    .state(StateInfo::new("state1", Self::state1).enter_fn(Self::state1_enter))
+                    .build(IDX_STATE1)
+                    .expect("Unexpected error initializing");
 
                 sme
             }
@@ -1003,11 +990,10 @@ mod test {
             #[no_coverage]
             fn new() -> Executor<Self, Message> {
                 let sm = RefCell::new(StateMachine { state: 0 });
-                let mut sme = Executor::new(sm, MAX_STATES);
-
-                sme.state(StateInfo::new("state1", None, Self::state1, None, None))
-                    .state(StateInfo::new("state1", None, Self::state2, None, None))
-                    .initialize(IDX_STATE1)
+                let sme = Executor::new(sm, MAX_STATES)
+                    .state(StateInfo::new("state1", Self::state1))
+                    .state(StateInfo::new("state2", Self::state2))
+                    .build(IDX_STATE1)
                     .expect("Unexpected error initializing");
 
                 sme
@@ -1084,17 +1070,10 @@ mod test {
             #[no_coverage]
             fn new() -> Executor<Self, Message> {
                 let sm = RefCell::new(StateMachine { state: 0 });
-                let mut sme = Executor::new(sm, MAX_STATES);
-
-                sme.state(StateInfo::new("parent", None, Self::parent, None, None))
-                    .state(StateInfo::new(
-                        "child",
-                        None,
-                        Self::child,
-                        None,
-                        Some(IDX_PARENT),
-                    ))
-                    .initialize(IDX_CHILD)
+                let sme = Executor::new(sm, MAX_STATES)
+                    .state(StateInfo::new("parent", Self::parent))
+                    .state(StateInfo::new("child", Self::child).parent_idx(IDX_PARENT))
+                    .build(IDX_CHILD)
                     .expect("Unexpected error initializing");
 
                 sme
@@ -1173,31 +1152,22 @@ mod test {
             #[no_coverage]
             fn new() -> Executor<Self, NoMessages> {
                 let sm = RefCell::new(StateMachine);
-                let mut sme = Executor::new(sm, MAX_STATES);
-
-                sme.state(StateInfo::new(
-                    "base",
-                    Some(Self::base_enter),
-                    Self::base,
-                    None,
-                    None,
-                ))
-                .state(StateInfo::new(
-                    "initial",
-                    Some(Self::initial_enter),
-                    Self::initial,
-                    Some(Self::initial_exit),
-                    Some(IDX_BASE),
-                ))
-                .state(StateInfo::new(
-                    "other",
-                    Some(Self::other_enter),
-                    Self::other,
-                    Some(Self::other_exit),
-                    Some(IDX_BASE),
-                ))
-                .initialize(IDX_INITIAL)
-                .expect("Unexpected error initializing");
+                let sme = Executor::new(sm, MAX_STATES)
+                    .state(StateInfo::new("base", Self::base).enter_fn(Self::base_enter))
+                    .state(
+                        StateInfo::new("initial", Self::initial)
+                            .enter_fn(Self::initial_enter)
+                            .exit_fn(Self::initial_exit)
+                            .parent_idx(IDX_BASE),
+                    )
+                    .state(
+                        StateInfo::new("other", Self::other)
+                            .enter_fn(Self::other_enter)
+                            .exit_fn(Self::other_exit)
+                            .parent_idx(IDX_BASE),
+                    )
+                    .build(IDX_INITIAL)
+                    .expect("Unexpected error initializing");
 
                 sme
             }
@@ -1337,38 +1307,31 @@ mod test {
             #[no_coverage]
             fn new() -> Executor<Self, NoMessages> {
                 let sm = RefCell::new(StateMachine);
-                let mut sme = Executor::new(sm, MAX_STATES);
-
-                sme.state(StateInfo::new(
-                    "initial_base",
-                    Some(Self::initial_base_enter),
-                    Self::initial_base,
-                    Some(Self::initial_base_exit),
-                    None,
-                ))
-                .state(StateInfo::new(
-                    "initial",
-                    Some(Self::initial_enter),
-                    Self::initial,
-                    Some(Self::initial_exit),
-                    Some(IDX_INITIAL_BASE),
-                ))
-                .state(StateInfo::new(
-                    "other_base",
-                    Some(Self::other_base_enter),
-                    Self::other_base,
-                    Some(Self::other_base_exit),
-                    None,
-                ))
-                .state(StateInfo::new(
-                    "other",
-                    Some(Self::other_enter),
-                    Self::other,
-                    Some(Self::other_exit),
-                    Some(IDX_OTHER_BASE),
-                ))
-                .initialize(IDX_INITIAL)
-                .expect("Unexpected error initializing");
+                let sme = Executor::new(sm, MAX_STATES)
+                    .state(
+                        StateInfo::new("initial_base", Self::initial_base)
+                            .enter_fn(Self::initial_base_enter)
+                            .exit_fn(Self::initial_base_exit),
+                    )
+                    .state(
+                        StateInfo::new("initial", Self::initial)
+                            .enter_fn(Self::initial_enter)
+                            .exit_fn(Self::initial_exit)
+                            .parent_idx(IDX_INITIAL_BASE),
+                    )
+                    .state(
+                        StateInfo::new("other_base", Self::other_base)
+                            .enter_fn(Self::other_base_enter)
+                            .exit_fn(Self::other_base_exit),
+                    )
+                    .state(
+                        StateInfo::new("other", Self::other)
+                            .enter_fn(Self::other_enter)
+                            .exit_fn(Self::other_exit)
+                            .parent_idx(IDX_OTHER_BASE),
+                    )
+                    .build(IDX_INITIAL)
+                    .expect("Unexpected error initializing");
 
                 sme
             }
@@ -1546,20 +1509,11 @@ mod test {
             #[no_coverage]
             fn new() {
                 let sm = RefCell::new(StateMachine);
-                let mut sme = Executor::new(sm, MAX_STATES);
-
-                // Add state that has itself as it's parent
-                let r = sme
-                    .state(StateInfo::new(
-                        "state1",
-                        None,
-                        Self::state1,
-                        None,
-                        Some(IDX_STATE1),
-                    ))
-                    .initialize(IDX_STATE1);
-                match r {
-                    Ok(()) => panic!("Expected a cycle it wasn't detected"),
+                match Executor::new(sm, MAX_STATES)
+                    .state(StateInfo::new("state1", Self::state1).parent_idx(IDX_STATE1))
+                    .build(IDX_STATE1)
+                {
+                    Ok(_) => panic!("Expected a cycle it wasn't detected"),
                     Err(e) => assert_eq!(e.to_string(), "Cycle detected"),
                 }
             }
@@ -1580,8 +1534,8 @@ mod test {
     #[test]
     #[no_coverage]
     fn test_2s_one_self_cycle() {
-        // StateMachine with one state and has itself as parent,
-        // this should fail to initialize!
+        // StateMachine with one state and has itself as parent
+        // plus another state with no parent, this should fail to initialize!
         //
         //     ------
         //     |    |
@@ -1603,21 +1557,12 @@ mod test {
             #[no_coverage]
             fn new() {
                 let sm = RefCell::new(StateMachine);
-                let mut sme = Executor::new(sm, MAX_STATES);
-
-                // Add state that has itself as it's parent
-                let r = sme
-                    .state(StateInfo::new(
-                        "state1",
-                        None,
-                        Self::state1,
-                        None,
-                        Some(IDX_STATE1),
-                    ))
-                    .state(StateInfo::new("state2", None, Self::state2, None, None))
-                    .initialize(IDX_STATE1);
-                match r {
-                    Ok(()) => panic!("Expected a cycle it wasn't detected"),
+                match Executor::new(sm, MAX_STATES)
+                    .state(StateInfo::new("state1", Self::state1).parent_idx(IDX_STATE1))
+                    .state(StateInfo::new("state2", Self::state2))
+                    .build(IDX_STATE1)
+                {
+                    Ok(_) => panic!("Expected a cycle it wasn't detected"),
                     Err(e) => assert_eq!(e.to_string(), "Cycle detected"),
                 }
             }
@@ -1648,7 +1593,7 @@ mod test {
     #[no_coverage]
     fn test_2s_cycle() {
         // StateMachine with two states each has the other as parent,
-        // this should fail to initialize!
+        // this should fail to build!
         //
         //  state2
         //   |  ^
@@ -1671,27 +1616,12 @@ mod test {
             #[no_coverage]
             fn new() {
                 let sm = RefCell::new(StateMachine);
-                let mut sme = Executor::new(sm, MAX_STATES);
-
-                // Add state that has itself as it's parent
-                let r = sme
-                    .state(StateInfo::new(
-                        "state1",
-                        None,
-                        Self::state1,
-                        None,
-                        Some(IDX_STATE2),
-                    ))
-                    .state(StateInfo::new(
-                        "state2",
-                        None,
-                        Self::state2,
-                        None,
-                        Some(IDX_STATE1),
-                    ))
-                    .initialize(IDX_STATE1);
-                match r {
-                    Ok(()) => panic!("Expected a cycle it wasn't detected"),
+                match Executor::new(sm, MAX_STATES)
+                    .state(StateInfo::new("state1", Self::state1).parent_idx(IDX_STATE2))
+                    .state(StateInfo::new("state2", Self::state2).parent_idx(IDX_STATE1))
+                    .build(IDX_STATE1)
+                {
+                    Ok(_) => panic!("Expected a cycle it wasn't detected"),
                     Err(e) => assert_eq!(e.to_string(), "Cycle detected"),
                 }
             }
@@ -1722,7 +1652,7 @@ mod test {
     #[no_coverage]
     fn test_3s_one_cycle() {
         // StateMachine with three states two have other as parent third is standalone,
-        // this should fail to initialize!
+        // this should fail to build!
         //
         //  state2   state3
         //   |  ^
@@ -1744,28 +1674,13 @@ mod test {
             #[no_coverage]
             fn new() {
                 let sm = RefCell::new(StateMachine);
-                let mut sme = Executor::new(sm, MAX_STATES);
-
-                // Add state that has itself as it's parent
-                let r = sme
-                    .state(StateInfo::new(
-                        "state1",
-                        None,
-                        Self::state1,
-                        None,
-                        Some(IDX_STATE2),
-                    ))
-                    .state(StateInfo::new(
-                        "state2",
-                        None,
-                        Self::state2,
-                        None,
-                        Some(IDX_STATE1),
-                    ))
-                    .state(StateInfo::new("state3", None, Self::state3, None, None))
-                    .initialize(IDX_STATE1);
-                match r {
-                    Ok(()) => panic!("Expected a cycle it wasn't detected"),
+                match Executor::new(sm, MAX_STATES)
+                    .state(StateInfo::new("state1", Self::state1).parent_idx(IDX_STATE2))
+                    .state(StateInfo::new("state2", Self::state2).parent_idx(IDX_STATE1))
+                    .state(StateInfo::new("state3", Self::state3))
+                    .build(IDX_STATE1)
+                {
+                    Ok(_) => panic!("Expected a cycle it wasn't detected"),
                     Err(e) => assert_eq!(e.to_string(), "Cycle detected"),
                 }
             }
@@ -1837,48 +1752,15 @@ mod test {
             #[no_coverage]
             fn new() {
                 let sm = RefCell::new(StateMachine);
-                let mut sme = Executor::new(sm, MAX_STATES);
-
-                // Add state that has itself as it's parent
-                let r = sme
-                    .state(StateInfo::new(
-                        "state1",
-                        None,
-                        Self::state1,
-                        None,
-                        Some(IDX_STATE3),
-                    ))
-                    .state(StateInfo::new(
-                        "state2",
-                        None,
-                        Self::state2,
-                        None,
-                        Some(IDX_STATE1),
-                    ))
-                    .state(StateInfo::new(
-                        "state3",
-                        None,
-                        Self::state3,
-                        None,
-                        Some(IDX_STATE2),
-                    ))
-                    .state(StateInfo::new(
-                        "state4",
-                        None,
-                        Self::state4,
-                        None,
-                        Some(IDX_STATE3),
-                    ))
-                    .state(StateInfo::new(
-                        "state5",
-                        None,
-                        Self::state5,
-                        None,
-                        Some(IDX_STATE3),
-                    ))
-                    .initialize(IDX_STATE1);
-                match r {
-                    Ok(()) => panic!("Expected a cycle it wasn't detected"),
+                match Executor::new(sm, MAX_STATES)
+                    .state(StateInfo::new("state1", Self::state1).parent_idx(IDX_STATE3))
+                    .state(StateInfo::new("state2", Self::state2).parent_idx(IDX_STATE1))
+                    .state(StateInfo::new("state3", Self::state3).parent_idx(IDX_STATE2))
+                    .state(StateInfo::new("state4", Self::state4).parent_idx(IDX_STATE3))
+                    .state(StateInfo::new("state5", Self::state5).parent_idx(IDX_STATE3))
+                    .build(IDX_STATE1)
+                {
+                    Ok(_) => panic!("Expected a cycle it wasn't detected"),
                     Err(e) => assert_eq!(e.to_string(), "Cycle detected"),
                 }
             }
