@@ -1,7 +1,7 @@
 [workspace]
 members = [
   "hsm0",
-  "hsm0-executor",
+  "hsm0-with-executor",
   "hsm1",
   "state-result",
   "xtask",

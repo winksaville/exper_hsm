@@ -5,7 +5,7 @@ use std::{
 
 use custom_logger::env_logger_init;
 
-use hsm0_executor::{DynError, Executor, Handled, StateInfo, StateResult};
+use hsm0_with_executor::{DynError, Executor, Handled, StateInfo, StateResult};
 
 #[derive(Debug, Clone)]
 enum Messages {

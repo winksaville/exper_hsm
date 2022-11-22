@@ -2,7 +2,7 @@
 use std::{cell::RefCell, rc::Rc};
 
 use custom_logger::env_logger_init;
-use hsm0_executor::{Executor, Handled, StateInfo, StateResult};
+use hsm0_with_executor::{Executor, Handled, StateInfo, StateResult};
 
 #[derive(Debug)]
 pub struct StateMachine {

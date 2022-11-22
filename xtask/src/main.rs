@@ -142,8 +142,8 @@ fn gen_coverage(output_type: &str, output_path_buf: &Path) -> Result<(), DynErro
 
     //let pb = Path::new("/home/wink/prgs/rust/clones/grcov/target/debug/grcov");
     //let grcov = pb.to_string_lossy().to_string();
-    let grcov = "grcov".to_string();
-    let status = Command::new(&grcov)
+    let grcov = "grcov";
+    let status = Command::new(grcov)
         .current_dir(project_root())
         .args([
             ".",
