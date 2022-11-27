@@ -27,7 +27,7 @@ pub enum Messages {
 
     Empty {
         // Return an empty buffer
-        buf_idx: usize,
+        buf: Box<Vec<u8>>,
     },
 
     Done {
@@ -51,8 +51,7 @@ pub struct FileStreamProducer {
     // to move buffers when using send!
     // For the moment we'll clone them and keep track
     // what what is empty in a stack, (empty_buffers)
-    buffers: Vec<Vec<u8>>,
-    empty_buffers: Vec<usize>,
+    buffers: Vec<Box<Vec<u8>>>,
 }
 
 const MAX_STATES: usize = 2;
@@ -68,7 +67,6 @@ impl FileStreamProducer {
             rx,
             file: None,
             buffers: Vec::new(),
-            empty_buffers: Vec::new(),
         });
 
         let sme = Executor::new(fsp, MAX_STATES)
@@ -100,13 +98,16 @@ impl FileStreamProducer {
                 "Messages::Data not supported in {}",
                 e.get_state_name(IDX_BASE)
             ),
-            Messages::Empty { buf_idx } => {
-                assert!(*buf_idx < self.buffers.len());
-                self.empty_buffers.push(*buf_idx);
+            Messages::Empty { buf } => {
+                println!("buf: {:p} *buf: ", buf);
+                println!("*buf: {:p}", *buf);
+                let x = buf.clone();
+                println!("x: {x:p}");
+                println!("x.as_ptr: {:p}", x.as_ptr());
+                self.buffers.push(x);
                 println!(
-                    "Messages::Empty: {} {:?}",
-                    self.empty_buffers.len(),
-                    self.empty_buffers
+                    "Messages::Empty: {} {:p}",
+                    self.buffers.len() + 1, &self.buffers.last(),
                 );
             }
             Messages::Done { result: _ } => panic!(
@@ -138,15 +139,15 @@ impl FileStreamProducer {
 
                 self.buffers = Vec::with_capacity(*buf_count);
                 println!("open: self.buffers.capacity {}", self.buffers.capacity());
-                self.empty_buffers = Vec::with_capacity(*buf_count);
-                println!(
-                    "open: self.empty_buffers.capacity {}",
-                    self.empty_buffers.capacity()
-                );
-                for buf_idx in 0..*buf_count {
-                    println!("open: empty_buffers.push({})", buf_idx);
-                    self.buffers.push(Vec::with_capacity(*buf_capacity));
-                    self.empty_buffers.push(buf_idx);
+                for _ in 0..*buf_count {
+                    let mut buf = Box::new(Vec::<u8>::with_capacity(*buf_capacity));
+                    for i in 0..*buf_capacity {
+                        buf.push((i % 256) as u8);
+                        println!("buf[{i}={} &buf[{i}]={:p}", buf[i], &buf[i])
+                    }
+                    println!("open: &buf: {:p} buf.as_ref(): {:p} buf.as_ptr(): {:p}", &buf, buf.as_ref(), buf.as_ptr(), );
+                    self.buffers.push(buf);
+                    println!("open: empty_buffers.push({}) {:p} {:p}", self.buffers.len()-1, &self.buffers[self.buffers.len()-1], &self.buffers.last().as_ref());
                 }
 
                 println!(
