@@ -424,7 +424,7 @@ where
     // TODO: More testing at warnings are needed that defering messages
     // is "dangerous" and processing time increases for new messages. There
     // maybe other dangers too!
-    pub fn dispatcher(self: &mut Executor<SM, P>, msg: &P) {
+    pub fn dispatcher(&mut self, msg: &P) {
         //log::trace!("dispatcher:+ msg={msg:?} sm={:?}", self.get_sm());
         let mut transitioned = self.dispatch(msg);
         //log::trace!("dispatcher:  msg={msg:?} sm={:?} ret={transitioned}", self.get_sm());
@@ -475,9 +475,9 @@ where
         self.primary_tx.send(m)
     }
 
-    //fn clone_sender(&self) -> Sender<M> {
-    //    self.primary_tx.clone()
-    //}
+    pub fn clone_sender(&self) -> Sender<P> {
+        self.primary_tx.clone()
+    }
 
     pub fn defer_try_recv(&self) -> Result<P, TryRecvError> {
         self.defer_rx[self.other_defer()].try_recv()
