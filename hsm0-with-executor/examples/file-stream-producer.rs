@@ -1,8 +1,12 @@
+/// Currently this is "working" but the biggest know problem
+/// is that when passing buffers around I've got to clone them
+/// when I'd like to achieve zero-copy!
 use std::{
     cell::RefCell,
     fs::File,
     io::Read,
     sync::mpsc::{channel, Receiver, Sender},
+    thread,
 };
 
 use custom_logger::env_logger_init;
@@ -37,6 +41,8 @@ pub enum Messages {
         // TODO: Return Error
         result: bool,
     },
+
+    StopThread,
 }
 
 #[allow(unused)]
@@ -112,21 +118,21 @@ impl FileStreamProducer {
                 "base: Messages::Data not supported in {}",
                 e.get_current_state_name()
             ),
+            // Maybe the msg parameters should be "msg: Messages" and we'd consume it
+            // or "msg: &mut Messages" then we could "take" it??
             Messages::Empty { buf } => {
-                println!("base: Messages::Empty: buf: {:p} *buf: ", buf);
-                println!("base: Messages::Empty: *buf: {:p}", *buf);
+                println!("base: Messages::Empty: &buf[0]: {:p} {:0X?}", &buf[0], *buf);
                 let x = buf.clone();
-                println!("base: Messages::Empty: x: {x:p}");
-                println!("base: Messages::Empty: x.as_ptr: {:p}", x.as_ptr());
+                println!("base: Messages::Empty:   &x[0]: {:p} {:0X?}", &x[0], x);
                 self.buffers.push(x);
-                println!(
-                    "base: Messages::Empty: {} {:p}",
-                    self.buffers.len() + 1,
-                    &self.buffers.last(),
-                );
             }
             Messages::Done { result: _ } => panic!(
                 "base: Messages:Done not supported in {}",
+                e.get_current_state_name()
+            ),
+
+            Messages::StopThread => println!(
+                "base: Messages::StopThread IGNORING {}",
                 e.get_current_state_name()
             ),
         }
@@ -165,26 +171,19 @@ impl FileStreamProducer {
                 };
 
                 self.buffers = Vec::with_capacity(*buf_count);
-                println!("open: self.buffers.capacity {}", self.buffers.capacity());
-                for _ in 0..*buf_count {
+                println!(
+                    "open: buf_count={} buf_capacity={}",
+                    buf_count, buf_capacity
+                );
+                for buf_idx in 0..*buf_count {
                     let mut buf = Box::new(Vec::<u8>::with_capacity(*buf_capacity));
+                    let first_value = buf_idx * *buf_capacity;
                     for i in 0..*buf_capacity {
-                        buf.push((i % 256) as u8);
-                        println!("open: buf[{i}={} &buf[{i}]={:p}", buf[i], &buf[i])
+                        buf.push(((first_value + i) % 256) as u8);
+                        //println!("open: buf[{i}={} &buf[{i}]={:p}", buf[i], &buf[i])
                     }
-                    println!(
-                        "open: &buf: {:p} buf.as_ref(): {:p} buf.as_ptr(): {:p}",
-                        &buf,
-                        buf.as_ref(),
-                        buf.as_ptr(),
-                    );
+                    println!("open: &buf[0]: {:p} {:0X?}", &buf[0], buf);
                     self.buffers.push(buf);
-                    println!(
-                        "open: empty_buffers.push({}) {:p} {:p}",
-                        self.buffers.len() - 1,
-                        &self.buffers[self.buffers.len() - 1],
-                        &self.buffers.last().as_ref()
-                    );
                 }
 
                 println!(
@@ -200,11 +199,11 @@ impl FileStreamProducer {
     fn wait_for_start(&mut self, e: &Executor<Self, Messages>, msg: &Messages) -> StateResult {
         match msg {
             Messages::Start => {
+                e.send(Messages::Read).expect("SNH");
                 println!(
                     "wait_for_start: Got Start, tranistion to '{}'",
                     e.get_state_name(IDX_READ)
                 );
-                e.defer_send(Messages::Read).expect("SNH");
                 (Handled::Yes, Some(IDX_READ))
             }
             _ => (Handled::No, None),
@@ -216,13 +215,27 @@ impl FileStreamProducer {
             Messages::Read => {
                 if let Some(buf) = self.buffers.pop() {
                     let mut buf = *buf;
+                    println!(
+                        "read: before read len={} &buf[0]: {:p} {:0X?}",
+                        buf.len(),
+                        &buf[0],
+                        buf
+                    );
+                    buf.truncate(buf.capacity());
                     if let Some(f) = &mut self.file {
                         let count = f.read(&mut buf).expect("ATM SNH");
-                        println!("read: count={}", count);
+                        // Truncate to count otherwise the len will be capacity!
+                        buf.truncate(count);
+                        println!(
+                            "read:  after read len={} &buf[0]: {:p} {:0X?}",
+                            buf.len(),
+                            &buf[0],
+                            buf
+                        );
                         if count < buf.capacity() {
                             println!("read: EOF");
                             if let Some(partner_tx) = &self.partner_tx {
-                                println!("read: EOF Send Data {} to partner", buf.len());
+                                println!("read: EOF Send {} bytes to partner", buf.len());
                                 partner_tx
                                     .send(Messages::Done { result: true })
                                     .expect("SNH");
@@ -243,26 +256,29 @@ impl FileStreamProducer {
                                 panic!("read: SNH self.partner_tx is None");
                             }
 
-                            // Send message to ourselves so process our own deferred Message::Read??
-                            e.defer_send(Messages::Read).expect("SNH");
-                            (Handled::Yes, Some(IDX_READ))
+                            // Send message to ourselves so we continue processing
+                            e.send(Messages::Read).expect("SNH");
+                            (Handled::Yes, None)
                         }
                     } else {
                         // No file so we're done, back to IDX_OPEN
                         println!(
-                            "read: error reading, transition to '{}'",
+                            "read: SNH, self.file is NONE, transition to '{}'",
                             e.get_state_name(IDX_OPEN)
                         );
                         (Handled::Yes, Some(IDX_OPEN))
                     }
                 } else {
-                    // Defer start
-                    e.defer_send(msg.clone()).expect("SNH");
+                    // There are no buffers, wait for an empty one
+                    println!(
+                        "read: no buffers, transition to '{}'",
+                        e.get_state_name(IDX_WAIT_FOR_EMPTY)
+                    );
                     (Handled::Yes, Some(IDX_WAIT_FOR_EMPTY))
                 }
             }
             _ => {
-                println!("read: unhandled {:?}", msg);
+                println!("read: unhandled {:0X?}", msg);
                 (Handled::No, None)
             }
         }
@@ -270,23 +286,17 @@ impl FileStreamProducer {
 
     fn wait_for_empty(&mut self, e: &Executor<Self, Messages>, msg: &Messages) -> StateResult {
         match msg {
-            // Maybe the msg parameters should be "msg: Messages" and we'd consume it
-            // or "msg: &mut Messages" then we could "take" it??
-            Messages::Empty { buf } => {
-                println!(
-                    "wait_for_empty: Empty received, transition to '{}'",
-                    e.get_state_name(IDX_READ)
-                );
-
-                self.buffers.push(buf.clone()); // What is this cloning
-
-                (Handled::Yes, Some(IDX_READ))
+            Messages::Empty { .. } => {
+                // Would be "faster" if we handled Empty here but DRY so let base do it.
+                e.send(Messages::Read).expect("SNH");
+                (Handled::No, Some(IDX_READ))
             }
-            Messages::Read => {
-                println!("wait_for_empty: Read received, defer");
-                e.defer_send(msg.clone()).expect("SNH");
-                (Handled::Yes, None)
-            }
+            //Messages::Read => {
+            //    // SNH ???
+            //    println!("wait_for_empty: Read received, defer");
+            //    e.defer_send(msg.clone()).expect("SNH");
+            //    (Handled::Yes, None)
+            //}
             _ => (Handled::No, None),
         }
     }
@@ -301,20 +311,44 @@ fn main() {
     let mut efsp = FileStreamProducer::new().expect("Error Fsp::new");
     println!("new: fsp={:?}", efsp.get_sm());
 
-    efsp.dispatcher(&Messages::Open {
-        file_name: "hello.txt".to_owned(),
-        buf_count: 2,
-        buf_capacity: 3,
-        partner_tx: tx,
+    // get tx for efsp
+    let efsp_tx = efsp.clone_sender();
+
+    // Spawn efsp in another thread
+    let efsp_thread = thread::spawn(move || {
+        println!("efsp thread:+");
+        while let Ok(msg) = efsp.recv() {
+            println!("efsp thread:  recv msg={:0X?}", msg);
+            efsp.dispatcher(&msg);
+            match msg {
+                Messages::StopThread => {
+                    println!("efsp thread: Stopping");
+                    break;
+                }
+                _ => (),
+            }
+        }
+        println!("efsp thread:-");
     });
 
-    efsp.dispatcher(&Messages::Start);
+    efsp_tx
+        .send(Messages::Open {
+            file_name: "hello.txt".to_owned(),
+            buf_count: 2,
+            buf_capacity: 3,
+            partner_tx: tx,
+        })
+        .unwrap();
+
+    efsp_tx.send(Messages::Start).unwrap();
 
     while let Ok(r) = rx.recv() {
         match r {
             Messages::Data { buf } => {
-                println!("main: Data {} {:0X?}", buf.len(), buf.as_ptr());
-                efsp.dispatcher(&Messages::Empty { buf: Box::new(buf) });
+                println!("main: Data {} {:p} {:0X?}", buf.len(), &buf[0], buf);
+                efsp_tx
+                    .send(Messages::Empty { buf: Box::new(buf) })
+                    .unwrap();
             }
             Messages::Done { result } => {
                 println!("main: Done result={result}");
@@ -323,5 +357,9 @@ fn main() {
             _ => println!("main: unexpected msg: {:?}", r),
         }
     }
+
+    efsp_tx.send(Messages::StopThread).unwrap();
+    efsp_thread.join().expect("Error efsp_thread");
+
     log::info!("main:-");
 }
