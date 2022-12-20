@@ -456,8 +456,7 @@ pub fn hsm1(input: TokenStream) -> TokenStream {
             } else {
                 // TODO: Improve error handling
                 panic!(
-                    "{}::{} is not defined and cannot be parent of {}",
-                    hsm_ident, parent, process_fn_ident
+                    "{hsm_ident}::{parent} is not defined and cannot be parent of {process_fn_ident}"
                 );
             }
         } else {
