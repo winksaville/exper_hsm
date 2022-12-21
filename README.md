@@ -1,7 +1,11 @@
-# Hierarchical State Machine (HSM) proc macro
+# Experiment with Hierarchical State Machines
 
-Define [`hsm1!`](hsm1/README.md) a `proc_macro` to make it easier to create HSM's.
+Contains the following experiments:
 
+ * [hsm0](hsm0/README.md)
+ * [hsm0_with_executor](hsm0_with_executor/README.md)
+ * [proc_macro_hsm1](proc_macro_hsm1/README.md)
+ * [hsm1](hsm1/README.md)
 
 ## License
 
