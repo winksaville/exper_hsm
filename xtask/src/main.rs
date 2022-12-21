@@ -100,10 +100,8 @@ fn gen_profraw(root: &Path) -> Result<(), DynError> {
         // Using -Zinstrument-coverage:
         //   Directory	        Line Coverage	    Functions	        Branches
         //   hsm0-executor/src	100%	240 / 240	91.55%	195 / 213	100%	0 / 0
-        //.env("RUSTFLAGS", "-Cinstrument-coverage -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests -Cpanic=abort")
         .env("RUSTFLAGS", "-Cinstrument-coverage -Ccodegen-units=1 -Copt-level=0 -Clink-dead-code -Coverflow-checks=off -Zpanic_abort_tests")
 
-        //.env("RUSTDOCFLAGS", "-Cpanic=abort")
         .env("TMPDIR", coverage_dir)
         .env("LLVM_PROFILE_FILE", "%t/cargo-test-%p-%m.profraw")
         .arg("test")
