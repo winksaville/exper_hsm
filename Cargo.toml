@@ -1,7 +1,7 @@
 [workspace]
 members = [
   "hsm0",
-  "hsm0-with-executor",
+  "hsm0_with_executor",
   "proc_macro_hsm1",
   "state-result",
   "xtask",
@@ -16,7 +16,7 @@ authors = [ "Wink Saville<wink@saville.com>" ]
 [profile.release]
 #lto = true
 #codegen-units = 1
-panic = "abort"
+#panic = "abort"
 
 [profile.release-with-debug]
 inherits = "release"
