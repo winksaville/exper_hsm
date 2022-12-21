@@ -3,7 +3,7 @@ members = [
   "hsm0",
   "hsm0_with_executor",
   "proc_macro_hsm1",
-  "state-result",
+  "state_result",
   "xtask",
 ]
 

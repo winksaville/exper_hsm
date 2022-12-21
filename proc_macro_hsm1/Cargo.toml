@@ -12,7 +12,7 @@ proc-macro = true
 syn = { version = "1.0", features = ["extra-traits", "full", "parsing", "visit-mut"] }
 quote = "1.0"
 proc-macro2 = "1.0"
-state-result = { path = "../state-result" }
+state_result = { path = "../state_result" }
 
 [dev-dependencies]
 criterion = "0.3"

@@ -1,4 +1,4 @@
-# state-result
+# state_result
 
 An enum StateResult returned by hsm1 proc-macro states.
 
