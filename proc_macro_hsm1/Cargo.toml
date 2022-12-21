@@ -1,5 +1,5 @@
 [package]
-name = "hsm1"
+name = "proc_macro_hsm1"
 version = "0.3.0"
 authors.workspace = true
 edition.workspace = true

@@ -1,5 +1,5 @@
 //use hsm1::{handled, hsm1, hsm1_state, not_handled, transition_to, StateResult};
-use hsm1::{handled, hsm1, hsm1_initial_state, hsm1_state, transition_to, StateResult};
+use proc_macro_hsm1::{handled, hsm1, hsm1_initial_state, hsm1_state, transition_to, StateResult};
 
 struct NoMessages;
 

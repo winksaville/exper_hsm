@@ -1,6 +1,6 @@
 use iai::black_box;
 
-use hsm1::{handled, hsm1, hsm1_initial_state, not_handled, transition_to, StateResult};
+use proc_macro_hsm1::{handled, hsm1, hsm1_initial_state, not_handled, transition_to, StateResult};
 
 struct NoMessages;
 

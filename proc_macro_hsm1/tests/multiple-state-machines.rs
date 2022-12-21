@@ -1,4 +1,4 @@
-use hsm1::{
+use proc_macro_hsm1::{
     handled, hsm1, hsm1_initial_state, hsm1_state, not_handled, transition_to, StateResult,
 };
 
