@@ -101,7 +101,7 @@ fn main() {
                 sme.dispatch(&m);
             }
             Messages::Done { val } => {
-                println!("main: Done val={val}");
+                log::info!("main: Done val={val}");
                 break;
             }
         }

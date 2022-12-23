@@ -90,74 +90,83 @@ fn main() {
 
 ## Build and run
 
-There is [`hsm1/src/main.rs`](hsm1/src/main.rs) which implements a trivial Finite
-State Machine (FSM) that can be run. Also, see [`hsm1/tests`](hsm1/tests)
+There is [`proc_macro_hsm1/src/main.rs`](proc_macro_hsm1/src/main.rs) which implements a trivial Finite
+State Machine (FSM) that can be run. Also, see [`proc_macro_hsm1/tests`](proc_macro_hsm1/tests)
 for some other examples. Eventually there will be other sub-packages as
 additional examples.
 
-I find it simplest to run and test from the sub-package, so initiall I `cd hsm1`:
+I find it simplest to run and test from the sub-package, so initiall I `cd proc_macro_hsm1`:
 ```
-wink@3900x 22-07-26T19:17:05.968Z:~/prgs/rust/myrepos/proc-macro-hsm1/hsm1 (main)
+wink@3900x 22-12-23T23:06:06.308Z:~/prgs/rust/myrepos/exper_hsm/proc_macro_hsm1 (main)
 $ cargo run
-    Finished dev [unoptimized + debuginfo] target(s) in 0.01s
-     Running `/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/hsm1`
+    Finished dev [unoptimized + debuginfo] target(s) in 0.02s
+     Running `/home/wink/prgs/rust/myrepos/exper_hsm/target/debug/proc_macro_hsm1`
 Fsm::initial: Add 15 data=15
 main: fsm initial_counter=1 data=15
 ```
 
 ## Tests
 ```
-wink@3900x 22-07-26T19:18:49.568Z:~/prgs/rust/myrepos/proc-macro-hsm1/hsm1 (main)
+wink@3900x 22-12-23T23:07:50.510Z:~/prgs/rust/myrepos/exper_hsm/proc_macro_hsm1 (main)
 $ cargo test
-    Finished test [unoptimized + debuginfo] target(s) in 0.01s
-     Running unittests src/lib.rs (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/deps/hsm1-9d926193173f76cc)
+    Finished test [unoptimized + debuginfo] target(s) in 0.03s
+     Running unittests src/lib.rs (/home/wink/prgs/rust/myrepos/exper_hsm/target/debug/deps/proc_macro_hsm1-02d34de914c0123e)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running unittests src/main.rs (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/deps/hsm1-d12cec030b367ee9)
+     Running unittests src/main.rs (/home/wink/prgs/rust/myrepos/exper_hsm/target/debug/deps/proc_macro_hsm1-efd5f5e752da32ed)
 
 running 0 tests
 
 test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running tests/low-level-tests.rs (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/deps/low_level_tests-702b20a4269af6d5)
+     Running tests/low-level-tests.rs (/home/wink/prgs/rust/myrepos/exper_hsm/target/debug/deps/low_level_tests-6f1d572a9fca2e39)
 
 running 12 tests
-test test_dispatch ... ok
-test test_initial_then_tree_of_parent_and_do_work_then_done ... ok
 test test_initial_and_do_work_and_done_all_with_enter_exit ... ok
+test test_dispatch ... ok
 test test_initial_and_done_both_with_exit ... ok
-test test_initialization ... ok
-test test_initial_and_done_both_with_enter ... ok
 test test_initial_and_done_no_enter_exit ... ok
-test test_one_tree_plus_done_as_separate ... ok
+test test_initial_and_done_both_with_enter ... ok
+test test_initialization ... ok
+test test_initial_then_tree_of_parent_and_do_work_then_done ... ok
 test test_parent_with_child_initial ... ok
 test test_parent_with_enter_exit_and_one_child_initial ... ok
+test test_one_tree_plus_done_as_separate ... ok
 test test_transition_to ... ok
 test test_tree_parent_with_children_initial_do_work_done_all_with_enter_exit ... ok
 
 test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running tests/multiple-state-machines.rs (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/deps/multiple_state_machines-983102007e6b3ae6)
+     Running tests/multiple-state-machines.rs (/home/wink/prgs/rust/myrepos/exper_hsm/target/debug/deps/multiple_state_machines-a4cb46daf151531a)
 
 running 1 test
 test multiple_state_machines ... ok
 
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-     Running tests/mut-msg-tests.rs (/home/wink/prgs/rust/myrepos/proc-macro-hsm1/target/debug/deps/mut_msg_tests-06ee428151409df1)
+     Running tests/mut-msg-tests.rs (/home/wink/prgs/rust/myrepos/exper_hsm/target/debug/deps/mut_msg_tests-4a6e5cc15887446e)
 
 running 1 test
 test mut_msg_tests ... ok
 
 test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
 
-   Doc-tests hsm1
+     Running tests/transitions.rs (/home/wink/prgs/rust/myrepos/exper_hsm/target/debug/deps/transitions-0e424ce703e9c398)
+
+running 3 tests
+test test_transitions_between_two_unrelated_states ... ok
+test test_transitions_with_one_state ... ok
+test test_transitions_between_leafs_of_trees ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests proc_macro_hsm1
 
 running 1 test
-test src/lib.rs - hsm1 (line 284) ... ignored
+test src/lib.rs - hsm1 (line 293) ... ignored
 
 test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.00s
 ```
@@ -167,145 +176,51 @@ test result: ok. 0 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; fini
 Running `cargo criterion` runs all the benchmarks as specified in
 the `[[bench]]` sections in Cargo.toml, i.e. `bench-dispatch` and `bench-dispatch-iai`:
 > Note: Execute `cargo install cargo-criterion` to install the criterion command.
-> You'll also need to install `valgrind`.
+> You'll also need to install `valgrind` if you enable `bench-dispatch-iai`.
 ```
-wink@3900x 22-07-26T22:53:56.139Z:~/prgs/rust/myrepos/proc-macro-hsm1/hsm1 (main)
-$ time cargo criterion
-    Finished bench [optimized] target(s) in 0.04s
-Gnuplot not found, using plotters backend
+wink@3900x 22-12-23T23:38:50.087Z:~/prgs/rust/myrepos/exper_hsm/proc_macro_hsm1 (main)
+$ cargo criterion 
+    Finished bench [optimized] target(s) in 0.05s
 bench_minimal_fsm_returning_handled                                                                              
-                        time:   [3.1206 ns 3.1212 ns 3.1219 ns]
+                        time:   [3.6606 ns 3.6617 ns 3.6633 ns]
+                        change: [-1.0130% -0.9252% -0.8459%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
 
 bench_minimal_fsm_returning_not_handled                                                                              
-                        time:   [3.3446 ns 3.3470 ns 3.3498 ns]
+                        time:   [3.1419 ns 3.1446 ns 3.1475 ns]
+                        change: [-0.7926% -0.6844% -0.5775%] (p = 0.00 < 0.05)
+                        Change within noise threshold.
 
 bench_minimal_fsm_returning_transition_to_self                                                                              
-                        time:   [6.7229 ns 6.7247 ns 6.7266 ns]
+                        time:   [6.9123 ns 6.9145 ns 6.9169 ns]
+                        change: [-3.6846% -3.5623% -3.4467%] (p = 0.00 < 0.05)
+                        Performance has improved.
 
 bench_minimal_fsm_returning_transition_to_self_with_enter                                                                              
-                        time:   [7.3337 ns 7.3357 ns 7.3377 ns]
+                        time:   [7.9939 ns 8.0042 ns 8.0153 ns]
+                        change: [+1.0017% +1.1176% +1.2492%] (p = 0.00 < 0.05)
+                        Performance has regressed.
 
 bench_minimal_fsm_returning_transition_to_self_with_exit                                                                              
-                        time:   [7.1287 ns 7.1323 ns 7.1366 ns]
+                        time:   [7.9073 ns 7.9140 ns 7.9224 ns]
+                        change: [-0.1358% -0.0389% +0.0619%] (p = 0.45 > 0.05)
+                        No change in performance detected.
 
 bench_minimal_fsm_returning_transition_to_self_with_ee                                                                              
-                        time:   [7.9757 ns 7.9783 ns 7.9809 ns]
-
-bench_fsm_setup
-  Instructions:                 936 (No change)
-  L1 Accesses:                 1363 (No change)
-  L2 Accesses:                    5 (No change)
-  RAM Accesses:                  24 (No change)
-  Estimated Cycles:            2228 (No change)
-
-bench_minimal_fsm_returning_handled
-  Instructions:                 992 (No change)
-  L1 Accesses:                 1441 (No change)
-  L2 Accesses:                    6 (No change)
-  RAM Accesses:                  30 (No change)
-  Estimated Cycles:            2521 (No change)
-
-bench_minimal_fsm_returning_not_handled
-  Instructions:                 992 (No change)
-  L1 Accesses:                 1438 (No change)
-  L2 Accesses:                    8 (No change)
-  RAM Accesses:                  32 (No change)
-  Estimated Cycles:            2598 (No change)
-
-bench_minimal_fsm_returning_transition_to_self
-  Instructions:                1054 (No change)
-  L1 Accesses:                 1521 (No change)
-  L2 Accesses:                    6 (No change)
-  RAM Accesses:                  37 (No change)
-  Estimated Cycles:            2846 (No change)
-
-bench_minimal_fsm_returning_transition_to_self_with_enter
-  Instructions:                1076 (No change)
-  L1 Accesses:                 1557 (No change)
-  L2 Accesses:                    7 (No change)
-  RAM Accesses:                  40 (No change)
-  Estimated Cycles:            2992 (No change)
-
-bench_minimal_fsm_returning_transition_to_self_with_exit
-  Instructions:                1076 (No change)
-  L1 Accesses:                 1558 (No change)
-  L2 Accesses:                    7 (No change)
-  RAM Accesses:                  39 (No change)
-  Estimated Cycles:            2958 (No change)
-
-bench_minimal_fsm_returning_transition_to_self_with_ee
-  Instructions:                1087 (No change)
-  L1 Accesses:                 1576 (No change)
-  L2 Accesses:                    9 (No change)
-  RAM Accesses:                  37 (No change)
-  Estimated Cycles:            2916 (No change)
-
-
-real	1m11.157s
-user	6m57.022s
-sys	0m1.508s
+                        time:   [8.3066 ns 8.3126 ns 8.3193 ns]
+                        change: [+1.1532% +1.2500% +1.3437%] (p = 0.00 < 0.05)
+                        Performance has regressed.
 ```
 
-You can also run one at a time, and which `bench-dispatch-iai` seems more useful.
-It also runs in about 1 second as compared to 1 minute:
+You can also run one benchmark at a time:
 ```
-wink@3900x 22-07-26T23:07:17.486Z:~/prgs/rust/myrepos/proc-macro-hsm1/hsm1 (main)
-$ time cargo criterion bench-dispatch-iai
-    Finished bench [optimized] target(s) in 0.04s
-Gnuplot not found, using plotters backend
-bench_fsm_setup
-  Instructions:                 936 (No change)
-  L1 Accesses:                 1363 (No change)
-  L2 Accesses:                    5 (No change)
-  RAM Accesses:                  24 (No change)
-  Estimated Cycles:            2228 (No change)
-
-bench_minimal_fsm_returning_handled
-  Instructions:                 992 (No change)
-  L1 Accesses:                 1441 (No change)
-  L2 Accesses:                    6 (No change)
-  RAM Accesses:                  30 (No change)
-  Estimated Cycles:            2521 (No change)
-
-bench_minimal_fsm_returning_not_handled
-  Instructions:                 992 (No change)
-  L1 Accesses:                 1438 (No change)
-  L2 Accesses:                    8 (No change)
-  RAM Accesses:                  32 (No change)
-  Estimated Cycles:            2598 (No change)
-
-bench_minimal_fsm_returning_transition_to_self
-  Instructions:                1054 (No change)
-  L1 Accesses:                 1521 (No change)
-  L2 Accesses:                    6 (No change)
-  RAM Accesses:                  37 (No change)
-  Estimated Cycles:            2846 (No change)
-
-bench_minimal_fsm_returning_transition_to_self_with_enter
-  Instructions:                1076 (No change)
-  L1 Accesses:                 1557 (No change)
-  L2 Accesses:                    7 (No change)
-  RAM Accesses:                  40 (No change)
-  Estimated Cycles:            2992 (No change)
-
-bench_minimal_fsm_returning_transition_to_self_with_exit
-  Instructions:                1076 (No change)
-  L1 Accesses:                 1558 (No change)
-  L2 Accesses:                    7 (No change)
-  RAM Accesses:                  39 (No change)
-  Estimated Cycles:            2958 (No change)
-
-bench_minimal_fsm_returning_transition_to_self_with_ee
-  Instructions:                1087 (No change)
-  L1 Accesses:                 1576 (No change)
-  L2 Accesses:                    9 (No change)
-  RAM Accesses:                  37 (No change)
-  Estimated Cycles:            2916 (No change)
-
-
-real	0m1.405s
-user	0m1.573s
-sys	0m1.019s
+wink@3900x 22-12-23T23:42:52.833Z:~/prgs/rust/myrepos/exper_hsm/proc_macro_hsm1 (main)
+$ cargo criterion bench_minimal_fsm_returning_not_handled
+    Finished bench [optimized] target(s) in 0.05s
+bench_minimal_fsm_returning_not_handled                                                                              
+                        time:   [3.2545 ns 3.2567 ns 3.2591 ns]
+                        change: [+1.8471% +1.9575% +2.0623%] (p = 0.00 < 0.05)
+                        Performance has regressed.
 ```
 
 ## License

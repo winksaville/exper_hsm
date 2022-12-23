@@ -96,19 +96,19 @@ fn main() {
     for _ in 0..10 {
         let msg = Messages::DeferredValue { val: 1 };
         sme.dispatcher(&msg);
-        println!("main: Sent {msg:?}");
+        log::info!("main: Sent {msg:?}");
     }
 
     let (tx, rx) = std::sync::mpsc::channel::<Messages>();
     let msg = Messages::Complete { tx };
     sme.dispatcher(&msg);
-    println!("main: Sent {msg:?}");
+    log::info!("main: Sent {msg:?}");
 
     // We should now recive one Messages::Done
     let result_value = match rx.recv() {
         Ok(response) => match response {
             Messages::Done { val } => {
-                println!("main: Got Expected reponse={response:?}");
+                log::info!("main: Got Expected reponse={response:?}");
                 val
             }
             _ => panic!("main: Unexpected response={response:?}"),
@@ -124,7 +124,7 @@ fn main() {
         }
         Err(e) => match e {
             TryRecvError::Empty => {
-                println!("main: rx.try_recv() got the expected TryRecvError::Empty, e={e:?}");
+                log::info!("main: rx.try_recv() got the expected TryRecvError::Empty, e={e:?}");
             }
             TryRecvError::Disconnected => {
                 panic!("main: rx.try_recv() Uexpected TryRecvError::Disconnected, e={e:?}");

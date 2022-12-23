@@ -182,121 +182,121 @@ Available examples:
     zero-copy
 ```
 
-## file-stream-producer
+### file-stream-producer
 
 ```
-wink@3900x 22-12-21T06:09:02.645Z:~/prgs/rust/myrepos/exper_hsm (main)
+wink@3900x 22-12-21T21:52:46.652Z:~/prgs/rust/myrepos/exper_hsm (main)
 $ cargo run --example file-stream-producer
-    Finished dev [unoptimized + debuginfo] target(s) in 0.03s
+   Compiling hsm0-with-executor v0.8.0 (/home/wink/prgs/rust/myrepos/exper_hsm/hsm0_with_executor)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.52s
      Running `target/debug/examples/file-stream-producer`
-[2022-12-21T06:09:09.331051640Z INFO  file_stream_producer  307  1] main:+
-new: fsp=RefCell { value: FileStreamProducer { tx: Sender { .. }, rx: Receiver { .. }, partner_tx: None, file: None, buffers: [] } }
-efsp thread:+
-efsp thread:  recv msg=Open { file_name: "hello.txt", buf_count: 2, buf_capacity: 3, partner_tx: Sender { .. } }
-open: file_name=hello.txt
-open: buf_count=2 buf_capacity=3
-open: &buf[0]: 0x7fe2e0000cc0 [0, 1, 2]
-open: &buf[0]: 0x7fe2e0000d00 [3, 4, 5]
-open: Handled Messages::Open transition to 'wait_for_start'
-efsp thread:  recv msg=Start
-wait_for_start: Got Start, tranistion to 'read'
-efsp thread:  recv msg=Read
-read: before read len=3 &buf[0]: 0x7fe2e0000d00 [3, 4, 5]
-read:  after read len=3 &buf[0]: 0x7fe2e0000d00 [48, 65, 6C]
-read: Send Data 3 to partner
-efsp thread:  recv msg=Read
-read: before read len=3 &buf[0]: 0x7fe2e0000cc0 [0, 1, 2]
-read:  after read len=3 &buf[0]: 0x7fe2e0000cc0 [6C, 6F, 20]
-read: Send Data 3 to partner
-main: Data 3 0x7fe2e0000d00 [48, 65, 6C]
-main: Data 3 0x7fe2e0000cc0 [6C, 6F, 20]
-efsp thread:  recv msg=Read
-read: no buffers, transition to 'wait_for_empty'
-efsp thread:  recv msg=Empty { buf: [48, 65, 6C] }
-base: Messages::Empty: &buf[0]: 0x7fe2e0000d00 [48, 65, 6C]
-base: Messages::Empty:   &x[0]: 0x7fe2e0000d20 [48, 65, 6C]
-efsp thread:  recv msg=Empty { buf: [6C, 6F, 20] }
-read: unhandled Empty { buf: [6C, 6F, 20] }
-base: Messages::Empty: &buf[0]: 0x7fe2e0000cc0 [6C, 6F, 20]
-base: Messages::Empty:   &x[0]: 0x7fe2e0000d00 [6C, 6F, 20]
-efsp thread:  recv msg=Read
-read: before read len=3 &buf[0]: 0x7fe2e0000d00 [6C, 6F, 20]
-read:  after read len=3 &buf[0]: 0x7fe2e0000d00 [57, 6F, 72]
-read: Send Data 3 to partner
-efsp thread:  recv msg=Read
-read: before read len=3 &buf[0]: 0x7fe2e0000d20 [48, 65, 6C]
-main: Data 3 0x7fe2e0000d00 [57, 6F, 72]
-read:  after read len=3 &buf[0]: 0x7fe2e0000d20 [6C, 64, 21]
-read: Send Data 3 to partner
-efsp thread:  recv msg=Empty { buf: [57, 6F, 72] }
-main: Data 3 0x7fe2e0000d20 [6C, 64, 21]
-read: unhandled Empty { buf: [57, 6F, 72] }
-base: Messages::Empty: &buf[0]: 0x7fe2e0000d00 [57, 6F, 72]
-base: Messages::Empty:   &x[0]: 0x5629cffdda50 [57, 6F, 72]
-efsp thread:  recv msg=Read
-read: before read len=3 &buf[0]: 0x5629cffdda50 [57, 6F, 72]
-read:  after read len=1 &buf[0]: 0x5629cffdda50 [A]
-read: EOF
-read: EOF Send 1 bytes to partner
-read: EOF transitition to 'open'
-main: Done result=true
-efsp thread:  recv msg=Empty { buf: [6C, 64, 21] }
-base: Messages::Empty: &buf[0]: 0x7fe2e0000d20 [6C, 64, 21]
-base: Messages::Empty:   &x[0]: 0x5629cffdda50 [6C, 64, 21]
-efsp thread:  recv msg=StopThread
-base: Messages::StopThread IGNORING open
-efsp thread: Stopping
-efsp thread:-
-[2022-12-21T06:09:09.331416701Z INFO  file_stream_producer  364  1] main:-
+[2022-12-21T21:53:13.272500135Z INFO  file_stream_producer  307  1] main:+
+[2022-12-21T21:53:13.272547944Z INFO  file_stream_producer  312  1] new: fsp=RefCell { value: FileStreamProducer { tx: Sender { .. }, rx: Receiver { .. }, partner_tx: None, file: None, buffers: [] } }
+[2022-12-21T21:53:13.272661757Z INFO  file_stream_producer  319  2] efsp thread:+
+[2022-12-21T21:53:13.272701532Z INFO  file_stream_producer  321  2] efsp thread:  recv msg=Open { file_name: "hello.txt", buf_count: 2, buf_capacity: 3, partner_tx: Sender { .. } }
+[2022-12-21T21:53:13.272730326Z INFO  file_stream_producer  157  2] open: file_name=hello.txt
+[2022-12-21T21:53:13.272741507Z INFO  file_stream_producer  174  2] open: buf_count=2 buf_capacity=3
+[2022-12-21T21:53:13.272753399Z INFO  file_stream_producer  185  2] open: &buf[0]: 0x7f2ec4000e40 [0, 1, 2]
+[2022-12-21T21:53:13.272766964Z INFO  file_stream_producer  185  2] open: &buf[0]: 0x7f2ec4000e80 [3, 4, 5]
+[2022-12-21T21:53:13.272777785Z INFO  file_stream_producer  189  2] open: Handled Messages::Open transition to 'wait_for_start'
+[2022-12-21T21:53:13.272791550Z INFO  file_stream_producer  321  2] efsp thread:  recv msg=Start
+[2022-12-21T21:53:13.272802371Z INFO  file_stream_producer  203  2] wait_for_start: Got Start, tranistion to 'read'
+[2022-12-21T21:53:13.272811939Z INFO  file_stream_producer  321  2] efsp thread:  recv msg=Read
+[2022-12-21T21:53:13.272820935Z INFO  file_stream_producer  218  2] read: before read len=3 &buf[0]: 0x7f2ec4000e80 [3, 4, 5]
+[2022-12-21T21:53:13.277947080Z INFO  file_stream_producer  229  2] read:  after read len=3 &buf[0]: 0x7f2ec4000e80 [48, 65, 6C]
+[2022-12-21T21:53:13.277961036Z INFO  file_stream_producer  253  2] read: Send Data 3 to partner
+[2022-12-21T21:53:13.277983789Z INFO  file_stream_producer  321  2] efsp thread:  recv msg=Read
+[2022-12-21T21:53:13.277990591Z INFO  file_stream_producer  218  2] read: before read len=3 &buf[0]: 0x7f2ec4000e40 [0, 1, 2]
+[2022-12-21T21:53:13.277987646Z INFO  file_stream_producer  348  1] main: Data 3 0x7f2ec4000e80 [48, 65, 6C]
+[2022-12-21T21:53:13.277999488Z INFO  file_stream_producer  229  2] read:  after read len=3 &buf[0]: 0x7f2ec4000e40 [6C, 6F, 20]
+[2022-12-21T21:53:13.278007112Z INFO  file_stream_producer  253  2] read: Send Data 3 to partner
+[2022-12-21T21:53:13.278016009Z INFO  file_stream_producer  321  2] efsp thread:  recv msg=Empty { buf: [48, 65, 6C] }
+[2022-12-21T21:53:13.278017842Z INFO  file_stream_producer  348  1] main: Data 3 0x7f2ec4000e40 [6C, 6F, 20]
+[2022-12-21T21:53:13.278024094Z INFO  file_stream_producer  281  2] read: unhandled Empty { buf: [48, 65, 6C] }
+[2022-12-21T21:53:13.278032390Z INFO  file_stream_producer  124  2] base: Messages::Empty: &buf[0]: 0x7f2ec4000e80 [48, 65, 6C]
+[2022-12-21T21:53:13.278041958Z INFO  file_stream_producer  126  2] base: Messages::Empty:   &x[0]: 0x7f2ec4000ea0 [48, 65, 6C]
+[2022-12-21T21:53:13.278049812Z INFO  file_stream_producer  321  2] efsp thread:  recv msg=Read
+[2022-12-21T21:53:13.278055483Z INFO  file_stream_producer  218  2] read: before read len=3 &buf[0]: 0x7f2ec4000ea0 [48, 65, 6C]
+[2022-12-21T21:53:13.278063298Z INFO  file_stream_producer  229  2] read:  after read len=3 &buf[0]: 0x7f2ec4000ea0 [57, 6F, 72]
+[2022-12-21T21:53:13.278070411Z INFO  file_stream_producer  253  2] read: Send Data 3 to partner
+[2022-12-21T21:53:13.278078766Z INFO  file_stream_producer  321  2] efsp thread:  recv msg=Empty { buf: [6C, 6F, 20] }
+[2022-12-21T21:53:13.278081141Z INFO  file_stream_producer  348  1] main: Data 3 0x7f2ec4000ea0 [57, 6F, 72]
+[2022-12-21T21:53:13.278086271Z INFO  file_stream_producer  281  2] read: unhandled Empty { buf: [6C, 6F, 20] }
+[2022-12-21T21:53:13.278094045Z INFO  file_stream_producer  124  2] base: Messages::Empty: &buf[0]: 0x7f2ec4000e40 [6C, 6F, 20]
+[2022-12-21T21:53:13.278101269Z INFO  file_stream_producer  126  2] base: Messages::Empty:   &x[0]: 0x559baa5a0b50 [6C, 6F, 20]
+[2022-12-21T21:53:13.278108823Z INFO  file_stream_producer  321  2] efsp thread:  recv msg=Read
+[2022-12-21T21:53:13.278114513Z INFO  file_stream_producer  218  2] read: before read len=3 &buf[0]: 0x559baa5a0b50 [6C, 6F, 20]
+[2022-12-21T21:53:13.278122418Z INFO  file_stream_producer  229  2] read:  after read len=3 &buf[0]: 0x559baa5a0b50 [6C, 64, 21]
+[2022-12-21T21:53:13.278129421Z INFO  file_stream_producer  253  2] read: Send Data 3 to partner
+[2022-12-21T21:53:13.278137837Z INFO  file_stream_producer  321  2] efsp thread:  recv msg=Empty { buf: [57, 6F, 72] }
+[2022-12-21T21:53:13.278139971Z INFO  file_stream_producer  348  1] main: Data 3 0x559baa5a0b50 [6C, 64, 21]
+[2022-12-21T21:53:13.278145371Z INFO  file_stream_producer  281  2] read: unhandled Empty { buf: [57, 6F, 72] }
+[2022-12-21T21:53:13.278152825Z INFO  file_stream_producer  124  2] base: Messages::Empty: &buf[0]: 0x7f2ec4000ea0 [57, 6F, 72]
+[2022-12-21T21:53:13.278160019Z INFO  file_stream_producer  126  2] base: Messages::Empty:   &x[0]: 0x559baa5a0b70 [57, 6F, 72]
+[2022-12-21T21:53:13.278167643Z INFO  file_stream_producer  321  2] efsp thread:  recv msg=Read
+[2022-12-21T21:53:13.278173504Z INFO  file_stream_producer  218  2] read: before read len=3 &buf[0]: 0x559baa5a0b70 [57, 6F, 72]
+[2022-12-21T21:53:13.278181248Z INFO  file_stream_producer  229  2] read:  after read len=1 &buf[0]: 0x559baa5a0b70 [A]
+[2022-12-21T21:53:13.278187781Z INFO  file_stream_producer  236  2] read: EOF
+[2022-12-21T21:53:13.278193080Z INFO  file_stream_producer  238  2] read: EOF Send 1 bytes to partner
+[2022-12-21T21:53:13.278201256Z INFO  file_stream_producer  249  2] read: EOF transitition to 'open'
+[2022-12-21T21:53:13.278204021Z INFO  file_stream_producer  354  1] main: Done result=true
+[2022-12-21T21:53:13.278208970Z INFO  file_stream_producer  321  2] efsp thread:  recv msg=Empty { buf: [6C, 64, 21] }
+[2022-12-21T21:53:13.278217145Z INFO  file_stream_producer  124  2] base: Messages::Empty: &buf[0]: 0x559baa5a0b50 [6C, 64, 21]
+[2022-12-21T21:53:13.278224068Z INFO  file_stream_producer  126  2] base: Messages::Empty:   &x[0]: 0x559baa5a0b70 [6C, 64, 21]
+[2022-12-21T21:53:13.278231182Z INFO  file_stream_producer  321  2] efsp thread:  recv msg=StopThread
+[2022-12-21T21:53:13.278236632Z INFO  file_stream_producer  134  2] base: Messages::StopThread IGNORING open
+[2022-12-21T21:53:13.278241832Z INFO  file_stream_producer  325  2] efsp thread: Stopping
+[2022-12-21T21:53:13.278247162Z INFO  file_stream_producer  331  2] efsp thread:-
+[2022-12-21T21:53:13.278285163Z INFO  file_stream_producer  364  1] main:-
 ```
 
-## defer-msgs
+### defer-msgs
 
 ```
-wink@3900x 22-12-21T01:45:18.046Z:~/prgs/rust/myrepos/exper_hsm/hsm0_with_executor (main)
+wink@3900x 22-12-21T21:50:23.580Z:~/prgs/rust/myrepos/exper_hsm (main)
 $ cargo run --example defer-msgs
-    Finished dev [unoptimized + debuginfo] target(s) in 0.02s
-     Running `/home/wink/prgs/rust/myrepos/exper_hsm/target/debug/examples/defer-msgs`
-[2022-12-21T01:45:19.928969623Z INFO  defer_msgs   91  1] main:+
-[2022-12-21T01:45:19.929015078Z INFO  defer_msgs   35  1] new: inital state=starting idxs_enter_fns=[0]
-[2022-12-21T01:45:19.929024285Z INFO  defer_msgs   47  1] deferring: Messages::DeferredValue:+ val=1
-main: Sent DeferredValue { val: 1 }
-[2022-12-21T01:45:19.929035667Z INFO  defer_msgs   47  1] deferring: Messages::DeferredValue:+ val=1
-main: Sent DeferredValue { val: 1 }
-[2022-12-21T01:45:19.929042309Z INFO  defer_msgs   47  1] deferring: Messages::DeferredValue:+ val=1
-main: Sent DeferredValue { val: 1 }
-[2022-12-21T01:45:19.929048410Z INFO  defer_msgs   47  1] deferring: Messages::DeferredValue:+ val=1
-main: Sent DeferredValue { val: 1 }
-[2022-12-21T01:45:19.929054823Z INFO  defer_msgs   47  1] deferring: Messages::DeferredValue:+ val=1
-main: Sent DeferredValue { val: 1 }
-[2022-12-21T01:45:19.929063008Z INFO  defer_msgs   47  1] deferring: Messages::DeferredValue:+ val=1
-main: Sent DeferredValue { val: 1 }
-[2022-12-21T01:45:19.929070742Z INFO  defer_msgs   47  1] deferring: Messages::DeferredValue:+ val=1
-main: Sent DeferredValue { val: 1 }
-[2022-12-21T01:45:19.929076303Z INFO  defer_msgs   47  1] deferring: Messages::DeferredValue:+ val=1
-main: Sent DeferredValue { val: 1 }
-[2022-12-21T01:45:19.929082194Z INFO  defer_msgs   47  1] deferring: Messages::DeferredValue:+ val=1
-main: Sent DeferredValue { val: 1 }
-[2022-12-21T01:45:19.929087875Z INFO  defer_msgs   47  1] deferring: Messages::DeferredValue:+ val=1
-main: Sent DeferredValue { val: 1 }
-[2022-12-21T01:45:19.929093946Z INFO  defer_msgs   52  1] deferring: Messages::Complete, transition to do_deferred_work
-[2022-12-21T01:45:19.929103033Z INFO  defer_msgs   67  1] do_deferred_work: Messages::DeferredValue:+ val=1 self.val=1
-[2022-12-21T01:45:19.929110818Z INFO  defer_msgs   67  1] do_deferred_work: Messages::DeferredValue:+ val=1 self.val=2
-[2022-12-21T01:45:19.929117610Z INFO  defer_msgs   67  1] do_deferred_work: Messages::DeferredValue:+ val=1 self.val=3
-[2022-12-21T01:45:19.929124413Z INFO  defer_msgs   67  1] do_deferred_work: Messages::DeferredValue:+ val=1 self.val=4
-[2022-12-21T01:45:19.929131637Z INFO  defer_msgs   67  1] do_deferred_work: Messages::DeferredValue:+ val=1 self.val=5
-[2022-12-21T01:45:19.929139171Z INFO  defer_msgs   67  1] do_deferred_work: Messages::DeferredValue:+ val=1 self.val=6
-[2022-12-21T01:45:19.929145503Z INFO  defer_msgs   67  1] do_deferred_work: Messages::DeferredValue:+ val=1 self.val=7
-[2022-12-21T01:45:19.929152345Z INFO  defer_msgs   67  1] do_deferred_work: Messages::DeferredValue:+ val=1 self.val=8
-[2022-12-21T01:45:19.929157936Z INFO  defer_msgs   67  1] do_deferred_work: Messages::DeferredValue:+ val=1 self.val=9
-[2022-12-21T01:45:19.929164288Z INFO  defer_msgs   67  1] do_deferred_work: Messages::DeferredValue:+ val=1 self.val=10
-[2022-12-21T01:45:19.929170449Z INFO  defer_msgs   77  1] do_deferred_work: Messages::Complete, sending Done { val: 10 }, transition to deferring
-main: Sent Complete { tx: Sender { .. } }
-main: Got Expected reponse=Done { val: 10 }
-main: rx.try_recv() got the expected TryRecvError::Empty, e=Empty
-[2022-12-21T01:45:19.929188083Z INFO  defer_msgs  136  1] main:- result_value=10
+   Compiling hsm0-with-executor v0.8.0 (/home/wink/prgs/rust/myrepos/exper_hsm/hsm0_with_executor)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.51s
+     Running `target/debug/examples/defer-msgs`
+[2022-12-21T21:52:46.646380636Z INFO  defer_msgs   91  1] main:+
+[2022-12-21T21:52:46.646420881Z INFO  defer_msgs   35  1] new: inital state=starting idxs_enter_fns=[0]
+[2022-12-21T21:52:46.646429618Z INFO  defer_msgs   47  1] deferring: Messages::DeferredValue:+ val=1
+[2022-12-21T21:52:46.646437462Z INFO  defer_msgs   99  1] main: Sent DeferredValue { val: 1 }
+[2022-12-21T21:52:46.646443443Z INFO  defer_msgs   47  1] deferring: Messages::DeferredValue:+ val=1
+[2022-12-21T21:52:46.646448463Z INFO  defer_msgs   99  1] main: Sent DeferredValue { val: 1 }
+[2022-12-21T21:52:46.646454013Z INFO  defer_msgs   47  1] deferring: Messages::DeferredValue:+ val=1
+[2022-12-21T21:52:46.646459243Z INFO  defer_msgs   99  1] main: Sent DeferredValue { val: 1 }
+[2022-12-21T21:52:46.646464513Z INFO  defer_msgs   47  1] deferring: Messages::DeferredValue:+ val=1
+[2022-12-21T21:52:46.646469402Z INFO  defer_msgs   99  1] main: Sent DeferredValue { val: 1 }
+[2022-12-21T21:52:46.646474632Z INFO  defer_msgs   47  1] deferring: Messages::DeferredValue:+ val=1
+[2022-12-21T21:52:46.646479491Z INFO  defer_msgs   99  1] main: Sent DeferredValue { val: 1 }
+[2022-12-21T21:52:46.646484821Z INFO  defer_msgs   47  1] deferring: Messages::DeferredValue:+ val=1
+[2022-12-21T21:52:46.646489680Z INFO  defer_msgs   99  1] main: Sent DeferredValue { val: 1 }
+[2022-12-21T21:52:46.646494900Z INFO  defer_msgs   47  1] deferring: Messages::DeferredValue:+ val=1
+[2022-12-21T21:52:46.646499799Z INFO  defer_msgs   99  1] main: Sent DeferredValue { val: 1 }
+[2022-12-21T21:52:46.646505069Z INFO  defer_msgs   47  1] deferring: Messages::DeferredValue:+ val=1
+[2022-12-21T21:52:46.646510078Z INFO  defer_msgs   99  1] main: Sent DeferredValue { val: 1 }
+[2022-12-21T21:52:46.646515288Z INFO  defer_msgs   47  1] deferring: Messages::DeferredValue:+ val=1
+[2022-12-21T21:52:46.646520267Z INFO  defer_msgs   99  1] main: Sent DeferredValue { val: 1 }
+[2022-12-21T21:52:46.646525457Z INFO  defer_msgs   47  1] deferring: Messages::DeferredValue:+ val=1
+[2022-12-21T21:52:46.646530326Z INFO  defer_msgs   99  1] main: Sent DeferredValue { val: 1 }
+[2022-12-21T21:52:46.646536036Z INFO  defer_msgs   52  1] deferring: Messages::Complete, transition to do_deferred_work
+[2022-12-21T21:52:46.646542839Z INFO  defer_msgs   67  1] do_deferred_work: Messages::DeferredValue:+ val=1 self.val=1
+[2022-12-21T21:52:46.646548079Z INFO  defer_msgs   67  1] do_deferred_work: Messages::DeferredValue:+ val=1 self.val=2
+[2022-12-21T21:52:46.646553289Z INFO  defer_msgs   67  1] do_deferred_work: Messages::DeferredValue:+ val=1 self.val=3
+[2022-12-21T21:52:46.646558608Z INFO  defer_msgs   67  1] do_deferred_work: Messages::DeferredValue:+ val=1 self.val=4
+[2022-12-21T21:52:46.646563748Z INFO  defer_msgs   67  1] do_deferred_work: Messages::DeferredValue:+ val=1 self.val=5
+[2022-12-21T21:52:46.646568898Z INFO  defer_msgs   67  1] do_deferred_work: Messages::DeferredValue:+ val=1 self.val=6
+[2022-12-21T21:52:46.646574047Z INFO  defer_msgs   67  1] do_deferred_work: Messages::DeferredValue:+ val=1 self.val=7
+[2022-12-21T21:52:46.646579317Z INFO  defer_msgs   67  1] do_deferred_work: Messages::DeferredValue:+ val=1 self.val=8
+[2022-12-21T21:52:46.646584447Z INFO  defer_msgs   67  1] do_deferred_work: Messages::DeferredValue:+ val=1 self.val=9
+[2022-12-21T21:52:46.646589606Z INFO  defer_msgs   67  1] do_deferred_work: Messages::DeferredValue:+ val=1 self.val=10
+[2022-12-21T21:52:46.646594946Z INFO  defer_msgs   77  1] do_deferred_work: Messages::Complete, sending Done { val: 10 }, transition to deferring
+[2022-12-21T21:52:46.646603733Z INFO  defer_msgs  105  1] main: Sent Complete { tx: Sender { .. } }
+[2022-12-21T21:52:46.646609373Z INFO  defer_msgs  111  1] main: Got Expected reponse=Done { val: 10 }
+[2022-12-21T21:52:46.646614653Z INFO  defer_msgs  127  1] main: rx.try_recv() got the expected TryRecvError::Empty, e=Empty
+[2022-12-21T21:52:46.646619552Z INFO  defer_msgs  136  1] main:- result_value=10
 ```
-
 
 ## License
 

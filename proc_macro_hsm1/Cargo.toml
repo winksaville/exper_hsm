@@ -15,14 +15,17 @@ proc-macro2 = "1.0"
 state_result = { path = "../state_result" }
 
 [dev-dependencies]
-criterion = "0.3"
-iai = "0.1.1"
+criterion = "0.4"
+#iai = "0.1.1"
 
 [[bench]]
 name = "bench-dispatch"
 harness = false
 
-[[bench]]
-name = "bench-dispatch-iai"
-harness = false
+# I've found iai hard to trust so not using for now.
+# To try these enable this [[bench]] and rename
+# bench-dispatch-iai.rs.not-used to bench-dispatch-iai.rs.
+#[[bench]]
+#name = "bench-dispatch-iai"
+#harness = false
 

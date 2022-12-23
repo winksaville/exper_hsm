@@ -102,15 +102,15 @@ impl FileStreamProducer {
     // as best as it can for now :)
     fn base(&mut self, e: &Executor<Self, Messages>, msg: &Messages) -> StateResult {
         match msg {
-            Messages::Open { .. } => println!(
+            Messages::Open { .. } => log::info!(
                 "base: Ignoring Messages::Open in state {}",
                 e.get_current_state_name()
             ),
-            Messages::Start => println!(
+            Messages::Start => log::info!(
                 "base: Messages::Start not supported in {}",
                 e.get_current_state_name()
             ),
-            Messages::Read => println!(
+            Messages::Read => log::info!(
                 "base: Messages::Read not supported in {}",
                 e.get_current_state_name()
             ),
@@ -121,9 +121,9 @@ impl FileStreamProducer {
             // Maybe the msg parameters should be "msg: Messages" and we'd consume it
             // or "msg: &mut Messages" then we could "take" it??
             Messages::Empty { buf } => {
-                println!("base: Messages::Empty: &buf[0]: {:p} {:0X?}", &buf[0], *buf);
+                log::info!("base: Messages::Empty: &buf[0]: {:p} {:0X?}", &buf[0], *buf);
                 let x = buf.clone();
-                println!("base: Messages::Empty:   &x[0]: {:p} {:0X?}", &x[0], x);
+                log::info!("base: Messages::Empty:   &x[0]: {:p} {:0X?}", &x[0], x);
                 self.buffers.push(x);
             }
             Messages::Done { result: _ } => panic!(
@@ -131,7 +131,7 @@ impl FileStreamProducer {
                 e.get_current_state_name()
             ),
 
-            Messages::StopThread => println!(
+            Messages::StopThread => log::info!(
                 "base: Messages::StopThread IGNORING {}",
                 e.get_current_state_name()
             ),
@@ -154,39 +154,42 @@ impl FileStreamProducer {
                 self.partner_tx = Some(partner_tx.clone());
                 self.file = match File::open(file_name) {
                     Ok(file) => {
-                        println!("open: file_name={}", file_name);
+                        log::info!("open: file_name={}", file_name);
                         Some(file)
                     }
                     Err(why) => {
                         if let Some(partner_tx) = &self.partner_tx {
                             if let Err(why_send) = partner_tx.send(Messages::Done { result: false })
                             {
-                                println!("open: couldn't send err: '{why}' to partner_tx because of err: '{why_send}'");
+                                log::info!("open: couldn't send err: '{why}' to partner_tx because of err: '{why_send}'");
                             }
                         } else {
-                            println!("open: couldn't send err: '{why}' because partner_tx is None");
+                            log::info!(
+                                "open: couldn't send err: '{why}' because partner_tx is None"
+                            );
                         }
                         return (Handled::Yes, None);
                     }
                 };
 
                 self.buffers = Vec::with_capacity(*buf_count);
-                println!(
+                log::info!(
                     "open: buf_count={} buf_capacity={}",
-                    buf_count, buf_capacity
+                    buf_count,
+                    buf_capacity
                 );
                 for buf_idx in 0..*buf_count {
                     let mut buf = Box::new(Vec::<u8>::with_capacity(*buf_capacity));
                     let first_value = buf_idx * *buf_capacity;
                     for i in 0..*buf_capacity {
                         buf.push(((first_value + i) % 256) as u8);
-                        //println!("open: buf[{i}={} &buf[{i}]={:p}", buf[i], &buf[i])
+                        //log::info!("open: buf[{i}={} &buf[{i}]={:p}", buf[i], &buf[i])
                     }
-                    println!("open: &buf[0]: {:p} {:0X?}", &buf[0], buf);
+                    log::info!("open: &buf[0]: {:p} {:0X?}", &buf[0], buf);
                     self.buffers.push(buf);
                 }
 
-                println!(
+                log::info!(
                     "open: Handled Messages::Open transition to '{}'",
                     e.get_state_name(IDX_WAIT_FOR_START)
                 );
@@ -200,7 +203,7 @@ impl FileStreamProducer {
         match msg {
             Messages::Start => {
                 e.send(Messages::Read).expect("SNH");
-                println!(
+                log::info!(
                     "wait_for_start: Got Start, tranistion to '{}'",
                     e.get_state_name(IDX_READ)
                 );
@@ -215,7 +218,7 @@ impl FileStreamProducer {
             Messages::Read => {
                 if let Some(buf) = self.buffers.pop() {
                     let mut buf = *buf;
-                    println!(
+                    log::info!(
                         "read: before read len={} &buf[0]: {:p} {:0X?}",
                         buf.len(),
                         &buf[0],
@@ -226,16 +229,16 @@ impl FileStreamProducer {
                         let count = f.read(&mut buf).expect("ATM SNH");
                         // Truncate to count otherwise the len will be capacity!
                         buf.truncate(count);
-                        println!(
+                        log::info!(
                             "read:  after read len={} &buf[0]: {:p} {:0X?}",
                             buf.len(),
                             &buf[0],
                             buf
                         );
                         if count < buf.capacity() {
-                            println!("read: EOF");
+                            log::info!("read: EOF");
                             if let Some(partner_tx) = &self.partner_tx {
-                                println!("read: EOF Send {} bytes to partner", buf.len());
+                                log::info!("read: EOF Send {} bytes to partner", buf.len());
                                 partner_tx
                                     .send(Messages::Done { result: true })
                                     .expect("SNH");
@@ -246,11 +249,14 @@ impl FileStreamProducer {
                             }
 
                             // Read all data back to open
-                            println!("read: EOF transitition to '{}'", e.get_state_name(IDX_OPEN));
+                            log::info!(
+                                "read: EOF transitition to '{}'",
+                                e.get_state_name(IDX_OPEN)
+                            );
                             (Handled::Yes, Some(IDX_OPEN))
                         } else {
                             if let Some(partner_tx) = &self.partner_tx {
-                                println!("read: Send Data {} to partner", buf.len());
+                                log::info!("read: Send Data {} to partner", buf.len());
                                 partner_tx.send(Messages::Data { buf }).expect("SNH");
                             } else {
                                 panic!("read: SNH self.partner_tx is None");
@@ -262,7 +268,7 @@ impl FileStreamProducer {
                         }
                     } else {
                         // No file so we're done, back to IDX_OPEN
-                        println!(
+                        log::info!(
                             "read: SNH, self.file is NONE, transition to '{}'",
                             e.get_state_name(IDX_OPEN)
                         );
@@ -270,7 +276,7 @@ impl FileStreamProducer {
                     }
                 } else {
                     // There are no buffers, wait for an empty one
-                    println!(
+                    log::info!(
                         "read: no buffers, transition to '{}'",
                         e.get_state_name(IDX_WAIT_FOR_EMPTY)
                     );
@@ -278,7 +284,7 @@ impl FileStreamProducer {
                 }
             }
             _ => {
-                println!("read: unhandled {:0X?}", msg);
+                log::info!("read: unhandled {:0X?}", msg);
                 (Handled::No, None)
             }
         }
@@ -293,7 +299,7 @@ impl FileStreamProducer {
             }
             //Messages::Read => {
             //    // SNH ???
-            //    println!("wait_for_empty: Read received, defer");
+            //    log::info!("wait_for_empty: Read received, defer");
             //    e.defer_send(msg.clone()).expect("SNH");
             //    (Handled::Yes, None)
             //}
@@ -309,26 +315,26 @@ fn main() {
     let (tx, rx) = channel::<Messages>();
 
     let mut efsp = FileStreamProducer::new().expect("Error Fsp::new");
-    println!("new: fsp={:?}", efsp.get_sm());
+    log::info!("new: fsp={:?}", efsp.get_sm());
 
     // get tx for efsp
     let efsp_tx = efsp.clone_sender();
 
     // Spawn efsp in another thread
     let efsp_thread = thread::spawn(move || {
-        println!("efsp thread:+");
+        log::info!("efsp thread:+");
         while let Ok(msg) = efsp.recv() {
-            println!("efsp thread:  recv msg={:0X?}", msg);
+            log::info!("efsp thread:  recv msg={:0X?}", msg);
             efsp.dispatcher(&msg);
             match msg {
                 Messages::StopThread => {
-                    println!("efsp thread: Stopping");
+                    log::info!("efsp thread: Stopping");
                     break;
                 }
                 _ => (),
             }
         }
-        println!("efsp thread:-");
+        log::info!("efsp thread:-");
     });
 
     efsp_tx
@@ -345,16 +351,16 @@ fn main() {
     while let Ok(r) = rx.recv() {
         match r {
             Messages::Data { buf } => {
-                println!("main: Data {} {:p} {:0X?}", buf.len(), &buf[0], buf);
+                log::info!("main: Data {} {:p} {:0X?}", buf.len(), &buf[0], buf);
                 efsp_tx
                     .send(Messages::Empty { buf: Box::new(buf) })
                     .unwrap();
             }
             Messages::Done { result } => {
-                println!("main: Done result={result}");
+                log::info!("main: Done result={result}");
                 break;
             }
-            _ => println!("main: unexpected msg: {:?}", r),
+            _ => log::info!("main: unexpected msg: {:?}", r),
         }
     }
 
